@@ -10,15 +10,21 @@
 package org.openmrs.module.patientdocuments.web.rest.controller;
 
 import static org.openmrs.module.patientdocuments.common.PatientDocumentsConstants.MODULE_ARTIFACT_ID;
+import static org.openmrs.module.patientdocuments.common.PatientDocumentsConstants.VISIT_SUMMARY_ID;
 
-import java.io.IOException;
-
-import javax.servlet.http.HttpServletResponse;
-
+import org.openmrs.Visit;
+import org.openmrs.api.APIAuthenticationException;
+import org.openmrs.api.context.Context;
+import org.openmrs.module.patientdocuments.reports.VisitSummaryPdfReport;
 import org.openmrs.module.webservices.rest.web.RestConstants;
 import org.openmrs.module.webservices.rest.web.v1_0.controller.BaseRestController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -33,41 +39,52 @@ import org.springframework.web.bind.annotation.RequestParam;
  * {@code true} (default) renders the PDF inline in the browser; {@code false} triggers a download.
  */
 @Controller
-@RequestMapping(value = "/rest/" + RestConstants.VERSION_1 + "/" + MODULE_ARTIFACT_ID + "/visitSummary")
+@RequestMapping(value = "/rest/" + RestConstants.VERSION_1 + "/" + MODULE_ARTIFACT_ID + "/" + VISIT_SUMMARY_ID)
 public class VisitSummaryPdfExportController extends BaseRestController {
 
 	private static final Logger logger = LoggerFactory.getLogger(VisitSummaryPdfExportController.class);
 
-	private static final String VISIT_SUMMARY_ID = "visitSummary";
+	private final VisitSummaryPdfReport pdfReport;
 
-	private void writeResponse(HttpServletResponse response, String visitUuid, boolean inline) throws IOException {
-		// TODO: Wire to VisitSummaryPdfReport.generatePdf(visitUuid)
-		String minimalPdf = "%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n"
-		        + "2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n"
-		        + "3 0 obj<</Type/Page/MediaBox[0 0 612 792]/Parent 2 0 R>>endobj\n"
-		        + "xref\n0 4\n0000000000 65535 f \n0000000009 00000 n \n"
-		        + "0000000058 00000 n \n0000000115 00000 n \n"
-		        + "trailer<</Size 4/Root 1 0 R>>\nstartxref\n190\n%%EOF";
-		byte[] pdfBytes = minimalPdf.getBytes();
-
-		response.setContentType("application/pdf");
-		String disposition = inline ? "inline" : "attachment";
-		response.setHeader("Content-Disposition", disposition + "; filename=\"" + VISIT_SUMMARY_ID + ".pdf\"");
-		response.setContentLength(pdfBytes.length);
-		response.getOutputStream().write(pdfBytes);
+	@Autowired
+	public VisitSummaryPdfExportController(VisitSummaryPdfReport pdfReport) {
+		this.pdfReport = pdfReport;
 	}
 
-	@RequestMapping(method = RequestMethod.GET)
-	public void getVisitSummary(HttpServletResponse response,
-	        @RequestParam(value = "visitUuid") String visitUuid,
-	        @RequestParam(value = "inline", required = false, defaultValue = "true") boolean inline) {
-
+	private ResponseEntity<byte[]> writeResponse(String visitUuid, boolean inline) {
 		try {
-			writeResponse(response, visitUuid, inline);
+			byte[] pdfBytes = pdfReport.generatePdf(visitUuid);
+
+			HttpHeaders headers = new HttpHeaders();
+			headers.set("Content-Type", "application/pdf");
+			String disposition = inline ? "inline" : "attachment";
+			headers.add("Content-Disposition", disposition + "; filename=\"" + VISIT_SUMMARY_ID + ".pdf\"");
+			headers.setContentLength(pdfBytes.length);
+
+			return new ResponseEntity<byte[]>(pdfBytes, headers, HttpStatus.OK);
+		}
+		catch (APIAuthenticationException e) {
+			logger.warn("Privilege check failed for visit summary PDF request: {}", e.getMessage());
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).contentType(MediaType.TEXT_PLAIN)
+			        .body("Access denied".getBytes());
 		}
 		catch (Exception e) {
 			logger.error("An error occurred while processing the request", e);
-			response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).contentType(MediaType.TEXT_PLAIN)
+			        .body("Error generating PDF".getBytes());
 		}
+	}
+
+	@RequestMapping(method = RequestMethod.GET)
+	public ResponseEntity<byte[]> getVisitSummary(
+	        @RequestParam(value = "visitUuid") String visitUuid,
+	        @RequestParam(value = "inline", required = false, defaultValue = "true") boolean inline) {
+
+		Visit visit = Context.getVisitService().getVisitByUuid(visitUuid);
+		if (visit == null) {
+			return ResponseEntity.notFound().build();
+		}
+
+		return writeResponse(visitUuid, inline);
 	}
 }

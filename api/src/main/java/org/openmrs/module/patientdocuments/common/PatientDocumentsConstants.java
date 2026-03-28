@@ -31,4 +31,13 @@ public class PatientDocumentsConstants {
 	 * The path to the style sheet for Patient History reports.
 	 */
 	public static final String PATIENT_ID_STICKER_XSL_PATH = "patientIdStickerFopStylesheet.xsl";
+
+	public static final String VISIT_SUMMARY_ID = "visitSummary";
+
+	public static final String COMPONENT_REPORTMANAGER_VISIT_SUMMARY = MODULE_ARTIFACT_ID + ".visitSummary";
+
+	/**
+	 * The path to the style sheet for Visit Summary reports.
+	 */
+	public static final String VISIT_SUMMARY_XSL_PATH = "visitSummaryFopStylesheet.xsl";
 }

@@ -14,14 +14,12 @@ import org.openmrs.module.reporting.evaluation.parameter.Parameter;
 import org.openmrs.module.reporting.common.Localized;
 
 /**
- * A dataset definition that fetches visit data using the OpenMRS API and returns it as JSON.
+ * A dataset definition that fetches visit data using the OpenMRS API.
  */
 @Localized("patientdocuments.visitSummaryDataSetDefinition")
 public class VisitSummaryDataSetDefinition extends BaseDataSetDefinition {
 
 	private static final long serialVersionUID = 1L;
-
-	private String visitUuid;
 
 	//***** CONSTRUCTORS *****
 
@@ -32,25 +30,5 @@ public class VisitSummaryDataSetDefinition extends BaseDataSetDefinition {
 	public VisitSummaryDataSetDefinition() {
 		super();
 		addParameter(new Parameter("visitUuid", "Visit UUID", String.class));
-	}
-
-	/**
-	 * Constructor with visitUuid
-	 */
-
-	public VisitSummaryDataSetDefinition(String visitUuid) {
-		super();
-		addParameter(new Parameter("visitUuid", "Visit UUID", String.class));
-		this.visitUuid = visitUuid;
-	}
-
-	//***** INSTANCE METHODS *****
-
-	public String getVisitUuid() {
-		return visitUuid;
-	}
-
-	public void setVisitUuid(String visitUuid) {
-		this.visitUuid = visitUuid;
 	}
 }

@@ -34,7 +34,7 @@ public interface VisitSummarySectionProvider {
 	 *
 	 * @param visit the visit to gather data for
 	 * @param patient the patient associated with the visit
-	 * @return a Map or List to be serialized to JSON for the XML renderer, or null if no data exists
+	 * @return a Map or List to be rendered as XML elements by the renderer, or null if no data exists
 	 */
 	Object getSectionData(Visit visit, Patient patient);
 }

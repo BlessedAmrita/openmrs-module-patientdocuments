@@ -5,9 +5,9 @@
 
     <xsl:output method="xml" indent="yes"/>
 
-    <!-- Attribute for dynamic page height and width -->
+    <!-- Page dimensions from renderer attributes -->
     <xsl:variable name="page-height" select="/visitSummary/@page-height"/>
-    <xsl:variable name="page-width" select="/visitSummary/@page-width"/>
+    <xsl:variable name="page-width"  select="/visitSummary/@page-width"/>
 
     <!-- Font families matching bundled IBM Plex Sans Arabic fonts -->
     <xsl:variable name="label-font-family">IBM Plex Sans Arabic</xsl:variable>
@@ -30,7 +30,6 @@
             </fo:layout-master-set>
 
             <fo:page-sequence master-reference="visit-summary-page">
-                <!-- Footer -->
                 <fo:static-content flow-name="xsl-region-after">
                     <xsl:call-template name="footer"/>
                 </fo:static-content>
@@ -42,7 +41,7 @@
                     <!-- Patient info — always rendered -->
                     <xsl:call-template name="patient-info"/>
 
-                    <!-- Vitals -->
+                    <!-- Vitals (element always present; inner check drives "None recorded") -->
                     <xsl:if test="vitals">
                         <xsl:call-template name="vitals"/>
                     </xsl:if>
@@ -86,10 +85,19 @@
         </fo:root>
     </xsl:template>
 
-    <!-- Facility header section -->
+    <!-- ═══════════════════════════════════════════════════
+         Facility header
+         ═══════════════════════════════════════════════════ -->
     <xsl:template name="facility-header">
         <fo:block font-family="{$label-font-family}" margin-bottom="5mm"
             border-bottom="0.5pt solid #cccccc" padding-bottom="3mm">
+            <!-- Logo: rendered only when logoData element is non-empty -->
+            <xsl:if test="facilityHeader/logoData != ''">
+                <fo:block text-align="center" margin-bottom="2mm">
+                    <fo:external-graphic src="{facilityHeader/logoData}"
+                        content-height="15mm" scaling="uniform"/>
+                </fo:block>
+            </xsl:if>
             <fo:block font-size="14pt" font-weight="bold" font-family="{$value-font-family}"
                 text-align="center">
                 <xsl:value-of select="facilityHeader/facilityName"/>
@@ -103,13 +111,16 @@
         </fo:block>
     </xsl:template>
 
-    <!-- Patient info section (2-column table: name, DOB, gender, visit date, patient ID) -->
+    <!-- ═══════════════════════════════════════════════════
+         Patient information (2-column table)
+         All field labels come from patientInfo/@lbl-* attributes set by the renderer.
+         ═══════════════════════════════════════════════════ -->
     <xsl:template name="patient-info">
         <fo:block font-family="{$label-font-family}" margin-bottom="4mm">
             <fo:block font-size="11pt" font-weight="bold" font-family="{$value-font-family}"
                 margin-bottom="2mm" color="{$section-heading-color}"
                 border-bottom="0.5pt solid #cccccc" padding-bottom="1mm">
-                Patient Information
+                <xsl:value-of select="patientInfo/@heading"/>
             </fo:block>
             <fo:table width="100%" table-layout="fixed">
                 <fo:table-column column-width="50%"/>
@@ -117,13 +128,17 @@
                 <fo:table-body>
                     <fo:table-row>
                         <fo:table-cell padding="1mm">
-                            <fo:block font-size="8pt" color="#444444">Patient Name</fo:block>
+                            <fo:block font-size="8pt" color="#444444">
+                                <xsl:value-of select="patientInfo/@lbl-patient-name"/>
+                            </fo:block>
                             <fo:block font-size="10pt" font-weight="bold" font-family="{$value-font-family}">
                                 <xsl:value-of select="patientInfo/patientName"/>
                             </fo:block>
                         </fo:table-cell>
                         <fo:table-cell padding="1mm">
-                            <fo:block font-size="8pt" color="#444444">Patient ID</fo:block>
+                            <fo:block font-size="8pt" color="#444444">
+                                <xsl:value-of select="patientInfo/@lbl-patient-id"/>
+                            </fo:block>
                             <fo:block font-size="10pt" font-weight="bold" font-family="{$value-font-family}">
                                 <xsl:value-of select="patientInfo/patientId"/>
                             </fo:block>
@@ -131,13 +146,17 @@
                     </fo:table-row>
                     <fo:table-row>
                         <fo:table-cell padding="1mm">
-                            <fo:block font-size="8pt" color="#444444">Date of Birth</fo:block>
+                            <fo:block font-size="8pt" color="#444444">
+                                <xsl:value-of select="patientInfo/@lbl-dob"/>
+                            </fo:block>
                             <fo:block font-size="10pt" font-weight="bold" font-family="{$value-font-family}">
                                 <xsl:value-of select="patientInfo/dateOfBirth"/>
                             </fo:block>
                         </fo:table-cell>
                         <fo:table-cell padding="1mm">
-                            <fo:block font-size="8pt" color="#444444">Gender</fo:block>
+                            <fo:block font-size="8pt" color="#444444">
+                                <xsl:value-of select="patientInfo/@lbl-gender"/>
+                            </fo:block>
                             <fo:block font-size="10pt" font-weight="bold" font-family="{$value-font-family}">
                                 <xsl:value-of select="patientInfo/gender"/>
                             </fo:block>
@@ -145,9 +164,29 @@
                     </fo:table-row>
                     <fo:table-row>
                         <fo:table-cell padding="1mm">
-                            <fo:block font-size="8pt" color="#444444">Visit Date</fo:block>
+                            <fo:block font-size="8pt" color="#444444">
+                                <xsl:value-of select="patientInfo/@lbl-visit-date"/>
+                            </fo:block>
                             <fo:block font-size="10pt" font-weight="bold" font-family="{$value-font-family}">
                                 <xsl:value-of select="patientInfo/visitDate"/>
+                            </fo:block>
+                        </fo:table-cell>
+                        <fo:table-cell padding="1mm">
+                            <fo:block font-size="8pt" color="#444444">
+                                <xsl:value-of select="patientInfo/@lbl-visit-type"/>
+                            </fo:block>
+                            <fo:block font-size="10pt" font-weight="bold" font-family="{$value-font-family}">
+                                <xsl:value-of select="patientInfo/visitType"/>
+                            </fo:block>
+                        </fo:table-cell>
+                    </fo:table-row>
+                    <fo:table-row>
+                        <fo:table-cell padding="1mm">
+                            <fo:block font-size="8pt" color="#444444">
+                                <xsl:value-of select="patientInfo/@lbl-location"/>
+                            </fo:block>
+                            <fo:block font-size="10pt" font-weight="bold" font-family="{$value-font-family}">
+                                <xsl:value-of select="patientInfo/visitLocation"/>
                             </fo:block>
                         </fo:table-cell>
                         <fo:table-cell padding="1mm">
@@ -159,17 +198,43 @@
         </fo:block>
     </xsl:template>
 
-    <!-- Vitals section -->
+    <!-- ═══════════════════════════════════════════════════
+         Vitals — horizontal 3-column grid of label/value pairs.
+         Each <vital> carries @label and @value set by the renderer.
+         Section heading comes from vitals/@heading.
+         ═══════════════════════════════════════════════════ -->
     <xsl:template name="vitals">
         <fo:block font-family="{$label-font-family}" margin-bottom="4mm">
             <fo:block font-size="11pt" font-weight="bold" font-family="{$value-font-family}"
                 margin-bottom="2mm" color="{$section-heading-color}"
                 border-bottom="0.5pt solid #cccccc" padding-bottom="1mm">
-                Vital Signs
+                <xsl:value-of select="vitals/@heading"/>
             </fo:block>
             <xsl:choose>
-                <xsl:when test="/visitSummary/vitals/vital">
-                    <!-- Data will be rendered here during implementation -->
+                <xsl:when test="vitals/vital">
+                    <fo:table width="100%" table-layout="fixed">
+                        <fo:table-column column-width="33%"/>
+                        <fo:table-column column-width="33%"/>
+                        <fo:table-column column-width="34%"/>
+                        <fo:table-body>
+                            <fo:table-row>
+                                <xsl:for-each select="vitals/vital">
+                                    <xsl:if test="(position() - 1) mod 3 = 0 and position() != 1">
+                                        </fo:table-row><fo:table-row>
+                                    </xsl:if>
+                                    <fo:table-cell padding="1mm 2mm">
+                                        <fo:block font-size="8pt" color="#444444">
+                                            <xsl:value-of select="@label"/>
+                                        </fo:block>
+                                        <fo:block font-size="10pt" font-weight="bold"
+                                            font-family="{$value-font-family}">
+                                            <xsl:value-of select="@value"/>
+                                        </fo:block>
+                                    </fo:table-cell>
+                                </xsl:for-each>
+                            </fo:table-row>
+                        </fo:table-body>
+                    </fo:table>
                 </xsl:when>
                 <xsl:otherwise>
                     <fo:block font-size="9pt" color="#999999" font-style="italic">None recorded</fo:block>
@@ -178,17 +243,66 @@
         </fo:block>
     </xsl:template>
 
-    <!-- Diagnoses section -->
+    <!-- ═══════════════════════════════════════════════════
+         Diagnoses — 3-column table (name, certainty, rank).
+         Column headers come from diagnoses/@col-* attributes set by the renderer.
+         Each <diagnosis> carries @name, @certainty, @rank.
+         ═══════════════════════════════════════════════════ -->
     <xsl:template name="diagnoses">
         <fo:block font-family="{$label-font-family}" margin-bottom="4mm">
             <fo:block font-size="11pt" font-weight="bold" font-family="{$value-font-family}"
                 margin-bottom="2mm" color="{$section-heading-color}"
                 border-bottom="0.5pt solid #cccccc" padding-bottom="1mm">
-                Diagnoses
+                <xsl:value-of select="diagnoses/@heading"/>
             </fo:block>
             <xsl:choose>
-                <xsl:when test="/visitSummary/diagnoses/diagnosis">
-                    <!-- Data will be rendered here during implementation -->
+                <xsl:when test="diagnoses/diagnosis">
+                    <fo:table width="100%" table-layout="fixed">
+                        <fo:table-column column-width="60%"/>
+                        <fo:table-column column-width="25%"/>
+                        <fo:table-column column-width="15%"/>
+                        <fo:table-body>
+                            <fo:table-row background-color="#f5f5f5">
+                                <fo:table-cell padding="1mm 2mm"
+                                    border-bottom="0.5pt solid #cccccc">
+                                    <fo:block font-size="8pt" font-weight="bold" color="#444444">
+                                        <xsl:value-of select="diagnoses/@col-name"/>
+                                    </fo:block>
+                                </fo:table-cell>
+                                <fo:table-cell padding="1mm 2mm"
+                                    border-bottom="0.5pt solid #cccccc">
+                                    <fo:block font-size="8pt" font-weight="bold" color="#444444">
+                                        <xsl:value-of select="diagnoses/@col-certainty"/>
+                                    </fo:block>
+                                </fo:table-cell>
+                                <fo:table-cell padding="1mm 2mm"
+                                    border-bottom="0.5pt solid #cccccc">
+                                    <fo:block font-size="8pt" font-weight="bold" color="#444444">
+                                        <xsl:value-of select="diagnoses/@col-rank"/>
+                                    </fo:block>
+                                </fo:table-cell>
+                            </fo:table-row>
+                            <xsl:for-each select="diagnoses/diagnosis">
+                                <fo:table-row>
+                                    <fo:table-cell padding="1mm 2mm">
+                                        <fo:block font-size="9pt">
+                                            <xsl:value-of select="@name"/>
+                                        </fo:block>
+                                    </fo:table-cell>
+                                    <fo:table-cell padding="1mm 2mm">
+                                        <fo:block font-size="9pt">
+                                            <xsl:value-of select="@certainty"/>
+                                        </fo:block>
+                                    </fo:table-cell>
+                                    <fo:table-cell padding="1mm 2mm">
+                                        <fo:block font-size="9pt">
+                                            <xsl:value-of select="@rank"/>
+                                        </fo:block>
+                                    </fo:table-cell>
+                                </fo:table-row>
+                            </xsl:for-each>
+                        </fo:table-body>
+                    </fo:table>
                 </xsl:when>
                 <xsl:otherwise>
                     <fo:block font-size="9pt" color="#999999" font-style="italic">None recorded</fo:block>
@@ -197,16 +311,18 @@
         </fo:block>
     </xsl:template>
 
-    <!-- Conditions section -->
+    <!-- ═══════════════════════════════════════════════════
+         Conditions (stub — data supplied by future section provider)
+         ═══════════════════════════════════════════════════ -->
     <xsl:template name="conditions">
         <fo:block font-family="{$label-font-family}" margin-bottom="4mm">
             <fo:block font-size="11pt" font-weight="bold" font-family="{$value-font-family}"
                 margin-bottom="2mm" color="{$section-heading-color}"
                 border-bottom="0.5pt solid #cccccc" padding-bottom="1mm">
-                Conditions
+                <xsl:value-of select="conditions/@heading"/>
             </fo:block>
             <xsl:choose>
-                <xsl:when test="/visitSummary/conditions/condition">
+                <xsl:when test="conditions/condition">
                     <!-- Data will be rendered here during implementation -->
                 </xsl:when>
                 <xsl:otherwise>
@@ -216,16 +332,18 @@
         </fo:block>
     </xsl:template>
 
-    <!-- Lab results section -->
+    <!-- ═══════════════════════════════════════════════════
+         Lab results (stub)
+         ═══════════════════════════════════════════════════ -->
     <xsl:template name="lab-results">
         <fo:block font-family="{$label-font-family}" margin-bottom="4mm">
             <fo:block font-size="11pt" font-weight="bold" font-family="{$value-font-family}"
                 margin-bottom="2mm" color="{$section-heading-color}"
                 border-bottom="0.5pt solid #cccccc" padding-bottom="1mm">
-                Lab Results
+                <xsl:value-of select="labResults/@heading"/>
             </fo:block>
             <xsl:choose>
-                <xsl:when test="/visitSummary/labResults/lab">
+                <xsl:when test="labResults/lab">
                     <!-- Data will be rendered here during implementation -->
                 </xsl:when>
                 <xsl:otherwise>
@@ -235,17 +353,66 @@
         </fo:block>
     </xsl:template>
 
-    <!-- Allergies section -->
+    <!-- ═══════════════════════════════════════════════════
+         Allergies — 3-column table (allergen, severity, reactions).
+         Column headers come from allergies/@col-* attributes set by the renderer.
+         Each <allergy> carries @allergen, @severity, @reactions.
+         ═══════════════════════════════════════════════════ -->
     <xsl:template name="allergies">
         <fo:block font-family="{$label-font-family}" margin-bottom="4mm">
             <fo:block font-size="11pt" font-weight="bold" font-family="{$value-font-family}"
                 margin-bottom="2mm" color="{$section-heading-color}"
                 border-bottom="0.5pt solid #cccccc" padding-bottom="1mm">
-                Allergies
+                <xsl:value-of select="allergies/@heading"/>
             </fo:block>
             <xsl:choose>
-                <xsl:when test="/visitSummary/allergies/allergy">
-                    <!-- Data will be rendered here during implementation -->
+                <xsl:when test="allergies/allergy">
+                    <fo:table width="100%" table-layout="fixed">
+                        <fo:table-column column-width="35%"/>
+                        <fo:table-column column-width="20%"/>
+                        <fo:table-column column-width="45%"/>
+                        <fo:table-body>
+                            <fo:table-row background-color="#f5f5f5">
+                                <fo:table-cell padding="1mm 2mm"
+                                    border-bottom="0.5pt solid #cccccc">
+                                    <fo:block font-size="8pt" font-weight="bold" color="#444444">
+                                        <xsl:value-of select="allergies/@col-allergen"/>
+                                    </fo:block>
+                                </fo:table-cell>
+                                <fo:table-cell padding="1mm 2mm"
+                                    border-bottom="0.5pt solid #cccccc">
+                                    <fo:block font-size="8pt" font-weight="bold" color="#444444">
+                                        <xsl:value-of select="allergies/@col-severity"/>
+                                    </fo:block>
+                                </fo:table-cell>
+                                <fo:table-cell padding="1mm 2mm"
+                                    border-bottom="0.5pt solid #cccccc">
+                                    <fo:block font-size="8pt" font-weight="bold" color="#444444">
+                                        <xsl:value-of select="allergies/@col-reactions"/>
+                                    </fo:block>
+                                </fo:table-cell>
+                            </fo:table-row>
+                            <xsl:for-each select="allergies/allergy">
+                                <fo:table-row>
+                                    <fo:table-cell padding="1mm 2mm">
+                                        <fo:block font-size="9pt">
+                                            <xsl:value-of select="@allergen"/>
+                                        </fo:block>
+                                    </fo:table-cell>
+                                    <fo:table-cell padding="1mm 2mm">
+                                        <fo:block font-size="9pt">
+                                            <xsl:value-of select="@severity"/>
+                                        </fo:block>
+                                    </fo:table-cell>
+                                    <fo:table-cell padding="1mm 2mm">
+                                        <fo:block font-size="9pt">
+                                            <xsl:value-of select="@reactions"/>
+                                        </fo:block>
+                                    </fo:table-cell>
+                                </fo:table-row>
+                            </xsl:for-each>
+                        </fo:table-body>
+                    </fo:table>
                 </xsl:when>
                 <xsl:otherwise>
                     <fo:block font-size="9pt" color="#999999" font-style="italic">None recorded</fo:block>
@@ -254,16 +421,18 @@
         </fo:block>
     </xsl:template>
 
-    <!-- Medications section -->
+    <!-- ═══════════════════════════════════════════════════
+         Medications (stub)
+         ═══════════════════════════════════════════════════ -->
     <xsl:template name="medications">
         <fo:block font-family="{$label-font-family}" margin-bottom="4mm">
             <fo:block font-size="11pt" font-weight="bold" font-family="{$value-font-family}"
                 margin-bottom="2mm" color="{$section-heading-color}"
                 border-bottom="0.5pt solid #cccccc" padding-bottom="1mm">
-                Medications
+                <xsl:value-of select="medications/@heading"/>
             </fo:block>
             <xsl:choose>
-                <xsl:when test="/visitSummary/medications/medication">
+                <xsl:when test="medications/medication">
                     <!-- Data will be rendered here during implementation -->
                 </xsl:when>
                 <xsl:otherwise>
@@ -273,16 +442,18 @@
         </fo:block>
     </xsl:template>
 
-    <!-- Visit notes section -->
+    <!-- ═══════════════════════════════════════════════════
+         Visit notes (stub)
+         ═══════════════════════════════════════════════════ -->
     <xsl:template name="visit-notes">
         <fo:block font-family="{$label-font-family}" margin-bottom="4mm">
             <fo:block font-size="11pt" font-weight="bold" font-family="{$value-font-family}"
                 margin-bottom="2mm" color="{$section-heading-color}"
                 border-bottom="0.5pt solid #cccccc" padding-bottom="1mm">
-                Visit Notes
+                <xsl:value-of select="visitNotes/@heading"/>
             </fo:block>
             <xsl:choose>
-                <xsl:when test="/visitSummary/visitNotes/note">
+                <xsl:when test="visitNotes/note">
                     <!-- Data will be rendered here during implementation -->
                 </xsl:when>
                 <xsl:otherwise>
@@ -292,16 +463,18 @@
         </fo:block>
     </xsl:template>
 
-    <!-- Billing section -->
+    <!-- ═══════════════════════════════════════════════════
+         Billing (stub)
+         ═══════════════════════════════════════════════════ -->
     <xsl:template name="billing">
         <fo:block font-family="{$label-font-family}" margin-bottom="4mm">
             <fo:block font-size="11pt" font-weight="bold" font-family="{$value-font-family}"
                 margin-bottom="2mm" color="{$section-heading-color}"
                 border-bottom="0.5pt solid #cccccc" padding-bottom="1mm">
-                Billing
+                <xsl:value-of select="billing/@heading"/>
             </fo:block>
             <xsl:choose>
-                <xsl:when test="/visitSummary/billing/item">
+                <xsl:when test="billing/item">
                     <!-- Data will be rendered here during implementation -->
                 </xsl:when>
                 <xsl:otherwise>
@@ -311,7 +484,10 @@
         </fo:block>
     </xsl:template>
 
-    <!-- Footer: printed-by, timestamp, system ID -->
+    <!-- ═══════════════════════════════════════════════════
+         Footer: printed-by, timestamp, system ID.
+         Label text comes from footer/@lbl-* attributes set by the renderer.
+         ═══════════════════════════════════════════════════ -->
     <xsl:template name="footer">
         <fo:block font-family="{$label-font-family}" font-size="7pt" color="#444444"
             border-top="0.5pt solid #cccccc" padding-top="1mm">
@@ -323,17 +499,21 @@
                     <fo:table-row>
                         <fo:table-cell>
                             <fo:block>
-                                Printed by: <xsl:value-of select="/visitSummary/footer/printedBy"/>
+                                <xsl:value-of select="footer/@lbl-printed-by"/>
+                                <xsl:text> </xsl:text>
+                                <xsl:value-of select="footer/printedBy"/>
                             </fo:block>
                         </fo:table-cell>
                         <fo:table-cell>
                             <fo:block>
-                                <xsl:value-of select="/visitSummary/footer/timestamp"/>
+                                <xsl:value-of select="footer/timestamp"/>
                             </fo:block>
                         </fo:table-cell>
                         <fo:table-cell>
                             <fo:block text-align="right">
-                                System ID: <xsl:value-of select="/visitSummary/footer/systemId"/>
+                                <xsl:value-of select="footer/@lbl-system-id"/>
+                                <xsl:text> </xsl:text>
+                                <xsl:value-of select="footer/systemId"/>
                             </fo:block>
                         </fo:table-cell>
                     </fo:table-row>

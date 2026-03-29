@@ -50,14 +50,14 @@ import org.slf4j.LoggerFactory;
 @Handler(supports = VisitSummaryDataSetDefinition.class, order = 50)
 public class VisitSummaryDataSetEvaluator implements DataSetEvaluator {
 
-	// Vitals concept UUIDs (CIEL)
-	private static final String SYSTOLIC_UUID  = "5085AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
-	private static final String DIASTOLIC_UUID = "5086AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
-	private static final String HEART_RATE_UUID = "5087AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
-	private static final String TEMPERATURE_UUID = "5088AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
-	private static final String WEIGHT_UUID    = "5089AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
-	private static final String HEIGHT_UUID    = "5090AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
-	private static final String SPO2_UUID      = "5092AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+	// CIEL default UUIDs — overrideable via Initializer keys (report.visitSummary.vitals.*)
+	private static final String DEFAULT_SYSTOLIC_UUID   = "5085AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+	private static final String DEFAULT_DIASTOLIC_UUID  = "5086AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+	private static final String DEFAULT_HEART_RATE_UUID  = "5087AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+	private static final String DEFAULT_TEMPERATURE_UUID = "5088AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+	private static final String DEFAULT_WEIGHT_UUID     = "5089AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+	private static final String DEFAULT_HEIGHT_UUID     = "5090AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+	private static final String DEFAULT_SPO2_UUID       = "5092AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
 
 	private static final Logger log = LoggerFactory.getLogger(VisitSummaryDataSetEvaluator.class);
 
@@ -150,11 +150,20 @@ public class VisitSummaryDataSetEvaluator implements DataSetEvaluator {
 			return vitals;
 		}
 
+		InitializerService iniz = Context.getService(InitializerService.class);
+		String systolicUuid     = resolveConceptUuid(iniz, "report.visitSummary.vitals.systolic",        DEFAULT_SYSTOLIC_UUID);
+		String diastolicUuid    = resolveConceptUuid(iniz, "report.visitSummary.vitals.diastolic",       DEFAULT_DIASTOLIC_UUID);
+		String heartRateUuid    = resolveConceptUuid(iniz, "report.visitSummary.vitals.heartRate",       DEFAULT_HEART_RATE_UUID);
+		String temperatureUuid  = resolveConceptUuid(iniz, "report.visitSummary.vitals.temperature",     DEFAULT_TEMPERATURE_UUID);
+		String weightUuid       = resolveConceptUuid(iniz, "report.visitSummary.vitals.weight",          DEFAULT_WEIGHT_UUID);
+		String heightUuid       = resolveConceptUuid(iniz, "report.visitSummary.vitals.height",          DEFAULT_HEIGHT_UUID);
+		String spo2Uuid         = resolveConceptUuid(iniz, "report.visitSummary.vitals.oxygenSaturation", DEFAULT_SPO2_UUID);
+
 		// Build list of available vital concepts for a single batch query
 		List<Concept> vitalConcepts = new ArrayList<Concept>();
 		String[] uuids = new String[]{
-			SYSTOLIC_UUID, DIASTOLIC_UUID, HEART_RATE_UUID,
-			TEMPERATURE_UUID, WEIGHT_UUID, HEIGHT_UUID, SPO2_UUID
+			systolicUuid, diastolicUuid, heartRateUuid,
+			temperatureUuid, weightUuid, heightUuid, spo2Uuid
 		};
 		for (String uuid : uuids) {
 			Concept c = Context.getConceptService().getConceptByUuid(uuid);
@@ -182,19 +191,24 @@ public class VisitSummaryDataSetEvaluator implements DataSetEvaluator {
 		}
 
 		// Blood Pressure (combined systolic/diastolic)
-		if (obsMap.containsKey(SYSTOLIC_UUID) || obsMap.containsKey(DIASTOLIC_UUID)) {
-			String s = obsMap.containsKey(SYSTOLIC_UUID) ? formatNumeric(obsMap.get(SYSTOLIC_UUID)) : "?";
-			String d = obsMap.containsKey(DIASTOLIC_UUID) ? formatNumeric(obsMap.get(DIASTOLIC_UUID)) : "?";
+		if (obsMap.containsKey(systolicUuid) || obsMap.containsKey(diastolicUuid)) {
+			String s = obsMap.containsKey(systolicUuid) ? formatNumeric(obsMap.get(systolicUuid)) : "?";
+			String d = obsMap.containsKey(diastolicUuid) ? formatNumeric(obsMap.get(diastolicUuid)) : "?";
 			vitals.add(vitalEntry("Blood Pressure", s + "/" + d + " mmHg"));
 		}
 
-		addVitalIfPresent(vitals, obsMap, HEART_RATE_UUID, "Heart Rate", "bpm");
-		addVitalIfPresent(vitals, obsMap, TEMPERATURE_UUID, "Temperature", "\u00b0C");
-		addVitalIfPresent(vitals, obsMap, WEIGHT_UUID, "Weight", "kg");
-		addVitalIfPresent(vitals, obsMap, HEIGHT_UUID, "Height", "cm");
-		addVitalIfPresent(vitals, obsMap, SPO2_UUID, "SpO2", "%");
+		addVitalIfPresent(vitals, obsMap, heartRateUuid, "Heart Rate", "bpm");
+		addVitalIfPresent(vitals, obsMap, temperatureUuid, "Temperature", "\u00b0C");
+		addVitalIfPresent(vitals, obsMap, weightUuid, "Weight", "kg");
+		addVitalIfPresent(vitals, obsMap, heightUuid, "Height", "cm");
+		addVitalIfPresent(vitals, obsMap, spo2Uuid, "SpO2", "%");
 
 		return vitals;
+	}
+
+	private String resolveConceptUuid(InitializerService iniz, String key, String defaultUuid) {
+		String val = iniz.getValueFromKey(key);
+		return (val != null && !val.isEmpty()) ? val : defaultUuid;
 	}
 
 	private void addVitalIfPresent(List<Map<String, String>> vitals, Map<String, Double> obsMap,

@@ -11,6 +11,7 @@ package org.openmrs.module.patientdocuments.library;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -145,7 +146,12 @@ public class VisitSummaryDataSetEvaluator implements DataSetEvaluator {
 	private List<Map<String, String>> buildVitals(Visit visit) {
 		List<Map<String, String>> vitals = new ArrayList<Map<String, String>>();
 
-		List<Encounter> encounters = new ArrayList<Encounter>(visit.getEncounters());
+		List<Encounter> encounters = new ArrayList<Encounter>();
+		for (Encounter e : visit.getEncounters()) {
+			if (!e.getVoided()) {
+				encounters.add(e);
+			}
+		}
 		if (encounters.isEmpty()) {
 			return vitals;
 		}
@@ -178,7 +184,9 @@ public class VisitSummaryDataSetEvaluator implements DataSetEvaluator {
 
 		// Single batch query for all vital obs across all visit encounters
 		List<Obs> obsList = Context.getObsService().getObservations(
-			null, encounters, vitalConcepts, null, null, null, null, null, null, null, null, false
+			null, encounters, vitalConcepts, null, null, null,
+			Collections.singletonList("obsDatetime desc"),
+			null, null, null, null, false
 		);
 
 		// Keep only the most-recent numeric value per concept UUID

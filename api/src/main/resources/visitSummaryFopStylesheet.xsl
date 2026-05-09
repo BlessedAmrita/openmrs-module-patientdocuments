@@ -217,11 +217,10 @@
                         <fo:table-column column-width="33%"/>
                         <fo:table-column column-width="34%"/>
                         <fo:table-body>
-                            <fo:table-row>
-                                <xsl:for-each select="vitals/vital">
-                                    <xsl:if test="(position() - 1) mod 3 = 0 and position() != 1">
-                                        </fo:table-row><fo:table-row>
-                                    </xsl:if>
+                            <!-- Select every 3rd vital (positions 1, 4, 7, …) to open a new row;
+                                 fill the 2nd and 3rd cells via following-sibling. -->
+                            <xsl:for-each select="vitals/vital[((position()-1) mod 3) = 0]">
+                                <fo:table-row>
                                     <fo:table-cell padding="1mm 2mm">
                                         <fo:block font-size="8pt" color="#444444">
                                             <xsl:value-of select="@label"/>
@@ -231,8 +230,40 @@
                                             <xsl:value-of select="@value"/>
                                         </fo:block>
                                     </fo:table-cell>
-                                </xsl:for-each>
-                            </fo:table-row>
+                                    <xsl:choose>
+                                        <xsl:when test="following-sibling::vital[1]">
+                                            <fo:table-cell padding="1mm 2mm">
+                                                <fo:block font-size="8pt" color="#444444">
+                                                    <xsl:value-of select="following-sibling::vital[1]/@label"/>
+                                                </fo:block>
+                                                <fo:block font-size="10pt" font-weight="bold"
+                                                    font-family="{$value-font-family}">
+                                                    <xsl:value-of select="following-sibling::vital[1]/@value"/>
+                                                </fo:block>
+                                            </fo:table-cell>
+                                        </xsl:when>
+                                        <xsl:otherwise>
+                                            <fo:table-cell><fo:block/></fo:table-cell>
+                                        </xsl:otherwise>
+                                    </xsl:choose>
+                                    <xsl:choose>
+                                        <xsl:when test="following-sibling::vital[2]">
+                                            <fo:table-cell padding="1mm 2mm">
+                                                <fo:block font-size="8pt" color="#444444">
+                                                    <xsl:value-of select="following-sibling::vital[2]/@label"/>
+                                                </fo:block>
+                                                <fo:block font-size="10pt" font-weight="bold"
+                                                    font-family="{$value-font-family}">
+                                                    <xsl:value-of select="following-sibling::vital[2]/@value"/>
+                                                </fo:block>
+                                            </fo:table-cell>
+                                        </xsl:when>
+                                        <xsl:otherwise>
+                                            <fo:table-cell><fo:block/></fo:table-cell>
+                                        </xsl:otherwise>
+                                    </xsl:choose>
+                                </fo:table-row>
+                            </xsl:for-each>
                         </fo:table-body>
                     </fo:table>
                 </xsl:when>

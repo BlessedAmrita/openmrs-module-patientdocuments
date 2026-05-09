@@ -9,28 +9,32 @@
  */
 package org.openmrs.module.patientdocuments.common;
 
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-
 import org.apache.commons.io.IOUtils;
 import org.openmrs.util.OpenmrsClassLoader;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+
 public class Helper {
-	
-	/**
-	 * Given a location on the classpath, return the contents of this resource as a String
-	 */
-	public static String getStringFromResource(String resourceName) {
-		InputStream is = null;
+
+	public static InputStream getInputStreamByResource(String resourceName) {
 		try {
-			is = OpenmrsClassLoader.getInstance().getResourceAsStream(resourceName);
-			return IOUtils.toString(is, StandardCharsets.UTF_8.name());
-		}
-		catch (Exception e) {
+			return OpenmrsClassLoader.getInstance().getResourceAsStream(resourceName);
+		} catch (Exception e) {
 			throw new IllegalArgumentException("Unable to load resource: " + resourceName, e);
 		}
-		finally {
-			IOUtils.closeQuietly(is);
+	}
+
+	/**
+	 * @deprecated Use {@link #getInputStreamByResource(String)} instead for better memory efficiency.
+	 */
+	@Deprecated
+	public static String getStringFromResource(String resourceName) {
+		try (InputStream is = getInputStreamByResource(resourceName)) {
+			return is != null ? IOUtils.toString(is, StandardCharsets.UTF_8) : null;
+		} catch (IOException e) {
+			throw new IllegalArgumentException("Unable to load resource: " + resourceName, e);
 		}
 	}
 }

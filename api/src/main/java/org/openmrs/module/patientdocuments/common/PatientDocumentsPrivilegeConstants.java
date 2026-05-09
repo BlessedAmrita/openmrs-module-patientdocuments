@@ -15,7 +15,7 @@ import org.openmrs.annotation.HasAddOnStartupPrivileges;
 public class PatientDocumentsPrivilegeConstants {
 	
 	public static final String VIEW_PATIENT_ID_STICKER = "App: Can generate a Patient Identity Sticker";
-
 	public static final String VIEW_VISIT_SUMMARY = "App: Can generate a Visit Summary";
+	public static final String PRINT_ENCOUNTER_FORMS_PRIVILEGE = "App: Print encounter forms";
 
 }

@@ -34,6 +34,9 @@ public class FacilityHeaderSection extends TypedSection<FacilityInfo> {
 
 	@Override
 	protected FacilityInfo gatherData(Visit visit) {
+		// TODO: populate facilityAddress from Location.getAddress1() through getAddress6()
+		// TODO: populate facilityPhone from location attributes (LocationAttributeType)
+		// Left empty pending address formatting decision
 		return new FacilityInfo(
 		    visit.getLocation() != null ? visit.getLocation().getName() : "",
 		    "",

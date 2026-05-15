@@ -14,8 +14,6 @@ import static org.openmrs.module.patientdocuments.reports.VisitSummaryReportMana
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -30,7 +28,6 @@ import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
-import org.openmrs.User;
 import org.openmrs.Visit;
 import org.openmrs.annotation.Handler;
 import org.openmrs.api.context.Context;
@@ -114,8 +111,6 @@ public class VisitSummaryXmlReportRenderer extends ReportDesignRenderer {
 				}
 			}
 		}
-		// Footer is structural, not a pluggable section
-		buildFooterElement(doc, root);
 	}
 
 	private void configurePageDimensions(Element root) {
@@ -125,40 +120,6 @@ public class VisitSummaryXmlReportRenderer extends ReportDesignRenderer {
 		        .getGlobalProperty("report.visitSummary.size.width", "210mm");
 		root.setAttribute("page-height", isNotBlank(pageHeight) ? pageHeight : "297mm");
 		root.setAttribute("page-width", isNotBlank(pageWidth) ? pageWidth : "210mm");
-	}
-
-	private void buildFooterElement(Document doc, Element root) {
-		Element footer = doc.createElement("footer");
-		footer.setAttribute("lbl-printed-by", "Printed by:");
-		footer.setAttribute("lbl-system-id", "System ID:");
-		root.appendChild(footer);
-
-		User currentUser = Context.getAuthenticatedUser();
-		String printedBy = "";
-		if (currentUser != null) {
-			if (currentUser.getPersonName() != null) {
-				printedBy = currentUser.getPersonName().getFullName();
-			} else {
-				printedBy = currentUser.getUsername();
-			}
-		}
-		addTextElement(doc, footer, "printedBy", printedBy);
-
-		String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
-		addTextElement(doc, footer, "timestamp", timestamp);
-
-		String systemId = currentUser != null ? nvl(currentUser.getSystemId()) : "";
-		addTextElement(doc, footer, "systemId", systemId);
-	}
-
-	private void addTextElement(Document doc, Element parent, String tag, String value) {
-		Element el = doc.createElement(tag);
-		el.setTextContent(nvl(value));
-		parent.appendChild(el);
-	}
-
-	private String nvl(String value) {
-		return value != null ? value : "";
 	}
 
 	private void writeToOutputStream(Document doc, OutputStream out) throws RenderingException {

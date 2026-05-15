@@ -18,29 +18,37 @@ import java.util.Map;
 import org.openmrs.Concept;
 import org.openmrs.Encounter;
 import org.openmrs.Obs;
-import org.openmrs.Patient;
 import org.openmrs.Visit;
 import org.openmrs.api.context.Context;
+import org.openmrs.module.patientdocuments.api.model.Vital;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 // TODO: i18n — section heading currently hardcoded English; wire to MessageSourceService
 // TODO: Add unit test for isEnabled() with mock global properties
 @Component
-@Order(2)
-public class VitalsSection extends AbstractVisitSummarySection {
+@Order(300)
+public class VitalsSection extends TypedSection<List<Vital>> {
 
 	private static final Logger log = LoggerFactory.getLogger(VitalsSection.class);
 
 	// CIEL default UUIDs — overrideable via global properties (report.visitSummary.vitals.*)
 	private static final String DEFAULT_SYSTOLIC_UUID    = "5085AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+
 	private static final String DEFAULT_DIASTOLIC_UUID   = "5086AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+
 	private static final String DEFAULT_HEART_RATE_UUID  = "5087AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+
 	private static final String DEFAULT_TEMPERATURE_UUID = "5088AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+
 	private static final String DEFAULT_WEIGHT_UUID      = "5089AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+
 	private static final String DEFAULT_HEIGHT_UUID      = "5090AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+
 	private static final String DEFAULT_SPO2_UUID        = "5092AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
 
 	@Override
@@ -49,9 +57,9 @@ public class VitalsSection extends AbstractVisitSummarySection {
 	}
 
 	@Override
-	public Object getSectionData(Visit visit, Patient patient) {
+	protected List<Vital> gatherData(Visit visit) {
 		try {
-			List<Map<String, String>> vitals = new ArrayList<Map<String, String>>();
+			List<Vital> vitals = new ArrayList<Vital>();
 
 			List<Encounter> encounters = new ArrayList<Encounter>();
 			for (Encounter e : visit.getEncounters()) {
@@ -113,7 +121,7 @@ public class VitalsSection extends AbstractVisitSummarySection {
 			if (obsMap.containsKey(systolicUuid) || obsMap.containsKey(diastolicUuid)) {
 				String s = obsMap.containsKey(systolicUuid) ? formatNumeric(obsMap.get(systolicUuid)) : "?";
 				String d = obsMap.containsKey(diastolicUuid) ? formatNumeric(obsMap.get(diastolicUuid)) : "?";
-				vitals.add(vitalEntry("Blood Pressure", s + "/" + d + " mmHg"));
+				vitals.add(new Vital("Blood Pressure", s + "/" + d + " mmHg"));
 			}
 
 			addVitalIfPresent(vitals, obsMap, heartRateUuid,   "Heart Rate",  "bpm");
@@ -123,9 +131,24 @@ public class VitalsSection extends AbstractVisitSummarySection {
 			addVitalIfPresent(vitals, obsMap, spo2Uuid,        "SpO2",        "%");
 
 			return vitals;
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			log.warn("Could not load vitals for visit; returning empty list", e);
-			return new ArrayList<>();
+			return new ArrayList<Vital>();
+		}
+	}
+
+	@Override
+	protected void renderXml(Document doc, Element root, List<Vital> vitals) {
+		Element section = doc.createElement("vitals");
+		section.setAttribute("heading", "Vital Signs");
+		root.appendChild(section);
+
+		for (Vital vital : vitals) {
+			Element vitalEl = doc.createElement("vital");
+			vitalEl.setAttribute("label", nvl(vital.getLabel()));
+			vitalEl.setAttribute("value", nvl(vital.getValue()));
+			section.appendChild(vitalEl);
 		}
 	}
 
@@ -134,18 +157,11 @@ public class VitalsSection extends AbstractVisitSummarySection {
 		return (val != null && !val.isEmpty()) ? val : defaultUuid;
 	}
 
-	private void addVitalIfPresent(List<Map<String, String>> vitals, Map<String, Double> obsMap,
+	private void addVitalIfPresent(List<Vital> vitals, Map<String, Double> obsMap,
 	        String uuid, String label, String unit) {
 		if (obsMap.containsKey(uuid)) {
-			vitals.add(vitalEntry(label, formatNumeric(obsMap.get(uuid)) + " " + unit));
+			vitals.add(new Vital(label, formatNumeric(obsMap.get(uuid)) + " " + unit));
 		}
-	}
-
-	private Map<String, String> vitalEntry(String label, String value) {
-		Map<String, String> entry = new HashMap<String, String>();
-		entry.put("label", label);
-		entry.put("value", value);
-		return entry;
 	}
 
 	private String formatNumeric(Double value) {

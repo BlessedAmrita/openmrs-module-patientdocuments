@@ -9,13 +9,16 @@
  */
 package org.openmrs.module.patientdocuments.api.section;
 
-import org.openmrs.Patient;
 import org.openmrs.Visit;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 /**
  * SPI for pluggable visit summary sections.
- * Register implementations as Spring beans; the document builder collects them
- * and assembles the data map in @Order sequence.
+ * Register implementations as Spring beans; the renderer collects them and calls
+ * renderXml() on each enabled section in @Order sequence.
+ * Implementing directly (without TypedSection) is valid for sections that don't
+ * fit the gather-then-render flow.
  *
  * TODO: BillingSection — stub activation check wired, data gathering pending billing module integration
  * TODO: MedicationsSection, LabResultsSection, ConditionsSection — to be implemented
@@ -23,7 +26,7 @@ import org.openmrs.Visit;
 public interface VisitSummarySection {
 
 	/**
-	 * Unique key — used as the global-property config suffix and XML element name (e.g. "vitals").
+	 * Unique key — used as the global-property config suffix (e.g. "vitals").
 	 * Must be lowercase and contain no dots.
 	 */
 	String getSectionKey();
@@ -32,14 +35,13 @@ public interface VisitSummarySection {
 	 * Activation rule. Returns true if this section should appear in the PDF.
 	 * Core sections read documents.section.&lt;key&gt;.enabled from global properties.
 	 * Cross-module sections may additionally check ModuleFactory.
-	 *
-	 * TODO: confirm naming convention (documents.section.*.enabled)
 	 */
 	boolean isEnabled();
 
 	/**
-	 * Gather this section's data for the given visit.
-	 * Returns a Map, List, or structured object. Null means nothing to render.
+	 * Build this section's XML elements into the document.
+	 * The Visit gives access to both the visit and its patient via visit.getPatient().
+	 * Implementations must not throw — swallow exceptions and produce no output instead.
 	 */
-	Object getSectionData(Visit visit, Patient patient);
+	void renderXml(Document doc, Element root, Visit visit);
 }

@@ -9,12 +9,9 @@
  */
 package org.openmrs.module.patientdocuments.library;
 
-import java.util.Map;
-
 import org.openmrs.Visit;
 import org.openmrs.annotation.Handler;
 import org.openmrs.api.context.Context;
-import org.openmrs.module.patientdocuments.api.document.VisitSummaryDocumentBuilder;
 import org.openmrs.module.reporting.dataset.DataSet;
 import org.openmrs.module.reporting.dataset.DataSetColumn;
 import org.openmrs.module.reporting.dataset.DataSetRow;
@@ -22,24 +19,15 @@ import org.openmrs.module.reporting.dataset.SimpleDataSet;
 import org.openmrs.module.reporting.dataset.definition.DataSetDefinition;
 import org.openmrs.module.reporting.dataset.definition.evaluator.DataSetEvaluator;
 import org.openmrs.module.reporting.evaluation.EvaluationContext;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
- * Evaluates a {@link VisitSummaryDataSetDefinition} by delegating data gathering to
- * {@link VisitSummaryDocumentBuilder}, which collects enabled {@link org.openmrs.module.patientdocuments.api.section.VisitSummarySection}
- * beans in @Order sequence.
- *
- * The pre-refactor per-section build methods (buildFacilityHeader, buildPatientInfo, buildVitals,
- * buildDiagnoses, buildAllergies) now live in their respective Section classes. See git history for
- * the monolithic implementation.
+ * Evaluates a {@link VisitSummaryDataSetDefinition} by resolving the Visit from its UUID
+ * and placing it in the DataSet. Each section gathers and renders its own data from the Visit.
  */
 @Component
 @Handler(supports = VisitSummaryDataSetDefinition.class, order = 50)
 public class VisitSummaryDataSetEvaluator implements DataSetEvaluator {
-
-	@Autowired
-	private VisitSummaryDocumentBuilder documentBuilder;
 
 	@Override
 	public DataSet evaluate(DataSetDefinition dataSetDefinition, EvaluationContext evalContext) {
@@ -55,10 +43,8 @@ public class VisitSummaryDataSetEvaluator implements DataSetEvaluator {
 			return dataSet;
 		}
 
-		Map<String, Object> visitData = documentBuilder.buildData(visit, visit.getPatient());
-
 		DataSetRow row = new DataSetRow();
-		row.addColumnValue(new DataSetColumn("visitData", "Visit Data", Map.class), visitData);
+		row.addColumnValue(new DataSetColumn("visit", "Visit", Visit.class), visit);
 		dataSet.addRow(row);
 
 		return dataSet;

@@ -10,25 +10,25 @@
 package org.openmrs.module.patientdocuments.api.section;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.openmrs.Allergy;
 import org.openmrs.AllergyReaction;
-import org.openmrs.Patient;
 import org.openmrs.Visit;
 import org.openmrs.api.context.Context;
+import org.openmrs.module.patientdocuments.api.model.AllergyEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 // TODO: i18n — section heading currently hardcoded English; wire to MessageSourceService
 // TODO: Add unit test for isEnabled() with mock global properties
 @Component
-@Order(4)
-public class AllergiesSection extends AbstractVisitSummarySection {
+@Order(500)
+public class AllergiesSection extends TypedSection<List<AllergyEntry>> {
 
 	private static final Logger log = LoggerFactory.getLogger(AllergiesSection.class);
 
@@ -38,13 +38,11 @@ public class AllergiesSection extends AbstractVisitSummarySection {
 	}
 
 	@Override
-	public Object getSectionData(Visit visit, Patient patient) {
-		List<Map<String, String>> allergies = new ArrayList<Map<String, String>>();
+	protected List<AllergyEntry> gatherData(Visit visit) {
+		List<AllergyEntry> allergies = new ArrayList<AllergyEntry>();
 
 		try {
-			for (Allergy allergy : Context.getPatientService().getAllergies(patient)) {
-				Map<String, String> entry = new HashMap<String, String>();
-
+			for (Allergy allergy : Context.getPatientService().getAllergies(visit.getPatient())) {
 				String allergenName = "";
 				if (allergy.getAllergen() != null) {
 					if (allergy.getAllergen().getCodedAllergen() != null
@@ -54,13 +52,11 @@ public class AllergiesSection extends AbstractVisitSummarySection {
 						allergenName = allergy.getAllergen().getNonCodedAllergen();
 					}
 				}
-				entry.put("allergen", allergenName);
 
 				String severity = "";
 				if (allergy.getSeverity() != null && allergy.getSeverity().getName() != null) {
 					severity = allergy.getSeverity().getName().getName();
 				}
-				entry.put("severity", severity);
 
 				StringBuilder reactions = new StringBuilder();
 				if (allergy.getReactions() != null) {
@@ -75,8 +71,8 @@ public class AllergiesSection extends AbstractVisitSummarySection {
 						}
 					}
 				}
-				entry.put("reactions", reactions.toString());
-				allergies.add(entry);
+
+				allergies.add(new AllergyEntry(allergenName, severity, reactions.toString()));
 			}
 		}
 		catch (Exception e) {
@@ -84,5 +80,23 @@ public class AllergiesSection extends AbstractVisitSummarySection {
 		}
 
 		return allergies;
+	}
+
+	@Override
+	protected void renderXml(Document doc, Element root, List<AllergyEntry> allergies) {
+		Element section = doc.createElement("allergies");
+		section.setAttribute("heading", "Allergies");
+		section.setAttribute("col-allergen", "Allergen");
+		section.setAttribute("col-severity", "Severity");
+		section.setAttribute("col-reactions", "Reactions");
+		root.appendChild(section);
+
+		for (AllergyEntry allergy : allergies) {
+			Element allergyEl = doc.createElement("allergy");
+			allergyEl.setAttribute("allergen", nvl(allergy.getAllergen()));
+			allergyEl.setAttribute("severity", nvl(allergy.getSeverity()));
+			allergyEl.setAttribute("reactions", nvl(allergy.getReactions()));
+			section.appendChild(allergyEl);
+		}
 	}
 }

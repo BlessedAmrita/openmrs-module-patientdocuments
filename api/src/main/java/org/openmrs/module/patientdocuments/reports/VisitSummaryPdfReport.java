@@ -37,7 +37,6 @@ import org.apache.fop.configuration.Configuration;
 import org.apache.fop.configuration.ConfigurationException;
 import org.apache.fop.configuration.DefaultConfigurationBuilder;
 import org.openmrs.api.context.Context;
-import org.openmrs.module.initializer.api.InitializerService;
 import org.openmrs.module.patientdocuments.common.PatientDocumentsConstants;
 import org.openmrs.module.patientdocuments.common.PatientDocumentsPrivilegeConstants;
 import org.openmrs.module.patientdocuments.library.VisitSummaryDataSetDefinition;
@@ -64,7 +63,7 @@ public class VisitSummaryPdfReport {
 	private VisitSummaryDataSetEvaluator evaluator;
 
 	@Autowired
-	private InitializerService initializerService;
+	private VisitSummaryXmlReportRenderer renderer;
 
 	public byte[] generatePdf(String visitUuid) throws RuntimeException {
 		Context.requirePrivilege(PatientDocumentsPrivilegeConstants.VIEW_VISIT_SUMMARY);
@@ -98,7 +97,6 @@ public class VisitSummaryPdfReport {
 	}
 
 	private byte[] renderReportToXml(ReportData reportData) throws IOException {
-		VisitSummaryXmlReportRenderer renderer = new VisitSummaryXmlReportRenderer();
 		try (ByteArrayOutputStream xmlOutputStream = new ByteArrayOutputStream()) {
 			renderer.render(reportData, null, xmlOutputStream);
 			return xmlOutputStream.toByteArray();
@@ -122,7 +120,8 @@ public class VisitSummaryPdfReport {
 	}
 
 	private String getStylesheetName() {
-		String stylesheetName = initializerService.getValueFromKey("report.visitSummary.stylesheet");
+		String stylesheetName = Context.getAdministrationService()
+		        .getGlobalProperty("report.visitSummary.stylesheet", "");
 		if (stylesheetName == null || stylesheetName.isEmpty()) {
 			stylesheetName = PatientDocumentsConstants.VISIT_SUMMARY_XSL_PATH;
 		}

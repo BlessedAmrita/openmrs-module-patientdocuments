@@ -11,20 +11,21 @@ package org.openmrs.module.patientdocuments.api.section;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.openmrs.Patient;
 import org.openmrs.PatientIdentifier;
 import org.openmrs.PersonName;
 import org.openmrs.Visit;
+import org.openmrs.module.patientdocuments.api.model.PatientVisitInfo;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 // TODO: i18n — section heading currently hardcoded English; wire to MessageSourceService
 @Component
-@Order(1)
-public class PatientInfoSection extends AbstractVisitSummarySection {
+@Order(200)
+public class PatientInfoSection extends TypedSection<PatientVisitInfo> {
 
 	@Override
 	public String getSectionKey() {
@@ -38,25 +39,44 @@ public class PatientInfoSection extends AbstractVisitSummarySection {
 	}
 
 	@Override
-	public Object getSectionData(Visit visit, Patient patient) {
-		Map<String, String> info = new HashMap<String, String>();
+	protected PatientVisitInfo gatherData(Visit visit) {
+		Patient patient = visit.getPatient();
 
 		PersonName name = patient.getPersonName();
-		info.put("patientName", name != null ? name.getFullName() : "");
-
-		Date dob = patient.getBirthdate();
-		info.put("dateOfBirth", dob != null ? formatDate(dob) : "");
-		info.put("gender", patient.getGender() != null ? patient.getGender() : "");
-
 		PatientIdentifier preferredId = patient.getPatientIdentifier();
-		info.put("patientId", preferredId != null ? preferredId.getIdentifier() : "");
 
-		info.put("visitDate", visit.getStartDatetime() != null ? formatDate(visit.getStartDatetime()) : "");
-		info.put("visitType", visit.getVisitType() != null ? visit.getVisitType().getName() : "");
-		info.put("visitLocation", visit.getLocation() != null ? visit.getLocation().getName() : "");
-		info.put("visitStopDate", visit.getStopDatetime() != null ? formatDate(visit.getStopDatetime()) : "");
+		return new PatientVisitInfo(
+		    name != null ? name.getFullName() : "",
+		    preferredId != null ? preferredId.getIdentifier() : "",
+		    patient.getBirthdate() != null ? formatDate(patient.getBirthdate()) : "",
+		    patient.getGender() != null ? patient.getGender() : "",
+		    visit.getStartDatetime() != null ? formatDate(visit.getStartDatetime()) : "",
+		    visit.getVisitType() != null ? visit.getVisitType().getName() : "",
+		    visit.getLocation() != null ? visit.getLocation().getName() : "",
+		    visit.getStopDatetime() != null ? formatDate(visit.getStopDatetime()) : "");
+	}
 
-		return info;
+	@Override
+	protected void renderXml(Document doc, Element root, PatientVisitInfo data) {
+		Element section = doc.createElement("patientInfo");
+		section.setAttribute("heading", "Patient Information");
+		section.setAttribute("lbl-patient-name", "Patient Name");
+		section.setAttribute("lbl-patient-id", "Patient ID");
+		section.setAttribute("lbl-dob", "Date of Birth");
+		section.setAttribute("lbl-gender", "Gender");
+		section.setAttribute("lbl-visit-date", "Visit Date");
+		section.setAttribute("lbl-visit-type", "Visit Type");
+		section.setAttribute("lbl-location", "Location");
+		root.appendChild(section);
+
+		addTextElement(doc, section, "patientName", data.getPatientName());
+		addTextElement(doc, section, "patientId", data.getPatientId());
+		addTextElement(doc, section, "dateOfBirth", data.getDateOfBirth());
+		addTextElement(doc, section, "gender", data.getGender());
+		addTextElement(doc, section, "visitDate", data.getVisitDate());
+		addTextElement(doc, section, "visitType", data.getVisitType());
+		addTextElement(doc, section, "visitLocation", data.getVisitLocation());
+		addTextElement(doc, section, "visitStopDate", data.getVisitStopDate());
 	}
 
 	private String formatDate(Date date) {

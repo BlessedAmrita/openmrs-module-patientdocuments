@@ -10,11 +10,12 @@
 package org.openmrs.module.patientdocuments.api.section;
 
 import org.openmrs.api.context.Context;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 /**
  * Convenience base for sections that read their enabled flag from a global property.
- * Initializer loads configuration into global properties at startup; at runtime
- * we read from global properties via AdministrationService — NOT InitializerService directly.
+ * At runtime we read from global properties via AdministrationService — NOT InitializerService.
  *
  * TODO: Add unit test for isEnabled() with mock global properties
  */
@@ -22,9 +23,6 @@ public abstract class AbstractVisitSummarySection implements VisitSummarySection
 
 	/**
 	 * Reads a boolean from the global properties table.
-	 *
-	 * @param globalPropertyKey the full global property key
-	 * @param defaultValue value to use when the property is absent
 	 */
 	protected boolean isConfigEnabled(String globalPropertyKey, boolean defaultValue) {
 		String value = Context.getAdministrationService()
@@ -39,5 +37,15 @@ public abstract class AbstractVisitSummarySection implements VisitSummarySection
 	@Override
 	public boolean isEnabled() {
 		return isConfigEnabled("documents.section." + getSectionKey() + ".enabled", true);
+	}
+
+	protected void addTextElement(Document doc, Element parent, String tag, String value) {
+		Element el = doc.createElement(tag);
+		el.setTextContent(value != null ? value : "");
+		parent.appendChild(el);
+	}
+
+	protected String nvl(String value) {
+		return value != null ? value : "";
 	}
 }

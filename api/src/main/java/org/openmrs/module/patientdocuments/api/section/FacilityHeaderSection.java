@@ -9,18 +9,17 @@
  */
 package org.openmrs.module.patientdocuments.api.section;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import org.openmrs.Patient;
 import org.openmrs.Visit;
+import org.openmrs.module.patientdocuments.api.model.FacilityInfo;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 // TODO: i18n — section heading currently hardcoded English; wire to MessageSourceService
 @Component
-@Order(0)
-public class FacilityHeaderSection extends AbstractVisitSummarySection {
+@Order(100)
+public class FacilityHeaderSection extends TypedSection<FacilityInfo> {
 
 	@Override
 	public String getSectionKey() {
@@ -34,11 +33,19 @@ public class FacilityHeaderSection extends AbstractVisitSummarySection {
 	}
 
 	@Override
-	public Object getSectionData(Visit visit, Patient patient) {
-		Map<String, String> header = new HashMap<String, String>();
-		header.put("facilityName", visit.getLocation() != null ? visit.getLocation().getName() : "");
-		header.put("facilityAddress", "");
-		header.put("facilityPhone", "");
-		return header;
+	protected FacilityInfo gatherData(Visit visit) {
+		return new FacilityInfo(
+		    visit.getLocation() != null ? visit.getLocation().getName() : "",
+		    "",
+		    "");
+	}
+
+	@Override
+	protected void renderXml(Document doc, Element root, FacilityInfo data) {
+		Element section = doc.createElement("facilityHeader");
+		root.appendChild(section);
+		addTextElement(doc, section, "facilityName", data.getFacilityName());
+		addTextElement(doc, section, "facilityAddress", data.getFacilityAddress());
+		addTextElement(doc, section, "facilityPhone", data.getFacilityPhone());
 	}
 }

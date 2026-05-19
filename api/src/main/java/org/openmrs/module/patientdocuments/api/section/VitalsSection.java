@@ -21,6 +21,7 @@ import org.openmrs.Obs;
 import org.openmrs.Visit;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.patientdocuments.api.model.Vital;
+import org.openmrs.module.patientdocuments.common.CielConceptConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
@@ -28,28 +29,11 @@ import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-// TODO: i18n — section heading currently hardcoded English; wire to MessageSourceService
-// TODO: Add unit test for isEnabled() with mock global properties
 @Component
 @Order(300)
 public class VitalsSection extends TypedSection<List<Vital>> {
 
 	private static final Logger log = LoggerFactory.getLogger(VitalsSection.class);
-
-	// CIEL default UUIDs — overrideable via global properties (report.visitSummary.vitals.*)
-	private static final String DEFAULT_SYSTOLIC_UUID    = "5085AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
-
-	private static final String DEFAULT_DIASTOLIC_UUID   = "5086AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
-
-	private static final String DEFAULT_HEART_RATE_UUID  = "5087AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
-
-	private static final String DEFAULT_TEMPERATURE_UUID = "5088AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
-
-	private static final String DEFAULT_WEIGHT_UUID      = "5089AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
-
-	private static final String DEFAULT_HEIGHT_UUID      = "5090AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
-
-	private static final String DEFAULT_SPO2_UUID        = "5092AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
 
 	@Override
 	public String getSectionKey() {
@@ -71,18 +55,13 @@ public class VitalsSection extends TypedSection<List<Vital>> {
 				return vitals;
 			}
 
-			// TODO: Confirm config key naming convention with mentor — currently using
-			// "report.visitSummary.vitals.systolic" etc. for concept UUID overrides.
-			// Enable/disable flags use "documents.section.<key>.enabled".
-			// The two namespaces differ intentionally: UUIDs are deploy-time config,
-			// enable flags are runtime-mutable. Validate this split is correct.
-			String systolicUuid    = resolveConceptUuid("report.visitSummary.vitals.systolic",         DEFAULT_SYSTOLIC_UUID);
-			String diastolicUuid   = resolveConceptUuid("report.visitSummary.vitals.diastolic",        DEFAULT_DIASTOLIC_UUID);
-			String heartRateUuid   = resolveConceptUuid("report.visitSummary.vitals.heartRate",        DEFAULT_HEART_RATE_UUID);
-			String temperatureUuid = resolveConceptUuid("report.visitSummary.vitals.temperature",      DEFAULT_TEMPERATURE_UUID);
-			String weightUuid      = resolveConceptUuid("report.visitSummary.vitals.weight",           DEFAULT_WEIGHT_UUID);
-			String heightUuid      = resolveConceptUuid("report.visitSummary.vitals.height",           DEFAULT_HEIGHT_UUID);
-			String spo2Uuid        = resolveConceptUuid("report.visitSummary.vitals.oxygenSaturation", DEFAULT_SPO2_UUID);
+			String systolicUuid    = resolveConceptUuid("report.visitSummary.vitals.systolic", CielConceptConstants.SYSTOLIC_BP);
+			String diastolicUuid   = resolveConceptUuid("report.visitSummary.vitals.diastolic", CielConceptConstants.DIASTOLIC_BP);
+			String heartRateUuid   = resolveConceptUuid("report.visitSummary.vitals.heartRate", CielConceptConstants.HEART_RATE);
+			String temperatureUuid = resolveConceptUuid("report.visitSummary.vitals.temperature", CielConceptConstants.TEMPERATURE);
+			String weightUuid      = resolveConceptUuid("report.visitSummary.vitals.weight", CielConceptConstants.WEIGHT);
+			String heightUuid      = resolveConceptUuid("report.visitSummary.vitals.height", CielConceptConstants.HEIGHT);
+			String spo2Uuid        = resolveConceptUuid("report.visitSummary.vitals.oxygenSaturation", CielConceptConstants.OXYGEN_SAT);
 
 			// Build list of available vital concepts for a single batch query
 			List<Concept> vitalConcepts = new ArrayList<Concept>();

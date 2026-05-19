@@ -19,15 +19,12 @@ import org.w3c.dom.Element;
  * renderXml() on each enabled section in @Order sequence.
  * Implementing directly (without TypedSection) is valid for sections that don't
  * fit the gather-then-render flow.
- *
- * TODO: BillingSection — stub activation check wired, data gathering pending billing module integration
- * TODO: MedicationsSection, LabResultsSection, ConditionsSection — to be implemented
  */
 public interface VisitSummarySection {
 
 	/**
-	 * Unique key — used as the global-property config suffix (e.g. "vitals").
-	 * Must be lowercase and contain no dots.
+	 * Unique key — used as the global-property config suffix (e.g. "vitals", "facilityHeader").
+	 * Must not contain dots.
 	 */
 	String getSectionKey();
 
@@ -41,7 +38,8 @@ public interface VisitSummarySection {
 	/**
 	 * Build this section's XML elements into the document.
 	 * The Visit gives access to both the visit and its patient via visit.getPatient().
-	 * Implementations must not throw — swallow exceptions and produce no output instead.
+	 * Implementations should handle exceptions gracefully. 
+	 * TypedSection renders a section-error element on failure for clinical safety visibility.
 	 */
 	void renderXml(Document doc, Element root, Visit visit);
 }

@@ -49,7 +49,11 @@ public abstract class TypedSection<T> extends AbstractVisitSummarySection {
 			}
 		}
 		catch (Exception e) {
-			log.warn("Section '{}' failed to render; skipping", getSectionKey(), e);
+			log.error("Section '{}' failed to render", getSectionKey(), e);
+			Element errorEl = doc.createElement("section-error");
+			errorEl.setAttribute("key", getSectionKey());
+			errorEl.setAttribute("message", "Unable to load data for this section");
+			root.appendChild(errorEl);
 		}
 	}
 }

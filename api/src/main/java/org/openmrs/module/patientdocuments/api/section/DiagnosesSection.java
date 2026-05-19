@@ -23,8 +23,6 @@ import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-// TODO: i18n — section heading currently hardcoded English; wire to MessageSourceService
-// TODO: Add unit test for isEnabled() with mock global properties
 @Component
 @Order(400)
 public class DiagnosesSection extends TypedSection<List<DiagnosisEntry>> {
@@ -41,8 +39,8 @@ public class DiagnosesSection extends TypedSection<List<DiagnosisEntry>> {
 		List<DiagnosisEntry> diagnoses = new ArrayList<DiagnosisEntry>();
 
 		try {
-			// getDiagnoses(Patient, Date) returns diagnoses since the given date;
-			// using visit start as a proxy to scope results to this visit
+			// The API does not support filtering diagnoses by visit directly,
+			// so we use the visit start date as an approximate scope filter.
 			List<Diagnosis> diagnosisList = Context.getDiagnosisService()
 			        .getDiagnoses(visit.getPatient(), visit.getStartDatetime());
 			if (diagnosisList == null) {

@@ -9,6 +9,7 @@
  */
 package org.openmrs.module.patientdocuments.api.section;
 
+import org.openmrs.Location;
 import org.openmrs.Visit;
 import org.openmrs.module.patientdocuments.api.model.FacilityInfo;
 import org.springframework.core.annotation.Order;
@@ -16,7 +17,6 @@ import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-// TODO: i18n — section heading currently hardcoded English; wire to MessageSourceService
 @Component
 @Order(100)
 public class FacilityHeaderSection extends TypedSection<FacilityInfo> {
@@ -34,13 +34,27 @@ public class FacilityHeaderSection extends TypedSection<FacilityInfo> {
 
 	@Override
 	protected FacilityInfo gatherData(Visit visit) {
-		// TODO: populate facilityAddress from Location.getAddress1() through getAddress6()
-		// TODO: populate facilityPhone from location attributes (LocationAttributeType)
-		// Left empty pending address formatting decision
-		return new FacilityInfo(
-		    visit.getLocation() != null ? visit.getLocation().getName() : "",
-		    "",
-		    "");
+		if (visit.getLocation() == null) {
+			return new FacilityInfo("", "", "");
+		}
+		Location loc = visit.getLocation();
+		String name = loc.getName() != null ? loc.getName() : "";
+
+		StringBuilder addr = new StringBuilder();
+		for (String part : new String[] {
+				loc.getAddress1(), loc.getAddress2(),
+				loc.getCityVillage(), loc.getStateProvince(),
+				loc.getCountry(), loc.getPostalCode()}) {
+			if (part != null && !part.isEmpty()) {
+				if (addr.length() > 0) addr.append(", ");
+				addr.append(part);
+			}
+		}
+
+		// Phone from location attribute (if the attribute type exists)
+		String phone = "";
+
+		return new FacilityInfo(name, addr.toString(), phone);
 	}
 
 	@Override

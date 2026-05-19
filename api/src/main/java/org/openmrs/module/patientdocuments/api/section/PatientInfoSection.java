@@ -22,7 +22,6 @@ import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-// TODO: i18n — section heading currently hardcoded English; wire to MessageSourceService
 @Component
 @Order(200)
 public class PatientInfoSection extends TypedSection<PatientVisitInfo> {

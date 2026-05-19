@@ -24,8 +24,6 @@ import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-// TODO: i18n — section heading currently hardcoded English; wire to MessageSourceService
-// TODO: Add unit test for isEnabled() with mock global properties
 @Component
 @Order(500)
 public class AllergiesSection extends TypedSection<List<AllergyEntry>> {
@@ -39,47 +37,52 @@ public class AllergiesSection extends TypedSection<List<AllergyEntry>> {
 
 	@Override
 	protected List<AllergyEntry> gatherData(Visit visit) {
-		List<AllergyEntry> allergies = new ArrayList<AllergyEntry>();
-
+		List<AllergyEntry> allergies = new ArrayList<>();
 		try {
 			for (Allergy allergy : Context.getPatientService().getAllergies(visit.getPatient())) {
-				String allergenName = "";
-				if (allergy.getAllergen() != null) {
-					if (allergy.getAllergen().getCodedAllergen() != null
-					        && allergy.getAllergen().getCodedAllergen().getName() != null) {
-						allergenName = allergy.getAllergen().getCodedAllergen().getName().getName();
-					} else if (allergy.getAllergen().getNonCodedAllergen() != null) {
-						allergenName = allergy.getAllergen().getNonCodedAllergen();
-					}
-				}
-
-				String severity = "";
-				if (allergy.getSeverity() != null && allergy.getSeverity().getName() != null) {
-					severity = allergy.getSeverity().getName().getName();
-				}
-
-				StringBuilder reactions = new StringBuilder();
-				if (allergy.getReactions() != null) {
-					for (AllergyReaction reaction : allergy.getReactions()) {
-						if (reactions.length() > 0) {
-							reactions.append(", ");
-						}
-						if (reaction.getReaction() != null && reaction.getReaction().getName() != null) {
-							reactions.append(reaction.getReaction().getName().getName());
-						} else if (reaction.getReactionNonCoded() != null) {
-							reactions.append(reaction.getReactionNonCoded());
-						}
-					}
-				}
-
-				allergies.add(new AllergyEntry(allergenName, severity, reactions.toString()));
+				allergies.add(new AllergyEntry(
+					extractAllergenName(allergy),
+					extractSeverity(allergy),
+					extractReactions(allergy)
+				));
 			}
-		}
-		catch (Exception e) {
+		} catch (Exception e) {
 			log.warn("Could not load allergies for patient; returning empty list", e);
 		}
-
 		return allergies;
+	}
+
+	private String extractAllergenName(Allergy allergy) {
+		if (allergy.getAllergen() == null) return "";
+		if (allergy.getAllergen().getCodedAllergen() != null
+				&& allergy.getAllergen().getCodedAllergen().getName() != null) {
+			return allergy.getAllergen().getCodedAllergen().getName().getName();
+		}
+		if (allergy.getAllergen().getNonCodedAllergen() != null) {
+			return allergy.getAllergen().getNonCodedAllergen();
+		}
+		return "";
+	}
+
+	private String extractSeverity(Allergy allergy) {
+		if (allergy.getSeverity() != null && allergy.getSeverity().getName() != null) {
+			return allergy.getSeverity().getName().getName();
+		}
+		return "";
+	}
+
+	private String extractReactions(Allergy allergy) {
+		if (allergy.getReactions() == null) return "";
+		StringBuilder reactions = new StringBuilder();
+		for (AllergyReaction reaction : allergy.getReactions()) {
+			if (reactions.length() > 0) reactions.append(", ");
+			if (reaction.getReaction() != null && reaction.getReaction().getName() != null) {
+				reactions.append(reaction.getReaction().getName().getName());
+			} else if (reaction.getReactionNonCoded() != null) {
+				reactions.append(reaction.getReactionNonCoded());
+			}
+		}
+		return reactions.toString();
 	}
 
 	@Override

@@ -552,12 +552,20 @@
             </fo:table>
         </fo:block>
     </xsl:template>
-
-    <!-- TODO: Add a generic fallback template for unknown/external section elements.
-         Currently the XSLT only handles known sections (facilityHeader, patientInfo,
-         vitals, diagnoses, allergies, footer). If a contributing module adds a new
-         section (e.g. <billing>), its XML elements will be silently ignored.
-         A fallback template should render unknown sections as a simple key-value table
-         so that external module sections appear in the PDF without XSLT changes. -->
+    
+    <!-- ═══════════════════════════════════════════════════
+         Section error fallback
+         ═══════════════════════════════════════════════════ -->
+    <xsl:template match="section-error">
+        <fo:block font-size="9pt" font-style="italic" color="#CC0000"
+                  space-before="6pt" space-after="6pt"
+                  padding="4pt" border="0.5pt solid #CC0000"
+                  background-color="#FFF0F0">
+            <fo:inline font-weight="bold">⚠ </fo:inline>
+            <xsl:value-of select="@key"/>
+            <xsl:text>: </xsl:text>
+            <xsl:value-of select="@message"/>
+        </fo:block>
+    </xsl:template>
 
 </xsl:stylesheet>

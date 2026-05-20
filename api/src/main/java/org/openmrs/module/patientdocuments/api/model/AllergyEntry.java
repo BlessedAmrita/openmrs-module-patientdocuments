@@ -9,29 +9,14 @@
  */
 package org.openmrs.module.patientdocuments.api.model;
 
+import lombok.Value;
+
+@Value
 public class AllergyEntry {
 
-	private final String allergen;
+	String allergen;
 
-	private final String severity;
+	String severity;
 
-	private final String reactions;
-
-	public AllergyEntry(String allergen, String severity, String reactions) {
-		this.allergen = allergen;
-		this.severity = severity;
-		this.reactions = reactions;
-	}
-
-	public String getAllergen() {
-		return allergen;
-	}
-
-	public String getSeverity() {
-		return severity;
-	}
-
-	public String getReactions() {
-		return reactions;
-	}
+	String reactions;
 }

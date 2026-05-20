@@ -16,8 +16,6 @@ import org.openmrs.Diagnosis;
 import org.openmrs.Visit;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.patientdocuments.api.model.DiagnosisEntry;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
@@ -27,8 +25,6 @@ import org.w3c.dom.Element;
 @Order(400)
 public class DiagnosesSection extends TypedSection<List<DiagnosisEntry>> {
 
-	private static final Logger log = LoggerFactory.getLogger(DiagnosesSection.class);
-
 	@Override
 	public String getSectionKey() {
 		return "diagnoses";
@@ -36,33 +32,28 @@ public class DiagnosesSection extends TypedSection<List<DiagnosisEntry>> {
 
 	@Override
 	protected List<DiagnosisEntry> gatherData(Visit visit) {
-		List<DiagnosisEntry> diagnoses = new ArrayList<DiagnosisEntry>();
+		List<DiagnosisEntry> diagnoses = new ArrayList<>();
 
-		try {
-			// The API does not support filtering diagnoses by visit directly,
-			// so we use the visit start date as an approximate scope filter.
-			List<Diagnosis> diagnosisList = Context.getDiagnosisService()
-			        .getDiagnoses(visit.getPatient(), visit.getStartDatetime());
-			if (diagnosisList == null) {
-				return diagnoses;
-			}
-			for (Diagnosis diagnosis : diagnosisList) {
-				String name = "";
-				if (diagnosis.getDiagnosis() != null) {
-					if (diagnosis.getDiagnosis().getCoded() != null
-					        && diagnosis.getDiagnosis().getCoded().getName() != null) {
-						name = diagnosis.getDiagnosis().getCoded().getName().getName();
-					} else if (diagnosis.getDiagnosis().getNonCoded() != null) {
-						name = diagnosis.getDiagnosis().getNonCoded();
-					}
-				}
-				String certainty = diagnosis.getCertainty() != null ? diagnosis.getCertainty().name() : "";
-				String rank = diagnosis.getRank() != null ? String.valueOf(diagnosis.getRank()) : "";
-				diagnoses.add(new DiagnosisEntry(name, certainty, rank));
-			}
+		// The API does not support filtering diagnoses by visit directly,
+		// so we use the visit start date as an approximate scope filter.
+		List<Diagnosis> diagnosisList = Context.getDiagnosisService()
+		        .getDiagnoses(visit.getPatient(), visit.getStartDatetime());
+		if (diagnosisList == null) {
+			return diagnoses;
 		}
-		catch (Exception e) {
-			log.warn("Could not load diagnoses for visit; returning empty list", e);
+		for (Diagnosis diagnosis : diagnosisList) {
+			String name = "";
+			if (diagnosis.getDiagnosis() != null) {
+				if (diagnosis.getDiagnosis().getCoded() != null
+				        && diagnosis.getDiagnosis().getCoded().getName() != null) {
+					name = diagnosis.getDiagnosis().getCoded().getName().getName();
+				} else if (diagnosis.getDiagnosis().getNonCoded() != null) {
+					name = diagnosis.getDiagnosis().getNonCoded();
+				}
+			}
+			String certainty = diagnosis.getCertainty() != null ? diagnosis.getCertainty().name() : "";
+			String rank = diagnosis.getRank() != null ? String.valueOf(diagnosis.getRank()) : "";
+			diagnoses.add(new DiagnosisEntry(name, certainty, rank));
 		}
 
 		return diagnoses;

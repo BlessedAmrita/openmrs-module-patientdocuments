@@ -9,22 +9,12 @@
  */
 package org.openmrs.module.patientdocuments.api.model;
 
+import lombok.Value;
+
+@Value
 public class Vital {
 
-	private final String label;
+	String label;
 
-	private final String value;
-
-	public Vital(String label, String value) {
-		this.label = label;
-		this.value = value;
-	}
-
-	public String getLabel() {
-		return label;
-	}
-
-	public String getValue() {
-		return value;
-	}
+	String value;
 }

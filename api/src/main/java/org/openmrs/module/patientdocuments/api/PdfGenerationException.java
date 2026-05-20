@@ -7,28 +7,13 @@
  * Copyright (C) OpenMRS Inc. OpenMRS is a registered trademark and the OpenMRS
  * graphic logo is a trademark of OpenMRS Inc.
  */
-package org.openmrs.module.patientdocuments.api.model;
+package org.openmrs.module.patientdocuments.api;
 
-import lombok.Builder;
-import lombok.Value;
+public class PdfGenerationException extends RuntimeException {
 
-@Value
-@Builder
-public class PatientVisitInfo {
+	private static final long serialVersionUID = 1L;
 
-	String patientName;
-
-	String patientId;
-
-	String dateOfBirth;
-
-	String gender;
-
-	String visitDate;
-
-	String visitType;
-
-	String visitLocation;
-
-	String visitStopDate;
+	public PdfGenerationException(String message, Throwable cause) {
+		super(message, cause);
+	}
 }

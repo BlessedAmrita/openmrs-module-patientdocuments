@@ -37,6 +37,7 @@ import org.apache.fop.configuration.Configuration;
 import org.apache.fop.configuration.ConfigurationException;
 import org.apache.fop.configuration.DefaultConfigurationBuilder;
 import org.openmrs.api.context.Context;
+import org.openmrs.module.patientdocuments.api.PdfGenerationException;
 import org.openmrs.module.patientdocuments.common.PatientDocumentsConstants;
 import org.openmrs.module.patientdocuments.common.PatientDocumentsPrivilegeConstants;
 import org.openmrs.module.patientdocuments.library.VisitSummaryDataSetDefinition;
@@ -77,7 +78,7 @@ public class VisitSummaryPdfReport {
 		}
 		catch (Exception e) {
 			log.error("Failed to generate visit summary PDF for visit '{}'", visitUuid, e);
-			throw new RuntimeException("Failed to generate visit summary PDF for visit: " + visitUuid, e);
+			throw new PdfGenerationException("Failed to generate visit summary PDF for visit: " + visitUuid, e);
 		}
 	}
 

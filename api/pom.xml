@@ -12,6 +12,7 @@
 	<description>API project for Patient Documents</description>
 
 	<properties>
+		<lombokVersion>1.18.34</lombokVersion>
 		<fopVersion>2.9</fopVersion>
 		<pdfboxVersion>2.0.28</pdfboxVersion>
 		<avalonFrameworkVersion>4.3.1</avalonFrameworkVersion>
@@ -19,6 +20,13 @@
 	</properties>
 
 	<dependencies>
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<version>${lombokVersion}</version>
+			<scope>provided</scope>
+		</dependency>
+
 		<dependency>
 			<groupId>org.openmrs.module</groupId>
 			<artifactId>calculation-api</artifactId>

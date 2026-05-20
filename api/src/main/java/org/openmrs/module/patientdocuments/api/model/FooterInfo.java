@@ -9,29 +9,14 @@
  */
 package org.openmrs.module.patientdocuments.api.model;
 
+import lombok.Value;
+
+@Value
 public class FooterInfo {
 
-	private final String printedBy;
+	String printedBy;
 
-	private final String systemId;
+	String systemId;
 
-	private final String timestamp;
-
-	public FooterInfo(String printedBy, String systemId, String timestamp) {
-		this.printedBy = printedBy;
-		this.systemId = systemId;
-		this.timestamp = timestamp;
-	}
-
-	public String getPrintedBy() {
-		return printedBy;
-	}
-
-	public String getSystemId() {
-		return systemId;
-	}
-
-	public String getTimestamp() {
-		return timestamp;
-	}
+	String timestamp;
 }

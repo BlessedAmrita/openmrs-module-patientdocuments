@@ -9,29 +9,14 @@
  */
 package org.openmrs.module.patientdocuments.api.model;
 
+import lombok.Value;
+
+@Value
 public class DiagnosisEntry {
 
-	private final String name;
+	String name;
 
-	private final String certainty;
+	String certainty;
 
-	private final String rank;
-
-	public DiagnosisEntry(String name, String certainty, String rank) {
-		this.name = name;
-		this.certainty = certainty;
-		this.rank = rank;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public String getCertainty() {
-		return certainty;
-	}
-
-	public String getRank() {
-		return rank;
-	}
+	String rank;
 }

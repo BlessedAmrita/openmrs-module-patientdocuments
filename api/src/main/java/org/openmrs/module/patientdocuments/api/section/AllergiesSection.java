@@ -17,8 +17,6 @@ import org.openmrs.AllergyReaction;
 import org.openmrs.Visit;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.patientdocuments.api.model.AllergyEntry;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
@@ -28,8 +26,6 @@ import org.w3c.dom.Element;
 @Order(500)
 public class AllergiesSection extends TypedSection<List<AllergyEntry>> {
 
-	private static final Logger log = LoggerFactory.getLogger(AllergiesSection.class);
-
 	@Override
 	public String getSectionKey() {
 		return "allergies";
@@ -38,16 +34,12 @@ public class AllergiesSection extends TypedSection<List<AllergyEntry>> {
 	@Override
 	protected List<AllergyEntry> gatherData(Visit visit) {
 		List<AllergyEntry> allergies = new ArrayList<>();
-		try {
-			for (Allergy allergy : Context.getPatientService().getAllergies(visit.getPatient())) {
-				allergies.add(new AllergyEntry(
-					extractAllergenName(allergy),
-					extractSeverity(allergy),
-					extractReactions(allergy)
-				));
-			}
-		} catch (Exception e) {
-			log.warn("Could not load allergies for patient; returning empty list", e);
+		for (Allergy allergy : Context.getPatientService().getAllergies(visit.getPatient())) {
+			allergies.add(new AllergyEntry(
+			    extractAllergenName(allergy),
+			    extractSeverity(allergy),
+			    extractReactions(allergy)
+			));
 		}
 		return allergies;
 	}

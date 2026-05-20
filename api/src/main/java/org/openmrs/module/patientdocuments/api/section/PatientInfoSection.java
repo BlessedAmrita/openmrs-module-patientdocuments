@@ -40,19 +40,34 @@ public class PatientInfoSection extends TypedSection<PatientVisitInfo> {
 	@Override
 	protected PatientVisitInfo gatherData(Visit visit) {
 		Patient patient = visit.getPatient();
+		if (patient == null) {
+			return buildVisitInfo("", "", "", "", visit);
+		}
 
 		PersonName name = patient.getPersonName();
 		PatientIdentifier preferredId = patient.getPatientIdentifier();
 
-		return new PatientVisitInfo(
-		    name != null ? name.getFullName() : "",
-		    preferredId != null ? preferredId.getIdentifier() : "",
-		    patient.getBirthdate() != null ? formatDate(patient.getBirthdate()) : "",
-		    patient.getGender() != null ? patient.getGender() : "",
-		    visit.getStartDatetime() != null ? formatDate(visit.getStartDatetime()) : "",
-		    visit.getVisitType() != null ? visit.getVisitType().getName() : "",
-		    visit.getLocation() != null ? visit.getLocation().getName() : "",
-		    visit.getStopDatetime() != null ? formatDate(visit.getStopDatetime()) : "");
+		return buildVisitInfo(
+			name != null ? name.getFullName() : "",
+			preferredId != null ? preferredId.getIdentifier() : "",
+			patient.getBirthdate() != null ? formatDate(patient.getBirthdate()) : "",
+			patient.getGender() != null ? patient.getGender() : "",
+			visit
+		);
+	}
+
+	private PatientVisitInfo buildVisitInfo(String patientName, String patientId,
+			String dateOfBirth, String gender, Visit visit) {
+		return PatientVisitInfo.builder()
+			.patientName(patientName)
+			.patientId(patientId)
+			.dateOfBirth(dateOfBirth)
+			.gender(gender)
+			.visitDate(visit.getStartDatetime() != null ? formatDate(visit.getStartDatetime()) : "")
+			.visitType(visit.getVisitType() != null ? visit.getVisitType().getName() : "")
+			.visitLocation(visit.getLocation() != null ? visit.getLocation().getName() : "")
+			.visitStopDate(visit.getStopDatetime() != null ? formatDate(visit.getStopDatetime()) : "")
+			.build();
 	}
 
 	@Override

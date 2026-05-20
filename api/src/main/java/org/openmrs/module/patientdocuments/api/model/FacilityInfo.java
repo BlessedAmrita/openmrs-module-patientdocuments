@@ -9,29 +9,14 @@
  */
 package org.openmrs.module.patientdocuments.api.model;
 
+import lombok.Value;
+
+@Value
 public class FacilityInfo {
 
-	private final String facilityName;
+	String facilityName;
 
-	private final String facilityAddress;
+	String facilityAddress;
 
-	private final String facilityPhone;
-
-	public FacilityInfo(String facilityName, String facilityAddress, String facilityPhone) {
-		this.facilityName = facilityName;
-		this.facilityAddress = facilityAddress;
-		this.facilityPhone = facilityPhone;
-	}
-
-	public String getFacilityName() {
-		return facilityName;
-	}
-
-	public String getFacilityAddress() {
-		return facilityAddress;
-	}
-
-	public String getFacilityPhone() {
-		return facilityPhone;
-	}
+	String facilityPhone;
 }

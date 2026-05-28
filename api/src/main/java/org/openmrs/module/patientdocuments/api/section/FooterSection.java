@@ -16,14 +16,19 @@ import org.openmrs.User;
 import org.openmrs.Visit;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.patientdocuments.api.model.FooterInfo;
-import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 @Component
-@Order(900)
 public class FooterSection extends TypedSection<FooterInfo> {
+
+	private static final int DEFAULT_ORDER = 900;
+
+	@Override
+	protected int getDefaultOrder() {
+		return DEFAULT_ORDER;
+	}
 
 	@Override
 	public String getSectionKey() {

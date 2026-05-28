@@ -12,14 +12,19 @@ package org.openmrs.module.patientdocuments.api.section;
 import org.openmrs.Location;
 import org.openmrs.Visit;
 import org.openmrs.module.patientdocuments.api.model.FacilityInfo;
-import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 @Component
-@Order(100)
 public class FacilityHeaderSection extends TypedSection<FacilityInfo> {
+
+	private static final int DEFAULT_ORDER = 100;
+
+	@Override
+	protected int getDefaultOrder() {
+		return DEFAULT_ORDER;
+	}
 
 	@Override
 	public String getSectionKey() {

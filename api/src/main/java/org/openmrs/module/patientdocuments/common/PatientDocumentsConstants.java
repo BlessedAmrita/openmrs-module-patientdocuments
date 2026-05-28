@@ -51,6 +51,8 @@ public class PatientDocumentsConstants {
 
 	public static final String ENCOUNTER_PRINTING_LOGO_PATH_KEY = "report.encounterPrinting.logopath";
 
+	public static final String VISIT_SUMMARY_SECTION_PREFIX = "report.visitSummary.section.";
+
 	public static final String NO_DATA_RECORDED_PLACEHOLDER = "No data recorded";
 
 	public static final String MISSING_VALUE_PLACEHOLDER = "-";

@@ -17,14 +17,19 @@ import org.openmrs.PatientIdentifier;
 import org.openmrs.PersonName;
 import org.openmrs.Visit;
 import org.openmrs.module.patientdocuments.api.model.PatientVisitInfo;
-import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 @Component
-@Order(200)
 public class PatientInfoSection extends TypedSection<PatientVisitInfo> {
+
+	private static final int DEFAULT_ORDER = 200;
+
+	@Override
+	protected int getDefaultOrder() {
+		return DEFAULT_ORDER;
+	}
 
 	@Override
 	public String getSectionKey() {

@@ -16,14 +16,19 @@ import org.openmrs.Diagnosis;
 import org.openmrs.Visit;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.patientdocuments.api.model.DiagnosisEntry;
-import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 @Component
-@Order(400)
 public class DiagnosesSection extends TypedSection<List<DiagnosisEntry>> {
+
+	private static final int DEFAULT_ORDER = 400;
+
+	@Override
+	protected int getDefaultOrder() {
+		return DEFAULT_ORDER;
+	}
 
 	@Override
 	public String getSectionKey() {

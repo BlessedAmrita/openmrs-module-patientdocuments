@@ -38,6 +38,7 @@ import org.apache.fop.configuration.ConfigurationException;
 import org.apache.fop.configuration.DefaultConfigurationBuilder;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.patientdocuments.api.PdfGenerationException;
+import org.openmrs.util.ConfigUtil;
 import org.openmrs.module.patientdocuments.common.PatientDocumentsConstants;
 import org.openmrs.module.patientdocuments.common.PatientDocumentsPrivilegeConstants;
 import org.openmrs.module.patientdocuments.library.VisitSummaryDataSetDefinition;
@@ -121,12 +122,8 @@ public class VisitSummaryPdfReport {
 	}
 
 	private String getStylesheetName() {
-		String stylesheetName = Context.getAdministrationService()
-		        .getGlobalProperty("report.visitSummary.stylesheet", "");
-		if (stylesheetName == null || stylesheetName.isEmpty()) {
-			stylesheetName = PatientDocumentsConstants.VISIT_SUMMARY_XSL_PATH;
-		}
-		return stylesheetName;
+		return ConfigUtil.getProperty(
+		    "report.visitSummary.stylesheet", PatientDocumentsConstants.VISIT_SUMMARY_XSL_PATH);
 	}
 
 	private InputStream getXslInputStream(String stylesheetName) throws IOException {

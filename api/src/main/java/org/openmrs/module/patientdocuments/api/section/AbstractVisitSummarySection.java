@@ -9,47 +9,73 @@
  */
 package org.openmrs.module.patientdocuments.api.section;
 
-import org.openmrs.api.context.Context;
+import org.openmrs.module.patientdocuments.common.PatientDocumentsConstants;
+import org.openmrs.util.ConfigUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 /**
- * Convenience base for sections that read their enabled flag from a global property.
- * At runtime we read from global properties via AdministrationService — NOT InitializerService.
+ * Convenience base for sections that read their enabled flag and render order
+ * from global properties via ConfigUtil.
  */
 public abstract class AbstractVisitSummarySection implements VisitSummarySection {
-
-	/**
-	 * Reads a boolean from the global properties table.
-	 */
 
 	private static final Logger log = LoggerFactory.getLogger(AbstractVisitSummarySection.class);
 
 	protected boolean isConfigEnabled(String globalPropertyKey, boolean defaultValue) {
-		String value = Context.getAdministrationService()
-				.getGlobalProperty(globalPropertyKey, String.valueOf(defaultValue));
-		
-		if ("true".equalsIgnoreCase(value != null ? value.trim() : "")) {
-			return true;
+		String value = ConfigUtil.getProperty(globalPropertyKey);
+		if (value != null) {
+			value = value.trim();
+			if ("true".equalsIgnoreCase(value)) {
+				return true;
+			} else if ("false".equalsIgnoreCase(value)) {
+				return false;
+			}
+			log.info("Global property '{}' has invalid value '{}'; defaulting to {}",
+					globalPropertyKey, value, defaultValue);
 		}
-		if ("false".equalsIgnoreCase(value != null ? value.trim() : "")) {
-			return false;
-		}
-		// Value is neither "true" nor "false" 
-		log.warn("Global property '{}' has invalid boolean value '{}'; defaulting to {}",
-				globalPropertyKey, value, defaultValue);
 		return defaultValue;
 	}
 
 	/**
-	 * Default: reads documents.section.&lt;key&gt;.enabled (defaults to true).
+	 * Returns the default integer order for this section.
+	 * Subclasses override this to return their section-specific constant.
+	 * Falls through to Integer.MAX_VALUE so unknown/test sections sort last.
+	 */
+	protected int getDefaultOrder() {
+		return Integer.MAX_VALUE;
+	}
+
+	/**
+	 * Reads the render position from
+	 * report.visitSummary.section.&lt;sectionKey&gt;.order, falling back to
+	 * getDefaultOrder(). Invalid (non-integer) values are logged and ignored.
+	 */
+	@Override
+	public int getOrder() {
+		String key = PatientDocumentsConstants.VISIT_SUMMARY_SECTION_PREFIX + getSectionKey() + ".order";
+		String defaultStr = String.valueOf(getDefaultOrder());
+		String valueStr = ConfigUtil.getProperty(key, defaultStr);
+		try {
+			return Integer.parseInt(valueStr.trim());
+		}
+		catch (NumberFormatException e) {
+			log.info("Global property '{}' has invalid value '{}'; defaulting to {}",
+					key, valueStr, getDefaultOrder());
+			return getDefaultOrder();
+		}
+	}
+
+	/**
+	 * Reads report.visitSummary.section.&lt;sectionKey&gt;.enabled (defaults true).
 	 * Override in subclasses that need additional checks (e.g. ModuleFactory for billing).
 	 */
 	@Override
 	public boolean isEnabled() {
-		return isConfigEnabled("documents.section." + getSectionKey() + ".enabled", true);
+		return isConfigEnabled(
+				PatientDocumentsConstants.VISIT_SUMMARY_SECTION_PREFIX + getSectionKey() + ".enabled", true);
 	}
 
 	protected void addTextElement(Document doc, Element parent, String tag, String value) {

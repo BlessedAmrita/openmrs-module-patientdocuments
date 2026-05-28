@@ -17,14 +17,19 @@ import org.openmrs.AllergyReaction;
 import org.openmrs.Visit;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.patientdocuments.api.model.AllergyEntry;
-import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 @Component
-@Order(500)
 public class AllergiesSection extends TypedSection<List<AllergyEntry>> {
+
+	private static final int DEFAULT_ORDER = 500;
+
+	@Override
+	protected int getDefaultOrder() {
+		return DEFAULT_ORDER;
+	}
 
 	@Override
 	public String getSectionKey() {

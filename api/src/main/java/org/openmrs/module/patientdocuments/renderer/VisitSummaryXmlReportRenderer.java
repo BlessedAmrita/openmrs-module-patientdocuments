@@ -9,11 +9,12 @@
  */
 package org.openmrs.module.patientdocuments.renderer;
 
-import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.openmrs.module.patientdocuments.reports.VisitSummaryReportManager.DATASET_KEY_VISIT_SUMMARY_FIELDS;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -30,8 +31,8 @@ import javax.xml.transform.stream.StreamResult;
 
 import org.openmrs.Visit;
 import org.openmrs.annotation.Handler;
-import org.openmrs.api.context.Context;
 import org.openmrs.module.patientdocuments.api.section.VisitSummarySection;
+import org.openmrs.util.ConfigUtil;
 import org.openmrs.module.reporting.common.Localized;
 import org.openmrs.module.reporting.dataset.DataSet;
 import org.openmrs.module.reporting.dataset.DataSetRow;
@@ -46,8 +47,9 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 /**
- * ReportRenderer that iterates enabled sections in @Order sequence,
- * delegating all XML construction to each section's renderXml().
+ * ReportRenderer that iterates enabled sections sorted by each section's
+ * configurable getOrder() value, delegating all XML construction to each
+ * section's renderXml().
  */
 @Component
 @Handler
@@ -105,7 +107,9 @@ public class VisitSummaryXmlReportRenderer extends ReportDesignRenderer {
 
 	private void buildXmlFromVisit(Document doc, Element root, Visit visit) {
 		if (sections != null) {
-			for (VisitSummarySection section : sections) {
+			List<VisitSummarySection> ordered = new ArrayList<>(sections);
+			ordered.sort(Comparator.comparingInt(VisitSummarySection::getOrder));
+			for (VisitSummarySection section : ordered) {
 				if (section.isEnabled()) {
 					section.renderXml(doc, root, visit);
 				}
@@ -114,12 +118,10 @@ public class VisitSummaryXmlReportRenderer extends ReportDesignRenderer {
 	}
 
 	private void configurePageDimensions(Element root) {
-		String pageHeight = Context.getAdministrationService()
-		        .getGlobalProperty("report.visitSummary.size.height", "297mm");
-		String pageWidth = Context.getAdministrationService()
-		        .getGlobalProperty("report.visitSummary.size.width", "210mm");
-		root.setAttribute("page-height", isNotBlank(pageHeight) ? pageHeight : "297mm");
-		root.setAttribute("page-width", isNotBlank(pageWidth) ? pageWidth : "210mm");
+		String pageHeight = ConfigUtil.getProperty("report.visitSummary.size.height", "297mm");
+		String pageWidth = ConfigUtil.getProperty("report.visitSummary.size.width", "210mm");
+		root.setAttribute("page-height", pageHeight);
+		root.setAttribute("page-width", pageWidth);
 	}
 
 	private void writeToOutputStream(Document doc, OutputStream out) throws RenderingException {

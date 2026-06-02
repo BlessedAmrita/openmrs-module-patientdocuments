@@ -91,7 +91,7 @@ public class VisitSummaryPdfReport {
 		DataSet dataSet = evaluator.evaluate(dsd, context);
 
 		ReportData reportData = new ReportData();
-		Map<String, DataSet> dataSets = new HashMap<String, DataSet>();
+		Map<String, DataSet> dataSets = new HashMap<>();
 		dataSets.put(VisitSummaryReportManager.DATASET_KEY_VISIT_SUMMARY_FIELDS, dataSet);
 		reportData.setDataSets(dataSets);
 

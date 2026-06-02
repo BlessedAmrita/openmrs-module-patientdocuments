@@ -61,7 +61,7 @@ public class VisitSummaryPdfExportController extends BaseRestController {
 			headers.add("Content-Disposition", disposition + "; filename=\"" + VISIT_SUMMARY_ID + ".pdf\"");
 			headers.setContentLength(pdfBytes.length);
 
-			return new ResponseEntity<byte[]>(pdfBytes, headers, HttpStatus.OK);
+			return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
 		}
 		catch (APIAuthenticationException e) {
 			logger.warn("Privilege check failed for visit summary PDF request: {}", e.getMessage());

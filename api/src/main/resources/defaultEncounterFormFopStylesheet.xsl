@@ -202,20 +202,23 @@
     </xsl:template>
 
     <xsl:template match="page">
-        <fo:block keep-together.within-page="always" margin-bottom="5mm">
+        <fo:block margin-bottom="5mm">
             <xsl:if test="@label">
-                <fo:block font-size="13pt" font-weight="bold" color="#005f87" margin-top="4mm" margin-bottom="2mm" border-bottom="0.5pt solid #005f87">
+                <fo:block font-size="13pt" font-weight="bold" color="#005f87" margin-top="4mm" margin-bottom="2mm"
+                          border-bottom="0.5pt solid #005f87" keep-with-next.within-page="always">
                     <xsl:value-of select="@label"/>
                 </fo:block>
             </xsl:if>
 
-            <xsl:apply-templates select="section"/> </fo:block>
+            <xsl:apply-templates select="section"/>
+        </fo:block>
     </xsl:template>
 
     <xsl:template match="section">
         <fo:block margin-left="2mm" margin-bottom="4mm">
             <xsl:if test="@label != ''">
-                <fo:block font-size="11pt" font-weight="bold" background-color="#eef" padding="1mm" margin-bottom="2mm">
+                <fo:block font-size="11pt" font-weight="bold" background-color="#eef" padding="1mm" margin-bottom="2mm"
+                          keep-with-next.within-page="always">
                     <xsl:value-of select="@label"/>
                 </fo:block>
             </xsl:if>

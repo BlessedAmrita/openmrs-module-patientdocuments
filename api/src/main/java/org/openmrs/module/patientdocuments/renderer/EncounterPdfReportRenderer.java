@@ -26,6 +26,8 @@ import org.openmrs.module.reporting.report.ReportData;
 import org.openmrs.module.reporting.report.ReportRequest;
 import org.openmrs.module.reporting.report.renderer.RenderingException;
 import org.openmrs.module.reporting.report.renderer.ReportDesignRenderer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import javax.xml.XMLConstants;
@@ -35,11 +37,14 @@ import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.sax.SAXResult;
 import javax.xml.transform.stream.StreamSource;
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.StringReader;
 import java.net.URI;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -47,6 +52,8 @@ import java.util.Locale;
 @Component
 @Handler
 public class EncounterPdfReportRenderer extends ReportDesignRenderer {
+
+	private static final Logger log = LoggerFactory.getLogger(EncounterPdfReportRenderer.class);
 
 	@Override
 	public String getFilename(ReportRequest request) {
@@ -99,10 +106,11 @@ public class EncounterPdfReportRenderer extends ReportDesignRenderer {
 		FOUserAgent foUserAgent = fopFactory.newFOUserAgent();
 		Fop fop = fopFactory.newFop(MimeConstants.MIME_PDF, foUserAgent, outStream);
 
-		String stylesheetName = getStylesheetName();
-		try (InputStream xslStream = Helper.getInputStreamByResource(stylesheetName)) {
+		try (InputStream xslStream = getStylesheetStream()) {
 			if (xslStream == null) {
-				throw new FileNotFoundException("Stylesheet not found at " + stylesheetName);
+				throw new FileNotFoundException(
+						"Default stylesheet not found on classpath: "
+								+ PatientDocumentsConstants.DEFAULT_ENCOUNTER_FORM_XSL_PATH);
 			}
 
 			TransformerFactory factory = TransformerFactory.newInstance();
@@ -115,11 +123,26 @@ public class EncounterPdfReportRenderer extends ReportDesignRenderer {
 		}
 	}
 
-	private String getStylesheetName() {
-		String stylesheetName = Context.getService(InitializerService.class).getValueFromKey(PatientDocumentsConstants.ENCOUNTER_PRINTING_STYLESHEET_KEY);
-		if (StringUtils.isBlank(stylesheetName)) {
-			stylesheetName = PatientDocumentsConstants.DEFAULT_ENCOUNTER_FORM_XSL_PATH;
+	InputStream getStylesheetStream() throws IOException {
+		return getStylesheetStream(getConfiguredStylesheetPath());
+	}
+
+	InputStream getStylesheetStream(String path) throws IOException {
+		if (StringUtils.isNotBlank(path)) {
+			File stylesheetFile = Helper.getFileFromAppDataDir(path);
+			if (stylesheetFile != null && stylesheetFile.isFile() && stylesheetFile.canRead()) {
+				return Files.newInputStream(stylesheetFile.toPath());
+			}
+			log.warn("Configured encounter printing stylesheet '{}' was not found in the OpenMRS "
+					+ "application data directory; falling back to the default bundled stylesheet.",
+					path);
 		}
-		return stylesheetName;
+
+		return Helper.getInputStreamByResource(PatientDocumentsConstants.DEFAULT_ENCOUNTER_FORM_XSL_PATH);
+	}
+
+	private String getConfiguredStylesheetPath() {
+		return Context.getService(InitializerService.class)
+				.getValueFromKey(PatientDocumentsConstants.ENCOUNTER_PRINTING_STYLESHEET_PATH_KEY);
 	}
 }

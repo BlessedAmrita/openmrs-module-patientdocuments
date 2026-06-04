@@ -26,6 +26,7 @@ import org.openmrs.api.context.Context;
 import org.openmrs.messagesource.MessageSourceService;
 import org.openmrs.module.initializer.api.InitializerService;
 import org.openmrs.module.o3forms.api.O3FormsService;
+import org.openmrs.module.patientdocuments.common.Helper;
 import org.openmrs.module.patientdocuments.common.PatientDocumentsConstants;
 import org.openmrs.module.webservices.rest.SimpleObject;
 import org.openmrs.util.OpenmrsUtil;
@@ -34,11 +35,10 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -52,6 +52,10 @@ public class EncounterXmlBuilder {
 	private static final String QUESTION_OPTIONS_SECTION = "questionOptions";
 
 	private static final String QUESTIONS_SECTION = "questions";
+
+	private static final String ANSWERS_FIELD = "answers";
+
+	private static final String CONCEPT_FIELD = "concept";
 
 	private static final String LABEL_FIELD = "label";
 
@@ -72,8 +76,8 @@ public class EncounterXmlBuilder {
 			return null;
 		}
 
-		File logoFile = resolveSecureLogoPath(logoPath);
-		if (logoFile == null || !logoFile.exists() || !logoFile.canRead() || !logoFile.isFile()) {
+		File logoFile = Helper.getFileFromAppDataDir(logoPath);
+		if (logoFile == null || !logoFile.isFile() || !logoFile.canRead()) {
 			return null;
 		}
 
@@ -87,40 +91,6 @@ public class EncounterXmlBuilder {
 		}
 
 		return null;
-	}
-
-	private File resolveSecureLogoPath(String logoUrlPath) {
-		if (StringUtils.isBlank(logoUrlPath)) {
-			return null;
-		}
-
-		final File appDataDir = OpenmrsUtil.getApplicationDataDirectoryAsFile();
-		try {
-			final Path appDataPath = appDataDir.toPath().toRealPath();
-			final Path logoPath = Paths.get(logoUrlPath);
-
-			if (logoPath.isAbsolute()) {
-				return null;
-			}
-
-			final Path logoAbsolutePath = logoPath.toAbsolutePath();
-			final Path logoNormalizedPath = logoAbsolutePath.normalize();
-
-			if (!logoAbsolutePath.equals(logoNormalizedPath)) {
-				return null;
-			}
-
-			final Path resolvedLogoPath = appDataPath.resolve(logoUrlPath).normalize();
-			final Path resolvedLogoRealPath = resolvedLogoPath.toRealPath();
-
-			if (!resolvedLogoRealPath.startsWith(appDataPath)) {
-				return null;
-			}
-
-			return resolvedLogoRealPath.toFile();
-		} catch (IllegalArgumentException | IOException e) {
-			return null;
-		}
 	}
 
 	public String build(EncounterPrintingContext printingContext) {
@@ -399,7 +369,19 @@ public class EncounterXmlBuilder {
 			return null;
 		}
 		Map<String, Object> options = (Map<String, Object>) question.get(QUESTION_OPTIONS_SECTION);
-		return (String) options.get("concept");
+		return (String) options.get(CONCEPT_FIELD);
+	}
+
+	private List<Map<String, Object>> extractAnswers(Map<String, Object> question) {
+		Object optionsObj = question.get(QUESTION_OPTIONS_SECTION);
+		if (!(optionsObj instanceof Map)) {
+			return Collections.emptyList();
+		}
+		Object answersObj = ((Map<String, Object>) optionsObj).get(ANSWERS_FIELD);
+		if (answersObj instanceof List) {
+			return (List<Map<String, Object>>) answersObj;
+		}
+		return Collections.emptyList();
 	}
 
 	private String formatValueAsText(Object value) {
@@ -426,7 +408,7 @@ public class EncounterXmlBuilder {
 		}
 
 		return observations.stream()
-				.map(obs -> getLocalizedObsValue(obs, locale))
+				.map(obs -> getLocalizedObsValue(question, obs, locale))
 				.collect(Collectors.joining(", "));
 	}
 
@@ -434,8 +416,13 @@ public class EncounterXmlBuilder {
 		return StringEscapeUtils.escapeXml10(StringUtils.defaultString(input));
 	}
 
-	private String getLocalizedObsValue(Obs obs, Locale locale) {
+	private String getLocalizedObsValue(Map<String, Object> question, Obs obs, Locale locale) {
 		if (obs.getValueCoded() != null) {
+			String answerLabel = findAnswerLabel(question, obs.getValueCoded().getUuid(), locale);
+			if (StringUtils.isNotBlank(answerLabel)) {
+				return answerLabel;
+			}
+
 			ConceptName localizedName = obs.getValueCoded().getName(locale);
 			if (localizedName != null) {
 				return localizedName.getName();
@@ -446,7 +433,40 @@ public class EncounterXmlBuilder {
 		return obs.getValueAsString(locale);
 	}
 
+	private String findAnswerLabel(Map<String, Object> question, String obsConceptUuid, Locale locale) {
+		for (Map<String, Object> answer : extractAnswers(question)) {
+			String answerConceptRef = (String) answer.get(CONCEPT_FIELD);
+			if (StringUtils.isBlank(answerConceptRef)) {
+				continue;
+			}
+			if (answerMatchesConcept(answerConceptRef, obsConceptUuid)) {
+				String answerLabel = (String) answer.get(LABEL_FIELD);
+				return StringUtils.isNotBlank(answerLabel) ? getLocalizedLabel(answerLabel, null, locale) : null;
+			}
+		}
+		return null;
+	}
+
+	private boolean answerMatchesConcept(String answerConceptRef, String obsConceptUuid) {
+		if (answerConceptRef.equals(obsConceptUuid)) {
+			return true;
+		}
+		Concept answerConcept = getConceptService().getConceptByReference(answerConceptRef);
+		return answerConcept != null && answerConcept.getUuid().equals(obsConceptUuid);
+	}
+
 	private String getLocalizedLabel(String defaultLabel, String conceptRef, Locale locale) {
+		if (StringUtils.isNotBlank(defaultLabel)) {
+			try {
+				String translated = getMessageSourceService().getMessage(defaultLabel, null, locale);
+				if (StringUtils.isNotBlank(translated) && !translated.equals(defaultLabel)) {
+					return translated;
+				}
+			} catch (Exception ignored) {
+			}
+			return defaultLabel;
+		}
+
 		if (StringUtils.isNotBlank(conceptRef)) {
 			Concept concept = getConceptService().getConceptByReference(conceptRef);
 			if (concept != null) {
@@ -457,17 +477,7 @@ public class EncounterXmlBuilder {
 			}
 		}
 
-		if (StringUtils.isNotBlank(defaultLabel)) {
-			try {
-				String translated = getMessageSourceService().getMessage(defaultLabel, null, locale);
-				if (StringUtils.isNotBlank(translated) && !translated.equals(defaultLabel)) {
-					return translated;
-				}
-			} catch (Exception ignored) {
-			}
-		}
-
-		return defaultLabel;
+		return "";
 	}
 
 	private MessageSourceService getMessageSourceService() {

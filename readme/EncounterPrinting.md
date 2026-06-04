@@ -57,7 +57,9 @@ Configuration for the XSL stylesheet used to render the PDF.
 
 | Key | Description |
 |-----|-------------|
-| `report.encounterPrinting.stylesheet` | XSL stylesheet filename to use for rendering (e.g., `defaultEncounterFormFopStylesheet.xsl`) |
+| `report.encounterPrinting.stylesheetPath` | Path to a custom XSL stylesheet, relative to `OPENMRS_APPLICATION_DATA_DIRECTORY`. Drop the `.xsl` file anywhere inside the OpenMRS data folder and point this config at it - no module rebuild required. If the configured file is missing, unreadable, or escapes the data directory (path traversal), the module falls back to the bundled `defaultEncounterFormFopStylesheet.xsl`. |
+
+**Note:** Path traversal sequences (`..`) and absolute paths are rejected.
 
 ### Logo
 Configuration for logo element in the PDF.
@@ -86,7 +88,7 @@ Configuration for logo element in the PDF.
     "report.encounterPrinting.header.visitAttributes": "true",
     "report.encounterPrinting.header.visitAttributeTypes": "Payment Method",
     "report.encounterPrinting.footer.customText": "Organization Name",
-    "report.encounterPrinting.stylesheet": "defaultEncounterFormFopStylesheet.xsl",
+    "report.encounterPrinting.stylesheetPath": "printing/customEncounterFormFopStylesheet.xsl",
     "report.encounterPrinting.logopath": "branding/logo.png"
 }
 ```

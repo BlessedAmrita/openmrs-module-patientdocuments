@@ -1,0 +1,97 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!--
+    Test dataset for DiagnosesSectionTest.
+    Diagnoses are stored in the encounter_diagnosis table (PK: diagnosis_id).
+    getDiagnosesByVisit() filters via "d.encounter.visit.visitId = :visitId",
+    so no visit_id column is needed on encounter_diagnosis itself.
+
+    Concept IDs 6001-6003 to avoid conflicts with vitalsSectionTestDataset (5001-5009).
+    Visit/encounter/diagnosis IDs 201+ to avoid conflicts with vitals IDs (101-106).
+    The rank column was renamed to dx_rank in OpenMRS 2.5.x (MySQL 8 reserved word).
+
+    Visit 201 — Malaria (CONFIRMED, dx_rank=1) + Anemia (PROVISIONAL, dx_rank=2)
+    Visit 202 — Hypertension (CONFIRMED, dx_rank=1)
+    Visit 203 — encounter with no diagnoses (empty-list test)
+    Visit 204 — no encounters (empty-list test)
+-->
+<dataset>
+
+  <!-- ── Diagnosis concepts ─────────────────────────────────────────────── -->
+
+  <concept concept_id="6001" retired="false" datatype_id="4" class_id="1" is_set="false"
+           creator="1" date_created="2025-01-01 00:00:00.0"
+           uuid="6001aaaa-0001-0001-0001-000000006001"/>
+  <concept_name concept_name_id="6001" concept_id="6001" name="Malaria" locale="en"
+                creator="1" date_created="2025-01-01 00:00:00.0" voided="false"
+                uuid="6001aa00-name-0001-0001-000000006001"
+                concept_name_type="FULLY_SPECIFIED" locale_preferred="1"/>
+
+  <concept concept_id="6002" retired="false" datatype_id="4" class_id="1" is_set="false"
+           creator="1" date_created="2025-01-01 00:00:00.0"
+           uuid="6002aaaa-0002-0002-0002-000000006002"/>
+  <concept_name concept_name_id="6002" concept_id="6002" name="Anemia" locale="en"
+                creator="1" date_created="2025-01-01 00:00:00.0" voided="false"
+                uuid="6002aa00-name-0002-0002-000000006002"
+                concept_name_type="FULLY_SPECIFIED" locale_preferred="1"/>
+
+  <concept concept_id="6003" retired="false" datatype_id="4" class_id="1" is_set="false"
+           creator="1" date_created="2025-01-01 00:00:00.0"
+           uuid="6003aaaa-0003-0003-0003-000000006003"/>
+  <concept_name concept_name_id="6003" concept_id="6003" name="Hypertension" locale="en"
+                creator="1" date_created="2025-01-01 00:00:00.0" voided="false"
+                uuid="6003aa00-name-0003-0003-000000006003"
+                concept_name_type="FULLY_SPECIFIED" locale_preferred="1"/>
+
+  <!-- ── Visit 201: Malaria (CONFIRMED dx_rank=1) + Anemia (PROVISIONAL dx_rank=2) ── -->
+
+  <visit visit_id="201" patient_id="2" visit_type_id="1"
+         date_started="2025-01-01 00:00:00.0"
+         creator="1" date_created="2025-01-01 00:00:00.0" voided="0"
+         uuid="00000201-0201-0201-0201-000000000201"/>
+  <encounter encounter_id="201" encounter_type="1" patient_id="2" location_id="1"
+             visit_id="201" encounter_datetime="2025-01-01 12:00:00.0"
+             creator="1" date_created="2025-01-01 00:00:00.0" voided="false"
+             uuid="00000201-enc1-enc1-enc1-000000000201"/>
+  <encounter_diagnosis diagnosis_id="201" patient_id="2" encounter_id="201"
+             diagnosis_coded="6001" certainty="CONFIRMED" dx_rank="1"
+             creator="1" date_created="2025-01-01 00:00:00.0" voided="0"
+             uuid="diag0201-0001-0001-0001-000000000201"/>
+  <encounter_diagnosis diagnosis_id="202" patient_id="2" encounter_id="201"
+             diagnosis_coded="6002" certainty="PROVISIONAL" dx_rank="2"
+             creator="1" date_created="2025-01-01 00:00:00.0" voided="0"
+             uuid="diag0201-0002-0002-0002-000000000201"/>
+
+  <!-- ── Visit 202: Hypertension (CONFIRMED dx_rank=1) ───────────────────── -->
+
+  <visit visit_id="202" patient_id="2" visit_type_id="1"
+         date_started="2025-01-02 00:00:00.0"
+         creator="1" date_created="2025-01-01 00:00:00.0" voided="0"
+         uuid="00000202-0202-0202-0202-000000000202"/>
+  <encounter encounter_id="202" encounter_type="1" patient_id="2" location_id="1"
+             visit_id="202" encounter_datetime="2025-01-02 12:00:00.0"
+             creator="1" date_created="2025-01-01 00:00:00.0" voided="false"
+             uuid="00000202-enc2-enc2-enc2-000000000202"/>
+  <encounter_diagnosis diagnosis_id="203" patient_id="2" encounter_id="202"
+             diagnosis_coded="6003" certainty="CONFIRMED" dx_rank="1"
+             creator="1" date_created="2025-01-01 00:00:00.0" voided="0"
+             uuid="diag0202-0003-0003-0003-000000000202"/>
+
+  <!-- ── Visit 203: encounter with NO diagnoses ───────────────────────── -->
+
+  <visit visit_id="203" patient_id="2" visit_type_id="1"
+         date_started="2025-01-03 00:00:00.0"
+         creator="1" date_created="2025-01-01 00:00:00.0" voided="0"
+         uuid="00000203-0203-0203-0203-000000000203"/>
+  <encounter encounter_id="203" encounter_type="1" patient_id="2" location_id="1"
+             visit_id="203" encounter_datetime="2025-01-03 12:00:00.0"
+             creator="1" date_created="2025-01-01 00:00:00.0" voided="false"
+             uuid="00000203-enc3-enc3-enc3-000000000203"/>
+
+  <!-- ── Visit 204: no encounters ─────────────────────────────────────── -->
+
+  <visit visit_id="204" patient_id="2" visit_type_id="1"
+         date_started="2025-01-04 00:00:00.0"
+         creator="1" date_created="2025-01-01 00:00:00.0" voided="0"
+         uuid="00000204-0204-0204-0204-000000000204"/>
+
+</dataset>

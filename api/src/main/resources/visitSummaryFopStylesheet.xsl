@@ -45,41 +45,49 @@
                     <xsl:if test="vitals">
                         <xsl:call-template name="vitals"/>
                     </xsl:if>
+                    <xsl:apply-templates select="section-error[@key='vitals']"/>
 
                     <!-- Diagnoses -->
                     <xsl:if test="diagnoses">
                         <xsl:call-template name="diagnoses"/>
                     </xsl:if>
+                    <xsl:apply-templates select="section-error[@key='diagnoses']"/>
 
                     <!-- Conditions -->
                     <xsl:if test="conditions">
                         <xsl:call-template name="conditions"/>
                     </xsl:if>
+                    <xsl:apply-templates select="section-error[@key='conditions']"/>
 
                     <!-- Lab results -->
                     <xsl:if test="labResults">
                         <xsl:call-template name="lab-results"/>
                     </xsl:if>
+                    <xsl:apply-templates select="section-error[@key='labResults']"/>
 
                     <!-- Allergies -->
                     <xsl:if test="allergies">
                         <xsl:call-template name="allergies"/>
                     </xsl:if>
+                    <xsl:apply-templates select="section-error[@key='allergies']"/>
 
                     <!-- Medications -->
                     <xsl:if test="medications">
                         <xsl:call-template name="medications"/>
                     </xsl:if>
+                    <xsl:apply-templates select="section-error[@key='medications']"/>
 
                     <!-- Visit notes -->
                     <xsl:if test="visitNotes">
                         <xsl:call-template name="visit-notes"/>
                     </xsl:if>
+                    <xsl:apply-templates select="section-error[@key='visitNotes']"/>
 
                     <!-- Billing -->
                     <xsl:if test="billing">
                         <xsl:call-template name="billing"/>
                     </xsl:if>
+                    <xsl:apply-templates select="section-error[@key='billing']"/>
                 </fo:flow>
             </fo:page-sequence>
         </fo:root>

@@ -39,10 +39,8 @@ public class DiagnosesSection extends TypedSection<List<DiagnosisEntry>> {
 	protected List<DiagnosisEntry> gatherData(Visit visit) {
 		List<DiagnosisEntry> diagnoses = new ArrayList<>();
 
-		// The API does not support filtering diagnoses by visit directly,
-		// so we use the visit start date as an approximate scope filter.
 		List<Diagnosis> diagnosisList = Context.getDiagnosisService()
-		        .getDiagnoses(visit.getPatient(), visit.getStartDatetime());
+		        .getDiagnosesByVisit(visit, false, false);
 		if (diagnosisList == null) {
 			return diagnoses;
 		}

@@ -106,16 +106,22 @@
                         content-height="15mm" scaling="uniform"/>
                 </fo:block>
             </xsl:if>
-            <fo:block font-size="14pt" font-weight="bold" font-family="{$value-font-family}"
-                text-align="center">
-                <xsl:value-of select="facilityHeader/facilityName"/>
-            </fo:block>
-            <fo:block font-size="9pt" text-align="center" margin-top="1mm">
-                <xsl:value-of select="facilityHeader/facilityAddress"/>
-            </fo:block>
-            <fo:block font-size="9pt" text-align="center" margin-top="1mm">
-                <xsl:value-of select="facilityHeader/facilityPhone"/>
-            </fo:block>
+            <xsl:if test="facilityHeader/facilityName != ''">
+                <fo:block font-size="14pt" font-weight="bold" font-family="{$value-font-family}"
+                    text-align="center">
+                    <xsl:value-of select="facilityHeader/facilityName"/>
+                </fo:block>
+            </xsl:if>
+            <xsl:if test="facilityHeader/facilityAddress != ''">
+                <fo:block font-size="9pt" text-align="center" margin-top="1mm">
+                    <xsl:value-of select="facilityHeader/facilityAddress"/>
+                </fo:block>
+            </xsl:if>
+            <xsl:if test="facilityHeader/facilityPhone != ''">
+                <fo:block font-size="9pt" text-align="center" margin-top="1mm">
+                    <xsl:value-of select="facilityHeader/facilityPhone"/>
+                </fo:block>
+            </xsl:if>
         </fo:block>
     </xsl:template>
 

@@ -33,7 +33,7 @@ public abstract class AbstractVisitSummarySection implements VisitSummarySection
 			} else if ("false".equalsIgnoreCase(value)) {
 				return false;
 			}
-			log.info("Global property '{}' has invalid value '{}'; defaulting to {}",
+			log.warn("Global property '{}' has invalid value '{}'; defaulting to {}",
 					globalPropertyKey, value, defaultValue);
 		}
 		return defaultValue;
@@ -62,7 +62,7 @@ public abstract class AbstractVisitSummarySection implements VisitSummarySection
 			return Integer.parseInt(valueStr.trim());
 		}
 		catch (NumberFormatException e) {
-			log.info("Global property '{}' has invalid value '{}'; defaulting to {}",
+			log.warn("Global property '{}' has invalid value '{}'; defaulting to {}",
 					key, valueStr, getDefaultOrder());
 			return getDefaultOrder();
 		}

@@ -67,7 +67,7 @@ public class VisitSummaryPdfReport {
 	@Autowired
 	private VisitSummaryXmlReportRenderer renderer;
 
-	public byte[] generatePdf(String visitUuid) throws RuntimeException {
+	public byte[] generatePdf(String visitUuid)  {
 		Context.requirePrivilege(PatientDocumentsPrivilegeConstants.VIEW_VISIT_SUMMARY);
 
 		// Visit existence is validated by the controller (404) and the evaluator
@@ -83,7 +83,7 @@ public class VisitSummaryPdfReport {
 		}
 	}
 
-	private ReportData createReportData(String visitUuid) throws Exception {
+	private ReportData createReportData(String visitUuid)  {
 		EvaluationContext context = new EvaluationContext();
 		context.addParameterValue("visitUuid", visitUuid);
 

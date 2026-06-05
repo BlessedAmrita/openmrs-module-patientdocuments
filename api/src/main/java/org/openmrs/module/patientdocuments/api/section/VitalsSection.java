@@ -165,13 +165,13 @@ public class VitalsSection extends TypedSection<List<Vital>> {
 			entry = entry.trim();
 			String[] parts = entry.split(":");
 			if (parts.length != 2) {
-				log.info("Vitals concept entry '{}' is not in source:code format; skipping", entry);
+				log.warn("Vitals concept entry '{}' is not in source:code format; skipping", entry);
 			} else {
 				String source = parts[0].trim();
 				String code = parts[1].trim();
 				Concept concept = Context.getConceptService().getConceptByMapping(code, source);
 				if (concept == null) {
-					log.info("Concept mapping {}:{} could not be resolved; skipping", source, code);
+					log.warn("Concept mapping {}:{} could not be resolved; skipping", source, code);
 				} else {
 					concepts.add(concept);
 				}

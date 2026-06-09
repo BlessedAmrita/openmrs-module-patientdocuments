@@ -170,16 +170,14 @@ public class VitalsSectionTest extends BaseModuleContextSensitiveTest {
 
 	@Test
 	public void gatherData_withUnresolvableConceptMapping_skipsEntry() {
-		// NONEXISTENT:99999 has no matching concept in the test database
+		// All entries configured but none resolve — must throw so the error banner fires
 		GlobalProperty gp = new GlobalProperty(
 		    "report.visitSummary.vitals.concepts", "NONEXISTENT:99999");
 		Context.getAdministrationService().saveGlobalProperty(gp);
 		Visit visit = Context.getVisitService().getVisit(101);
 
-		List<Vital> vitals = section.gatherData(visit);
-
-		Assertions.assertTrue(vitals.isEmpty(),
-		    "Expected empty vitals when all mappings are unresolvable");
+		Assertions.assertThrows(IllegalStateException.class, () -> section.gatherData(visit),
+		    "Expected IllegalStateException when all configured concepts are unresolvable");
 	}
 
 	@Test

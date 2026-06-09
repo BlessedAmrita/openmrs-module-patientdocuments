@@ -64,8 +64,13 @@ public class VitalsSection extends TypedSection<List<Vital>> {
 			return vitals;
 		}
 
+		String rawConcepts = ConfigUtil.getProperty("report.visitSummary.vitals.concepts", DEFAULT_VITAL_CONCEPTS);
 		List<Concept> vitalConcepts = resolveVitalConcepts();
 		if (vitalConcepts.isEmpty()) {
+			if (rawConcepts != null && !rawConcepts.trim().isEmpty()) {
+				throw new IllegalStateException(
+				    "None of the configured vital concepts could be resolved; check report.visitSummary.vitals.concepts");
+			}
 			return vitals;
 		}
 

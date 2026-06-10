@@ -1,0 +1,112 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!--
+    Test dataset for AllergiesSectionTest.
+    Allergies are stored in the allergy table (PK: allergy_id) with reactions in the
+    allergy_reaction table (FK: allergy_id). getAllergies(patient) returns ALL allergies
+    for a patient regardless of visit, so allergies are patient-scoped, not visit-scoped.
+
+    Concept IDs 7001-7006 to avoid conflicts with vitalsSectionTestDataset (5001-5009)
+    and diagnosesSectionTestDataset (6001-6003).
+    Visit IDs 301+ to avoid conflicts with vitals (101-106) and diagnoses (201-204).
+    Allergy/allergy_reaction IDs 301+ for the same reason.
+
+    Patient 2 (from standardTestDataset) — 2 allergies:
+      Allergy 301 — Penicillin (DRUG), severity=Severe, reactions: Rash + Nausea
+      Allergy 302 — Peanuts (FOOD), severity=Mild, reaction: Rash
+
+    Visit 301 — for patient 2 (has allergies)
+    Visit 302 — for patient 7 (no allergies, empty-list test)
+-->
+<dataset>
+
+  <!-- ── Allergen concepts ──────────────────────────────────────────────── -->
+
+  <concept concept_id="7001" retired="false" datatype_id="4" class_id="1" is_set="false"
+           creator="1" date_created="2025-01-01 00:00:00.0"
+           uuid="7001aaaa-0001-0001-0001-000000007001"/>
+  <concept_name concept_name_id="7001" concept_id="7001" name="Penicillin" locale="en"
+                creator="1" date_created="2025-01-01 00:00:00.0" voided="false"
+                uuid="7001aa00-name-0001-0001-000000007001"
+                concept_name_type="FULLY_SPECIFIED" locale_preferred="1"/>
+
+  <concept concept_id="7002" retired="false" datatype_id="4" class_id="1" is_set="false"
+           creator="1" date_created="2025-01-01 00:00:00.0"
+           uuid="7002aaaa-0002-0002-0002-000000007002"/>
+  <concept_name concept_name_id="7002" concept_id="7002" name="Peanuts" locale="en"
+                creator="1" date_created="2025-01-01 00:00:00.0" voided="false"
+                uuid="7002aa00-name-0002-0002-000000007002"
+                concept_name_type="FULLY_SPECIFIED" locale_preferred="1"/>
+
+  <!-- ── Severity concepts ─────────────────────────────────────────────── -->
+
+  <concept concept_id="7003" retired="false" datatype_id="4" class_id="1" is_set="false"
+           creator="1" date_created="2025-01-01 00:00:00.0"
+           uuid="7003aaaa-0003-0003-0003-000000007003"/>
+  <concept_name concept_name_id="7003" concept_id="7003" name="Mild" locale="en"
+                creator="1" date_created="2025-01-01 00:00:00.0" voided="false"
+                uuid="7003aa00-name-0003-0003-000000007003"
+                concept_name_type="FULLY_SPECIFIED" locale_preferred="1"/>
+
+  <concept concept_id="7004" retired="false" datatype_id="4" class_id="1" is_set="false"
+           creator="1" date_created="2025-01-01 00:00:00.0"
+           uuid="7004aaaa-0004-0004-0004-000000007004"/>
+  <concept_name concept_name_id="7004" concept_id="7004" name="Severe" locale="en"
+                creator="1" date_created="2025-01-01 00:00:00.0" voided="false"
+                uuid="7004aa00-name-0004-0004-000000007004"
+                concept_name_type="FULLY_SPECIFIED" locale_preferred="1"/>
+
+  <!-- ── Reaction concepts ─────────────────────────────────────────────── -->
+
+  <concept concept_id="7005" retired="false" datatype_id="4" class_id="1" is_set="false"
+           creator="1" date_created="2025-01-01 00:00:00.0"
+           uuid="7005aaaa-0005-0005-0005-000000007005"/>
+  <concept_name concept_name_id="7005" concept_id="7005" name="Rash" locale="en"
+                creator="1" date_created="2025-01-01 00:00:00.0" voided="false"
+                uuid="7005aa00-name-0005-0005-000000007005"
+                concept_name_type="FULLY_SPECIFIED" locale_preferred="1"/>
+
+  <concept concept_id="7006" retired="false" datatype_id="4" class_id="1" is_set="false"
+           creator="1" date_created="2025-01-01 00:00:00.0"
+           uuid="7006aaaa-0006-0006-0006-000000007006"/>
+  <concept_name concept_name_id="7006" concept_id="7006" name="Nausea" locale="en"
+                creator="1" date_created="2025-01-01 00:00:00.0" voided="false"
+                uuid="7006aa00-name-0006-0006-000000007006"
+                concept_name_type="FULLY_SPECIFIED" locale_preferred="1"/>
+
+  <!-- ── Allergy 301: Penicillin (DRUG), Severe, reactions Rash + Nausea ─── -->
+
+  <allergy allergy_id="301" patient_id="2" allergen_type="DRUG" coded_allergen="7001"
+           severity_concept_id="7004" voided="0"
+           creator="1" date_created="2025-01-01 00:00:00.0"
+           uuid="0a11e269-0301-0301-0301-000000000301"/>
+
+  <allergy_reaction allergy_reaction_id="301" allergy_id="301" reaction_concept_id="7005"
+           uuid="a11e9ea0-0301-0301-0301-000000000301"/>
+  <allergy_reaction allergy_reaction_id="302" allergy_id="301" reaction_concept_id="7006"
+           uuid="a11e9ea0-0302-0302-0302-000000000302"/>
+
+  <!-- ── Allergy 302: Peanuts (FOOD), Mild, reaction Rash ────────────────── -->
+
+  <allergy allergy_id="302" patient_id="2" allergen_type="FOOD" coded_allergen="7002"
+           severity_concept_id="7003" voided="0"
+           creator="1" date_created="2025-01-01 00:00:00.0"
+           uuid="0a11e269-0302-0302-0302-000000000302"/>
+
+  <allergy_reaction allergy_reaction_id="303" allergy_id="302" reaction_concept_id="7005"
+           uuid="a11e9ea0-0303-0303-0303-000000000303"/>
+
+  <!-- ── Visit 301: patient 2 (has allergies) ────────────────────────────── -->
+
+  <visit visit_id="301" patient_id="2" visit_type_id="1"
+         date_started="2025-02-01 00:00:00.0"
+         creator="1" date_created="2025-02-01 00:00:00.0" voided="0"
+         uuid="00000301-0301-0301-0301-000000000301"/>
+
+  <!-- ── Visit 302: patient 7 (no allergies — empty-list test) ───────────── -->
+
+  <visit visit_id="302" patient_id="7" visit_type_id="1"
+         date_started="2025-02-02 00:00:00.0"
+         creator="1" date_created="2025-02-02 00:00:00.0" voided="0"
+         uuid="00000302-0302-0302-0302-000000000302"/>
+
+</dataset>

@@ -32,6 +32,15 @@ public class PatientDocumentsConstants {
 	 */
 	public static final String PATIENT_ID_STICKER_XSL_PATH = "patientIdStickerFopStylesheet.xsl";
 
+	public static final String VISIT_SUMMARY_ID = "visitSummary";
+
+	public static final String COMPONENT_REPORTMANAGER_VISIT_SUMMARY = MODULE_ARTIFACT_ID + ".visitSummary";
+
+	/**
+	 * The path to the style sheet for Visit Summary reports.
+	 */
+	public static final String VISIT_SUMMARY_XSL_PATH = "visitSummaryFopStylesheet.xsl";
+	
 	public static final String DEFAULT_ENCOUNTER_FORM_XSL_PATH = "defaultEncounterFormFopStylesheet.xsl";
 
 	public static final String ENCOUNTER_PRINTING_HEADER_PREFIX = "report.encounterPrinting.header.";
@@ -41,6 +50,8 @@ public class PatientDocumentsConstants {
 	public static final String ENCOUNTER_PRINTING_STYLESHEET_PATH_KEY = "report.encounterPrinting.stylesheetPath";
 
 	public static final String ENCOUNTER_PRINTING_LOGO_PATH_KEY = "report.encounterPrinting.logopath";
+
+	public static final String VISIT_SUMMARY_SECTION_PREFIX = "report.visitSummary.section.";
 
 	public static final String NO_DATA_RECORDED_PLACEHOLDER = "No data recorded";
 

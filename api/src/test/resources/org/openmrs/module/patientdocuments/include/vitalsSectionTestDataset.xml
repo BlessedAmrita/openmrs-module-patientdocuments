@@ -1,0 +1,286 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!--
+    Test dataset for VitalsSectionTest.
+    Provides vitals concepts (with CIEL concept mappings), visits, encounters, and obs so
+    that tests can call gatherData() without going through saveObs() (which triggers a
+    buggy ConceptReferenceRange validator in OpenMRS 2.7.0).
+
+    Concept reference sources (high IDs to avoid conflicts with standardTestDataset):
+      concept_source_id=10  CIEL
+      concept_source_id=11  TEST (for the custom-mapping override test)
+
+    Concept reference terms (ids 100+) and maps (ids 100+) link concept_ids to CIEL codes.
+
+    Visit 101 — bp scenario: systolic 120 (newer) + older systolic 110 + diastolic 80
+    Visit 102 — only systolic 120 (blood-pressure partial format test)
+    Visit 103 — weight 70 + height 175 (separate vitals test)
+    Visit 104 — encounter with no vitals obs (empty-list test)
+    Visit 105 — custom concept mapping override (global-property test)
+-->
+<dataset>
+
+  <!-- ── Concept reference sources ──────────────────────────────────────── -->
+
+  <concept_reference_source concept_source_id="10" name="CIEL"
+      description="Columbia International eHealth Laboratory" hl7_code="CIEL"
+      creator="1" date_created="2024-01-01 00:00:00.0" retired="false"
+      uuid="ciel0000-0000-0000-0000-000000000010"/>
+
+  <concept_reference_source concept_source_id="11" name="TEST"
+      description="Local test source for VitalsSectionTest"
+      creator="1" date_created="2024-01-01 00:00:00.0" retired="false"
+      uuid="test0000-0000-0000-0000-000000000011"/>
+
+  <!-- ── Vitals concepts ────────────────────────────────────────────────── -->
+
+  <concept concept_id="5001" retired="false" datatype_id="1" class_id="1" is_set="false"
+           creator="1" date_created="2024-01-01 00:00:00.0"
+           uuid="5085AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"/>
+  <concept_name concept_name_id="5001" concept_id="5001" name="Systolic BP" locale="en"
+                creator="1" date_created="2024-01-01 00:00:00.0" voided="false"
+                uuid="5085aa00-0001-0001-0001-000000000001"
+                concept_name_type="FULLY_SPECIFIED" locale_preferred="1"/>
+
+  <concept concept_id="5002" retired="false" datatype_id="1" class_id="1" is_set="false"
+           creator="1" date_created="2024-01-01 00:00:00.0"
+           uuid="5086AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"/>
+  <concept_name concept_name_id="5002" concept_id="5002" name="Diastolic BP" locale="en"
+                creator="1" date_created="2024-01-01 00:00:00.0" voided="false"
+                uuid="5086aa00-0002-0002-0002-000000000002"
+                concept_name_type="FULLY_SPECIFIED" locale_preferred="1"/>
+
+  <concept concept_id="5003" retired="false" datatype_id="1" class_id="1" is_set="false"
+           creator="1" date_created="2024-01-01 00:00:00.0"
+           uuid="5089AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"/>
+  <concept_name concept_name_id="5003" concept_id="5003" name="Weight (kg)" locale="en"
+                creator="1" date_created="2024-01-01 00:00:00.0" voided="false"
+                uuid="5089aa00-0003-0003-0003-000000000003"
+                concept_name_type="FULLY_SPECIFIED" locale_preferred="1"/>
+
+  <concept concept_id="5004" retired="false" datatype_id="1" class_id="1" is_set="false"
+           creator="1" date_created="2024-01-01 00:00:00.0"
+           uuid="5090AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"/>
+  <concept_name concept_name_id="5004" concept_id="5004" name="Height (cm)" locale="en"
+                creator="1" date_created="2024-01-01 00:00:00.0" voided="false"
+                uuid="5090aa00-0004-0004-0004-000000000004"
+                concept_name_type="FULLY_SPECIFIED" locale_preferred="1"/>
+
+  <concept concept_id="5005" retired="false" datatype_id="1" class_id="1" is_set="false"
+           creator="1" date_created="2024-01-01 00:00:00.0"
+           uuid="5087AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"/>
+  <concept_name concept_name_id="5005" concept_id="5005" name="Heart Rate" locale="en"
+                creator="1" date_created="2024-01-01 00:00:00.0" voided="false"
+                uuid="5087aa00-0005-0005-0005-000000000005"
+                concept_name_type="FULLY_SPECIFIED" locale_preferred="1"/>
+
+  <concept concept_id="5006" retired="false" datatype_id="1" class_id="1" is_set="false"
+           creator="1" date_created="2024-01-01 00:00:00.0"
+           uuid="5092AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"/>
+  <concept_name concept_name_id="5006" concept_id="5006" name="Oxygen Saturation" locale="en"
+                creator="1" date_created="2024-01-01 00:00:00.0" voided="false"
+                uuid="5092aa00-0006-0006-0006-000000000006"
+                concept_name_type="FULLY_SPECIFIED" locale_preferred="1"/>
+
+  <!-- Temperature — CIEL:5088 -->
+  <concept concept_id="5008" retired="false" datatype_id="1" class_id="1" is_set="false"
+           creator="1" date_created="2024-01-01 00:00:00.0"
+           uuid="5088AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"/>
+  <concept_name concept_name_id="5008" concept_id="5008" name="Temperature" locale="en"
+                creator="1" date_created="2024-01-01 00:00:00.0" voided="false"
+                uuid="5088aa00-0008-0008-0008-000000000008"
+                concept_name_type="FULLY_SPECIFIED" locale_preferred="1"/>
+
+  <!-- Respiratory Rate — CIEL:5242 -->
+  <concept concept_id="5009" retired="false" datatype_id="1" class_id="1" is_set="false"
+           creator="1" date_created="2024-01-01 00:00:00.0"
+           uuid="5242AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"/>
+  <concept_name concept_name_id="5009" concept_id="5009" name="Respiratory Rate" locale="en"
+                creator="1" date_created="2024-01-01 00:00:00.0" voided="false"
+                uuid="5242aa00-0009-0009-0009-000000000009"
+                concept_name_type="FULLY_SPECIFIED" locale_preferred="1"/>
+
+  <!-- Custom concept for the mapping-override test (no concept_numeric — units not needed) -->
+  <concept concept_id="5007" retired="false" datatype_id="1" class_id="1" is_set="false"
+           creator="1" date_created="2024-01-01 00:00:00.0"
+           uuid="cccc0001-cccc-cccc-cccc-cccc00000001"/>
+  <concept_name concept_name_id="5007" concept_id="5007" name="Custom Systolic" locale="en"
+                creator="1" date_created="2024-01-01 00:00:00.0" voided="false"
+                uuid="ccccaa00-0007-0007-0007-000000000007"
+                concept_name_type="FULLY_SPECIFIED" locale_preferred="1"/>
+
+  <!-- ── concept_numeric — provides units for ConceptNumeric.getUnits() ─── -->
+
+  <concept_numeric concept_id="5001" units="mmHg" allow_decimal="true"/>
+  <concept_numeric concept_id="5002" units="mmHg" allow_decimal="true"/>
+  <concept_numeric concept_id="5003" units="kg"   allow_decimal="true"/>
+  <concept_numeric concept_id="5004" units="cm"   allow_decimal="true"/>
+  <concept_numeric concept_id="5005" units="bpm"  allow_decimal="false"/>
+  <concept_numeric concept_id="5006" units="%"    allow_decimal="false"/>
+  <concept_numeric concept_id="5008" units="DEG C"         allow_decimal="true"/>
+  <concept_numeric concept_id="5009" units="breaths/min"   allow_decimal="false"/>
+
+  <!-- ── CIEL concept reference terms ───────────────────────────────────── -->
+
+  <concept_reference_term concept_reference_term_id="100" concept_source_id="10"
+      code="5085" name="Systolic blood pressure" retired="0"
+      creator="1" date_created="2024-01-01 00:00:00.0" uuid="ciel-term-5085"/>
+  <concept_reference_term concept_reference_term_id="101" concept_source_id="10"
+      code="5086" name="Diastolic blood pressure" retired="0"
+      creator="1" date_created="2024-01-01 00:00:00.0" uuid="ciel-term-5086"/>
+  <concept_reference_term concept_reference_term_id="102" concept_source_id="10"
+      code="5087" name="Pulse" retired="0"
+      creator="1" date_created="2024-01-01 00:00:00.0" uuid="ciel-term-5087"/>
+  <concept_reference_term concept_reference_term_id="103" concept_source_id="10"
+      code="5088" name="Temperature (C)" retired="0"
+      creator="1" date_created="2024-01-01 00:00:00.0" uuid="ciel-term-5088"/>
+  <concept_reference_term concept_reference_term_id="104" concept_source_id="10"
+      code="5089" name="Weight (kg)" retired="0"
+      creator="1" date_created="2024-01-01 00:00:00.0" uuid="ciel-term-5089"/>
+  <concept_reference_term concept_reference_term_id="105" concept_source_id="10"
+      code="5090" name="Height (cm)" retired="0"
+      creator="1" date_created="2024-01-01 00:00:00.0" uuid="ciel-term-5090"/>
+  <concept_reference_term concept_reference_term_id="106" concept_source_id="10"
+      code="5092" name="Blood oxygen saturation" retired="0"
+      creator="1" date_created="2024-01-01 00:00:00.0" uuid="ciel-term-5092"/>
+  <concept_reference_term concept_reference_term_id="107" concept_source_id="10"
+      code="5242" name="Respiratory rate" retired="0"
+      creator="1" date_created="2024-01-01 00:00:00.0" uuid="ciel-term-5242"/>
+
+  <!-- TEST source term for the custom-mapping override test -->
+  <concept_reference_term concept_reference_term_id="108" concept_source_id="11"
+      code="custom001" name="Custom test systolic" retired="0"
+      creator="1" date_created="2024-01-01 00:00:00.0" uuid="test-term-custom001"/>
+
+  <!-- ── Concept reference maps (concept_map_type_id=2 = same-as) ───────── -->
+
+  <concept_reference_map concept_map_id="100" concept_id="5001"
+      concept_reference_term_id="100" concept_map_type_id="2"
+      creator="1" date_created="2024-01-01 00:00:00.0" uuid="cmap-5001-5085"/>
+  <concept_reference_map concept_map_id="101" concept_id="5002"
+      concept_reference_term_id="101" concept_map_type_id="2"
+      creator="1" date_created="2024-01-01 00:00:00.0" uuid="cmap-5002-5086"/>
+  <concept_reference_map concept_map_id="102" concept_id="5005"
+      concept_reference_term_id="102" concept_map_type_id="2"
+      creator="1" date_created="2024-01-01 00:00:00.0" uuid="cmap-5005-5087"/>
+  <concept_reference_map concept_map_id="103" concept_id="5008"
+      concept_reference_term_id="103" concept_map_type_id="2"
+      creator="1" date_created="2024-01-01 00:00:00.0" uuid="cmap-5008-5088"/>
+  <concept_reference_map concept_map_id="104" concept_id="5003"
+      concept_reference_term_id="104" concept_map_type_id="2"
+      creator="1" date_created="2024-01-01 00:00:00.0" uuid="cmap-5003-5089"/>
+  <concept_reference_map concept_map_id="105" concept_id="5004"
+      concept_reference_term_id="105" concept_map_type_id="2"
+      creator="1" date_created="2024-01-01 00:00:00.0" uuid="cmap-5004-5090"/>
+  <concept_reference_map concept_map_id="106" concept_id="5006"
+      concept_reference_term_id="106" concept_map_type_id="2"
+      creator="1" date_created="2024-01-01 00:00:00.0" uuid="cmap-5006-5092"/>
+  <concept_reference_map concept_map_id="107" concept_id="5009"
+      concept_reference_term_id="107" concept_map_type_id="2"
+      creator="1" date_created="2024-01-01 00:00:00.0" uuid="cmap-5009-5242"/>
+  <concept_reference_map concept_map_id="108" concept_id="5007"
+      concept_reference_term_id="108" concept_map_type_id="2"
+      creator="1" date_created="2024-01-01 00:00:00.0" uuid="cmap-5007-custom001"/>
+
+  <!-- ── Visit 101: systolic + diastolic + older systolic + heart rate + SpO2 ── -->
+
+  <visit visit_id="101" patient_id="2" visit_type_id="1"
+         date_started="2024-01-01 00:00:00.0"
+         creator="1" date_created="2024-01-01 00:00:00.0" voided="0"
+         uuid="00000101-0101-0101-0101-000000000101"/>
+  <encounter encounter_id="101" encounter_type="1" patient_id="2" location_id="1"
+             visit_id="101" encounter_datetime="2024-01-01 12:00:00.0"
+             creator="1" date_created="2024-01-01 00:00:00.0" voided="false"
+             uuid="00000101-enc1-enc1-enc1-000000000101"/>
+  <!-- Newer systolic -->
+  <obs obs_id="10001" person_id="2" concept_id="5001" encounter_id="101"
+       obs_datetime="2024-01-01 12:00:00.0" value_numeric="120.0"
+       location_id="1" creator="1" date_created="2024-01-01 00:00:00.0"
+       voided="false" uuid="0obs1001-0000-0000-0000-000000010001" status="FINAL"/>
+  <!-- Diastolic -->
+  <obs obs_id="10002" person_id="2" concept_id="5002" encounter_id="101"
+       obs_datetime="2024-01-01 12:00:00.0" value_numeric="80.0"
+       location_id="1" creator="1" date_created="2024-01-01 00:00:00.0"
+       voided="false" uuid="0obs1002-0000-0000-0000-000000010002" status="FINAL"/>
+  <!-- Older systolic — superseded by the newer one above -->
+  <obs obs_id="10003" person_id="2" concept_id="5001" encounter_id="101"
+       obs_datetime="2024-01-01 11:00:00.0" value_numeric="110.0"
+       location_id="1" creator="1" date_created="2024-01-01 00:00:00.0"
+       voided="false" uuid="0obs1003-0000-0000-0000-000000010003" status="FINAL"/>
+  <!-- Heart rate and SpO2 -->
+  <obs obs_id="10008" person_id="2" concept_id="5005" encounter_id="101"
+       obs_datetime="2024-01-01 12:00:00.0" value_numeric="72.0"
+       location_id="1" creator="1" date_created="2024-01-01 00:00:00.0"
+       voided="false" uuid="0obs1008-0000-0000-0000-000000010008" status="FINAL"/>
+  <obs obs_id="10009" person_id="2" concept_id="5006" encounter_id="101"
+       obs_datetime="2024-01-01 12:00:00.0" value_numeric="98.0"
+       location_id="1" creator="1" date_created="2024-01-01 00:00:00.0"
+       voided="false" uuid="0obs1009-0000-0000-0000-000000010009" status="FINAL"/>
+
+  <!-- ── Visit 102: only systolic (test — no diastolic obs) ───────────── -->
+
+  <visit visit_id="102" patient_id="2" visit_type_id="1"
+         date_started="2024-01-02 00:00:00.0"
+         creator="1" date_created="2024-01-01 00:00:00.0" voided="0"
+         uuid="00000102-0102-0102-0102-000000000102"/>
+  <encounter encounter_id="102" encounter_type="1" patient_id="2" location_id="1"
+             visit_id="102" encounter_datetime="2024-01-02 12:00:00.0"
+             creator="1" date_created="2024-01-01 00:00:00.0" voided="false"
+             uuid="00000102-enc2-enc2-enc2-000000000102"/>
+  <obs obs_id="10004" person_id="2" concept_id="5001" encounter_id="102"
+       obs_datetime="2024-01-02 12:00:00.0" value_numeric="120.0"
+       location_id="1" creator="1" date_created="2024-01-01 00:00:00.0"
+       voided="false" uuid="0obs1004-0000-0000-0000-000000010004" status="FINAL"/>
+
+  <!-- ── Visit 103: weight + height ────────────────────────────────────── -->
+
+  <visit visit_id="103" patient_id="2" visit_type_id="1"
+         date_started="2024-01-03 00:00:00.0"
+         creator="1" date_created="2024-01-01 00:00:00.0" voided="0"
+         uuid="00000103-0103-0103-0103-000000000103"/>
+  <encounter encounter_id="103" encounter_type="1" patient_id="2" location_id="1"
+             visit_id="103" encounter_datetime="2024-01-03 12:00:00.0"
+             creator="1" date_created="2024-01-01 00:00:00.0" voided="false"
+             uuid="00000103-enc3-enc3-enc3-000000000103"/>
+  <obs obs_id="10005" person_id="2" concept_id="5003" encounter_id="103"
+       obs_datetime="2024-01-03 12:00:00.0" value_numeric="70.0"
+       location_id="1" creator="1" date_created="2024-01-01 00:00:00.0"
+       voided="false" uuid="0obs1005-0000-0000-0000-000000010005" status="FINAL"/>
+  <obs obs_id="10006" person_id="2" concept_id="5004" encounter_id="103"
+       obs_datetime="2024-01-03 12:00:00.0" value_numeric="175.0"
+       location_id="1" creator="1" date_created="2024-01-01 00:00:00.0"
+       voided="false" uuid="0obs1006-0000-0000-0000-000000010006" status="FINAL"/>
+
+  <!-- ── Visit 104: encounter with NO vitals obs ───────────────────────── -->
+
+  <visit visit_id="104" patient_id="2" visit_type_id="1"
+         date_started="2024-01-04 00:00:00.0"
+         creator="1" date_created="2024-01-01 00:00:00.0" voided="0"
+         uuid="00000104-0104-0104-0104-000000000104"/>
+  <encounter encounter_id="104" encounter_type="1" patient_id="2" location_id="1"
+             visit_id="104" encounter_datetime="2024-01-04 12:00:00.0"
+             creator="1" date_created="2024-01-01 00:00:00.0" voided="false"
+             uuid="00000104-enc4-enc4-enc4-000000000104"/>
+
+  <!-- ── Visit 106: no encounters ─────────────────────────────────────── -->
+
+  <visit visit_id="106" patient_id="2" visit_type_id="1"
+         date_started="2024-01-06 00:00:00.0"
+         creator="1" date_created="2024-01-01 00:00:00.0" voided="0"
+         uuid="00000106-0106-0106-0106-000000000106"/>
+
+  <!-- ── Visit 105: custom concept mapping override test ──────────────── -->
+
+  <visit visit_id="105" patient_id="2" visit_type_id="1"
+         date_started="2024-01-05 00:00:00.0"
+         creator="1" date_created="2024-01-01 00:00:00.0" voided="0"
+         uuid="00000105-0105-0105-0105-000000000105"/>
+  <encounter encounter_id="105" encounter_type="1" patient_id="2" location_id="1"
+             visit_id="105" encounter_datetime="2024-01-05 12:00:00.0"
+             creator="1" date_created="2024-01-01 00:00:00.0" voided="false"
+             uuid="00000105-enc5-enc5-enc5-000000000105"/>
+  <obs obs_id="10007" person_id="2" concept_id="5007" encounter_id="105"
+       obs_datetime="2024-01-05 12:00:00.0" value_numeric="118.0"
+       location_id="1" creator="1" date_created="2024-01-01 00:00:00.0"
+       voided="false" uuid="0obs1007-0000-0000-0000-000000010007" status="FINAL"/>
+
+</dataset>

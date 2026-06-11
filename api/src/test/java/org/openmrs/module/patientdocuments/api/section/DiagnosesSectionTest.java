@@ -1,0 +1,125 @@
+/**
+ * This Source Code Form is subject to the terms of the Mozilla Public License,
+ * v. 2.0. If a copy of the MPL was not distributed with this file, You can
+ * obtain one at http://mozilla.org/MPL/2.0/. OpenMRS is also distributed under
+ * the terms of the Healthcare Disclaimer located at http://openmrs.org/license.
+ *
+ * Copyright (C) OpenMRS Inc. OpenMRS is a registered trademark and the OpenMRS
+ * graphic logo is a trademark of OpenMRS Inc.
+ */
+package org.openmrs.module.patientdocuments.api.section;
+
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.openmrs.GlobalProperty;
+import org.openmrs.Visit;
+import org.openmrs.api.context.Context;
+import org.openmrs.module.patientdocuments.api.model.DiagnosisEntry;
+import org.openmrs.test.jupiter.BaseModuleContextSensitiveTest;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
+import javax.xml.parsers.DocumentBuilderFactory;
+import java.util.Arrays;
+import java.util.List;
+
+/**
+ * Integration tests for DiagnosesSection.
+ *
+ * Diagnoses are pre-loaded from diagnosesSectionTestDataset.xml rather than created
+ * programmatically to avoid triggering validators that NPE on new entities without
+ * fully populated relationships.
+ *
+ * Dataset layout:
+ *   Visit 201 — Malaria (CONFIRMED, rank=1) + Anemia (PROVISIONAL, rank=2)
+ *   Visit 202 — Hypertension (CONFIRMED, rank=1)
+ *   Visit 203 — encounter with no diagnoses
+ *   Visit 204 — no encounters
+ */
+public class DiagnosesSectionTest extends BaseModuleContextSensitiveTest {
+
+	private static final String DATASET =
+	    "org/openmrs/module/patientdocuments/include/diagnosesSectionTestDataset.xml";
+
+	private DiagnosesSection section;
+
+	@BeforeEach
+	public void setUp() throws Exception {
+		executeDataSet(DATASET);
+		section = new DiagnosesSection();
+	}
+
+	// ── gatherData tests ──────────────────────────────────────────────────────
+
+	@Test
+	public void gatherData_visitWithDiagnoses_returnsOnlyThatVisitsDiagnoses() {
+		// Visit 201 has Malaria + Anemia; Visit 202 has Hypertension — must stay separate
+		Visit visit = Context.getVisitService().getVisit(201);
+
+		List<DiagnosisEntry> diagnoses = section.gatherData(visit);
+
+		Assertions.assertEquals(2, diagnoses.size());
+		boolean hasHypertension = diagnoses.stream()
+		    .anyMatch(d -> "Hypertension".equals(d.getName()));
+		Assertions.assertFalse(hasHypertension,
+		    "Visit 202's Hypertension diagnosis must not appear in Visit 201's results");
+	}
+
+	@Test
+	public void gatherData_visitWithNoDiagnoses_returnsEmptyList() {
+		// Visit 203 has an encounter but no diagnoses
+		Visit visit = Context.getVisitService().getVisit(203);
+
+		List<DiagnosisEntry> diagnoses = section.gatherData(visit);
+
+		Assertions.assertEquals(0, diagnoses.size());
+	}
+
+	@Test
+	public void gatherData_visitWithNoEncounters_returnsEmptyList() {
+		// Visit 204 has no encounters
+		Visit visit = Context.getVisitService().getVisit(204);
+
+		List<DiagnosisEntry> diagnoses = section.gatherData(visit);
+
+		Assertions.assertEquals(0, diagnoses.size());
+	}
+
+	// ── renderXml tests ───────────────────────────────────────────────────────
+
+	@Test
+	public void renderXml_withDiagnoses_producesCorrectXmlStructure() throws Exception {
+		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+		Element root = doc.createElement("root");
+		doc.appendChild(root);
+		List<DiagnosisEntry> entries = Arrays.asList(
+		    new DiagnosisEntry("Malaria", "CONFIRMED", "1"),
+		    new DiagnosisEntry("Anemia", "PROVISIONAL", "2")
+		);
+
+		section.renderXml(doc, root, entries);
+
+		Assertions.assertEquals(1, root.getChildNodes().getLength());
+		Element diagnosesEl = (Element) root.getChildNodes().item(0);
+		Assertions.assertEquals("diagnoses", diagnosesEl.getNodeName());
+		Assertions.assertEquals(2, diagnosesEl.getChildNodes().getLength());
+
+		Element first = (Element) diagnosesEl.getChildNodes().item(0);
+		Assertions.assertEquals("diagnosis", first.getNodeName());
+		Assertions.assertEquals("Malaria", first.getAttribute("name"));
+		Assertions.assertEquals("CONFIRMED", first.getAttribute("certainty"));
+		Assertions.assertEquals("1", first.getAttribute("rank"));
+	}
+
+	// ── isEnabled tests ───────────────────────────────────────────────────────
+
+	@Test
+	public void isEnabled_whenGlobalPropertySetToFalse_returnsFalse() {
+		GlobalProperty gp = new GlobalProperty(
+		    "report.visitSummary.section.diagnoses.enabled", "false");
+		Context.getAdministrationService().saveGlobalProperty(gp);
+
+		Assertions.assertFalse(section.isEnabled());
+	}
+}

@@ -9,6 +9,9 @@
  */
 package org.openmrs.module.patientdocuments.api.section;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import org.openmrs.module.patientdocuments.common.PatientDocumentsConstants;
 import org.openmrs.util.ConfigUtil;
 import org.slf4j.Logger;
@@ -86,5 +89,12 @@ public abstract class AbstractVisitSummarySection implements VisitSummarySection
 
 	protected String nvl(String value) {
 		return value != null ? value : "";
+	}
+
+	protected String formatDate(Date date) {
+		if (date == null) {
+			return "";
+		}
+		return new SimpleDateFormat("yyyy-MM-dd").format(date);
 	}
 }

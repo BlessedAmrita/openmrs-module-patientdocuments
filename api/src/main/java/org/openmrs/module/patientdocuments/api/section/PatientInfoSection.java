@@ -9,9 +9,6 @@
  */
 package org.openmrs.module.patientdocuments.api.section;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
 import org.openmrs.Patient;
 import org.openmrs.PatientIdentifier;
 import org.openmrs.PersonName;
@@ -96,12 +93,5 @@ public class PatientInfoSection extends TypedSection<PatientVisitInfo> {
 		addTextElement(doc, section, "visitType", data.getVisitType());
 		addTextElement(doc, section, "visitLocation", data.getVisitLocation());
 		addTextElement(doc, section, "visitStopDate", data.getVisitStopDate());
-	}
-
-	private String formatDate(Date date) {
-		if (date == null) {
-			return "";
-		}
-		return new SimpleDateFormat("yyyy-MM-dd").format(date);
 	}
 }

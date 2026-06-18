@@ -15,6 +15,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import lombok.extern.slf4j.Slf4j;
+
 import org.openmrs.Concept;
 import org.openmrs.ConceptNumeric;
 import org.openmrs.Encounter;
@@ -23,16 +25,13 @@ import org.openmrs.Visit;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.patientdocuments.api.model.Vital;
 import org.openmrs.util.ConfigUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 @Component
+@Slf4j
 public class VitalsSection extends TypedSection<List<Vital>> {
-
-	private static final Logger log = LoggerFactory.getLogger(VitalsSection.class);
 
 	/**
 	 * Default comma-separated list of concept mappings (source:code) used when

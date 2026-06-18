@@ -12,10 +12,10 @@ package org.openmrs.module.patientdocuments.api.section;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import lombok.extern.slf4j.Slf4j;
+
 import org.openmrs.module.patientdocuments.common.PatientDocumentsConstants;
 import org.openmrs.util.ConfigUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -23,9 +23,8 @@ import org.w3c.dom.Element;
  * Convenience base for sections that read their enabled flag and render order
  * from global properties via ConfigUtil.
  */
+@Slf4j
 public abstract class AbstractVisitSummarySection implements VisitSummarySection {
-
-	private static final Logger log = LoggerFactory.getLogger(AbstractVisitSummarySection.class);
 
 	protected boolean isConfigEnabled(String globalPropertyKey, boolean defaultValue) {
 		String value = ConfigUtil.getProperty(globalPropertyKey);

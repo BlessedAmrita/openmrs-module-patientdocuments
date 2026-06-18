@@ -12,6 +12,8 @@ package org.openmrs.module.patientdocuments.api.section;
 import java.util.ArrayList;
 import java.util.List;
 
+import lombok.extern.slf4j.Slf4j;
+
 import org.openmrs.CodedOrFreeText;
 import org.openmrs.Concept;
 import org.openmrs.ConceptName;
@@ -21,16 +23,13 @@ import org.openmrs.Visit;
 import org.openmrs.api.ConditionService;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.patientdocuments.api.model.ConditionEntry;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 @Component
+@Slf4j
 public class ConditionsSection extends TypedSection<List<ConditionEntry>> {
-
-	private static final Logger log = LoggerFactory.getLogger(ConditionsSection.class);
 
 	private static final int DEFAULT_ORDER = 450;
 

@@ -65,6 +65,14 @@ public class ConditionsSectionTest extends BaseModuleContextSensitiveTest {
 
 		Assertions.assertEquals(2, conditions.size());
 
+		boolean hasDiabetes = conditions.stream()
+		    .anyMatch(c -> "Type 2 Diabetes Mellitus".equals(c.getName()));
+		Assertions.assertTrue(hasDiabetes, "Expected Type 2 Diabetes Mellitus in active conditions");
+
+		boolean hasRhinitis = conditions.stream()
+		    .anyMatch(c -> "Seasonal Allergic Rhinitis".equals(c.getName()));
+		Assertions.assertTrue(hasRhinitis, "Expected Seasonal Allergic Rhinitis in active conditions");
+
 		boolean hasInactive = conditions.stream()
 		    .anyMatch(c -> "Chronic Sinusitis".equals(c.getName()));
 		Assertions.assertFalse(hasInactive, "INACTIVE condition must not appear in active conditions");

@@ -108,7 +108,7 @@ public class DiagnosesSectionTest extends BaseModuleContextSensitiveTest {
 		Element first = (Element) diagnosesEl.getChildNodes().item(0);
 		Assertions.assertEquals("diagnosis", first.getNodeName());
 		Assertions.assertEquals("Malaria", first.getAttribute("name"));
-		Assertions.assertEquals("CONFIRMED", first.getAttribute("certainty"));
+		Assertions.assertEquals("Confirmed", first.getAttribute("certainty"));
 		Assertions.assertEquals("1", first.getAttribute("rank"));
 	}
 

@@ -65,18 +65,28 @@ public class DiagnosesSection extends TypedSection<List<DiagnosisEntry>> {
 	@Override
 	protected void renderXml(Document doc, Element root, List<DiagnosisEntry> diagnoses) {
 		Element section = doc.createElement("diagnoses");
-		section.setAttribute("heading", "Diagnoses");
-		section.setAttribute("col-name", "Diagnosis");
-		section.setAttribute("col-certainty", "Certainty");
-		section.setAttribute("col-rank", "Rank");
+		section.setAttribute("heading", msg("patientdocuments.visitSummary.section.diagnoses.heading", "Diagnoses"));
+		section.setAttribute("col-name", msg("patientdocuments.visitSummary.fields.diagnosis", "Diagnosis"));
+		section.setAttribute("col-certainty", msg("patientdocuments.visitSummary.fields.certainty", "Certainty"));
+		section.setAttribute("col-rank", msg("patientdocuments.visitSummary.fields.rank", "Rank"));
 		root.appendChild(section);
 
 		for (DiagnosisEntry diag : diagnoses) {
 			Element diagEl = doc.createElement("diagnosis");
 			diagEl.setAttribute("name", nvl(diag.getName()));
-			diagEl.setAttribute("certainty", nvl(diag.getCertainty()));
+			diagEl.setAttribute("certainty", localizeCertainty(diag.getCertainty()));
 			diagEl.setAttribute("rank", nvl(diag.getRank()));
 			section.appendChild(diagEl);
 		}
+	}
+
+	// Localizes the certainty value; unknown values fall back to a title-cased form rather than a missing-key string.
+	private String localizeCertainty(String certainty) {
+		String name = nvl(certainty);
+		if (name.isEmpty()) {
+			return "";
+		}
+		String fallback = name.charAt(0) + name.substring(1).toLowerCase();
+		return msg("patientdocuments.visitSummary.certainty." + name.toLowerCase(), fallback);
 	}
 }

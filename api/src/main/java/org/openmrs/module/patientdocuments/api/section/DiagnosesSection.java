@@ -25,6 +25,8 @@ public class DiagnosesSection extends TypedSection<List<DiagnosisEntry>> {
 
 	private static final int DEFAULT_ORDER = 400;
 
+	private static final String KEY_PREFIX = "patientdocuments.visitSummary.section.diagnoses.";
+
 	@Override
 	protected int getDefaultOrder() {
 		return DEFAULT_ORDER;
@@ -65,10 +67,10 @@ public class DiagnosesSection extends TypedSection<List<DiagnosisEntry>> {
 	@Override
 	protected void renderXml(Document doc, Element root, List<DiagnosisEntry> diagnoses) {
 		Element section = doc.createElement("diagnoses");
-		section.setAttribute("heading", msg("patientdocuments.visitSummary.section.diagnoses.heading", "Diagnoses"));
-		section.setAttribute("col-name", msg("patientdocuments.visitSummary.fields.diagnosis", "Diagnosis"));
-		section.setAttribute("col-certainty", msg("patientdocuments.visitSummary.fields.certainty", "Certainty"));
-		section.setAttribute("col-rank", msg("patientdocuments.visitSummary.fields.rank", "Rank"));
+		section.setAttribute("heading", msg(KEY_PREFIX + "heading", "Diagnoses"));
+		section.setAttribute("col-name", msg(KEY_PREFIX + "col.name", "Diagnosis"));
+		section.setAttribute("col-certainty", msg(KEY_PREFIX + "col.certainty", "Certainty"));
+		section.setAttribute("col-rank", msg(KEY_PREFIX + "col.rank", "Rank"));
 		root.appendChild(section);
 
 		for (DiagnosisEntry diag : diagnoses) {

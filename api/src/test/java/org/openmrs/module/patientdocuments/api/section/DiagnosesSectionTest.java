@@ -112,6 +112,30 @@ public class DiagnosesSectionTest extends BaseModuleContextSensitiveTest {
 		Assertions.assertEquals("1", first.getAttribute("rank"));
 	}
 
+	@Test
+	public void renderXml_provisionalCertainty_localizesToBundleValue() throws Exception {
+		Element diag = renderSingleDiagnosis(new DiagnosisEntry("Anemia", "PROVISIONAL", "2"));
+
+		Assertions.assertEquals("Provisional", diag.getAttribute("certainty"));
+	}
+
+	@Test
+	public void renderXml_unknownCertainty_fallsBackToTitleCase() throws Exception {
+		Element diag = renderSingleDiagnosis(new DiagnosisEntry("Something", "DIFFERENTIAL", "1"));
+
+		String certainty = diag.getAttribute("certainty");
+		Assertions.assertEquals("Differential", certainty);
+		Assertions.assertFalse(certainty.contains("patientdocuments"),
+		    "Unknown certainty must degrade to a readable label, not a raw message key");
+	}
+
+	@Test
+	public void renderXml_emptyCertainty_staysEmpty() throws Exception {
+		Element diag = renderSingleDiagnosis(new DiagnosisEntry("Something", "", "1"));
+
+		Assertions.assertEquals("", diag.getAttribute("certainty"));
+	}
+
 	// ── isEnabled tests ───────────────────────────────────────────────────────
 
 	@Test
@@ -121,5 +145,17 @@ public class DiagnosesSectionTest extends BaseModuleContextSensitiveTest {
 		Context.getAdministrationService().saveGlobalProperty(gp);
 
 		Assertions.assertFalse(section.isEnabled());
+	}
+
+	// Renders a single diagnosis entry and returns its <diagnosis> element.
+	private Element renderSingleDiagnosis(DiagnosisEntry entry) throws Exception {
+		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+		Element root = doc.createElement("root");
+		doc.appendChild(root);
+
+		section.renderXml(doc, root, Arrays.asList(entry));
+
+		Element diagnosesEl = (Element) root.getChildNodes().item(0);
+		return (Element) diagnosesEl.getChildNodes().item(0);
 	}
 }

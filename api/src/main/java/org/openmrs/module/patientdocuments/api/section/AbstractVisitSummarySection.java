@@ -93,4 +93,24 @@ public abstract class AbstractVisitSummarySection implements VisitSummarySection
 	protected String msg(String key, String fallback) {
 		return Context.getMessageSourceService().getMessage(key, null, fallback, Context.getLocale());
 	}
+
+	// "ENTERED_IN_ERROR" -> "Entered In Error", "CONFIRMED" -> "Confirmed"; "" for null/empty.
+	protected String formatEnumName(String rawEnumName) {
+		if (rawEnumName == null || rawEnumName.isEmpty()) {
+			return "";
+		}
+		String[] parts = rawEnumName.split("_");
+		StringBuilder sb = new StringBuilder();
+		for (String part : parts) {
+			if (part.isEmpty()) {
+				continue;
+			}
+			if (sb.length() > 0) {
+				sb.append(" ");
+			}
+			sb.append(Character.toUpperCase(part.charAt(0)))
+					.append(part.substring(1).toLowerCase());
+		}
+		return sb.toString();
+	}
 }

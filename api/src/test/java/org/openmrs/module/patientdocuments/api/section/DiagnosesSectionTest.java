@@ -130,6 +130,16 @@ public class DiagnosesSectionTest extends BaseModuleContextSensitiveTest {
 	}
 
 	@Test
+	public void renderXml_unknownMultiWordCertainty_fallsBackToTitleCasedWords() throws Exception {
+		Element diag = renderSingleDiagnosis(new DiagnosisEntry("Something", "ENTERED_IN_ERROR", "1"));
+
+		String certainty = diag.getAttribute("certainty");
+		Assertions.assertEquals("Entered In Error", certainty);
+		Assertions.assertFalse(certainty.contains("_"),
+		    "Multi-word certainty must not leak underscores into the rendered label");
+	}
+
+	@Test
 	public void renderXml_emptyCertainty_staysEmpty() throws Exception {
 		Element diag = renderSingleDiagnosis(new DiagnosisEntry("Something", "", "1"));
 

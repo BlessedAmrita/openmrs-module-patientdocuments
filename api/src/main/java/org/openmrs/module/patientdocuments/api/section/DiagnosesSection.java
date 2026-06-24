@@ -88,7 +88,7 @@ public class DiagnosesSection extends TypedSection<List<DiagnosisEntry>> {
 		if (name.isEmpty()) {
 			return "";
 		}
-		String fallback = name.charAt(0) + name.substring(1).toLowerCase();
+		String fallback = formatEnumName(name);
 		return msg("patientdocuments.visitSummary.certainty." + name.toLowerCase(), fallback);
 	}
 }

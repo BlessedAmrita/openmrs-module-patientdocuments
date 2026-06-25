@@ -9,6 +9,8 @@
  */
 package org.openmrs.module.patientdocuments.api.section;
 
+import org.apache.commons.lang3.StringUtils;
+import org.openmrs.api.context.Context;
 import org.openmrs.module.patientdocuments.common.PatientDocumentsConstants;
 import org.openmrs.util.ConfigUtil;
 import org.slf4j.Logger;
@@ -85,6 +87,37 @@ public abstract class AbstractVisitSummarySection implements VisitSummarySection
 	}
 
 	protected String nvl(String value) {
-		return value != null ? value : "";
+		return StringUtils.defaultString(value);
+	}
+
+	// Looks up a message by key for the current locale; returns the fallback (not the raw key) if the key is missing.
+	protected String msg(String key, String fallback) {
+		try {
+			return Context.getMessageSourceService().getMessage(key, null, fallback, Context.getLocale());
+		}
+		catch (Exception e) {
+			log.warn("Message lookup failed for key '{}'; using fallback", key, e);
+			return fallback;
+		}
+	}
+
+	// "ENTERED_IN_ERROR" -> "Entered In Error", "CONFIRMED" -> "Confirmed"; "" for null/empty.
+	protected String formatEnumName(String rawEnumName) {
+		if (rawEnumName == null || rawEnumName.isEmpty()) {
+			return "";
+		}
+		String[] parts = rawEnumName.split("_");
+		StringBuilder sb = new StringBuilder();
+		for (String part : parts) {
+			if (part.isEmpty()) {
+				continue;
+			}
+			if (sb.length() > 0) {
+				sb.append(" ");
+			}
+			sb.append(Character.toUpperCase(part.charAt(0)))
+					.append(part.substring(1).toLowerCase());
+		}
+		return sb.toString();
 	}
 }

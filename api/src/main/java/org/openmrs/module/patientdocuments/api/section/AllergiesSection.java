@@ -26,6 +26,8 @@ public class AllergiesSection extends TypedSection<List<AllergyEntry>> {
 
 	private static final int DEFAULT_ORDER = 500;
 
+	private static final String KEY_PREFIX = "patientdocuments.visitSummary.section.allergies.";
+
 	@Override
 	protected int getDefaultOrder() {
 		return DEFAULT_ORDER;
@@ -85,10 +87,10 @@ public class AllergiesSection extends TypedSection<List<AllergyEntry>> {
 	@Override
 	protected void renderXml(Document doc, Element root, List<AllergyEntry> allergies) {
 		Element section = doc.createElement("allergies");
-		section.setAttribute("heading", "Allergies");
-		section.setAttribute("col-allergen", "Allergen");
-		section.setAttribute("col-severity", "Severity");
-		section.setAttribute("col-reactions", "Reactions");
+		section.setAttribute("heading", msg(KEY_PREFIX + "heading", "Allergies"));
+		section.setAttribute("col-allergen", msg(KEY_PREFIX + "col.allergen", "Allergen"));
+		section.setAttribute("col-severity", msg(KEY_PREFIX + "col.severity", "Severity"));
+		section.setAttribute("col-reactions", msg(KEY_PREFIX + "col.reactions", "Reactions"));
 		root.appendChild(section);
 
 		for (AllergyEntry allergy : allergies) {

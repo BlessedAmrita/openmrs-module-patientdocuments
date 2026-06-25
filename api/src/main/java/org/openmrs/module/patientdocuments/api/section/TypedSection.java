@@ -52,7 +52,8 @@ public abstract class TypedSection<T> extends AbstractVisitSummarySection {
 			log.error("Section '{}' failed to render", getSectionKey(), e);
 			Element errorEl = doc.createElement("section-error");
 			errorEl.setAttribute("key", getSectionKey());
-			errorEl.setAttribute("message", "Unable to load data for this section");
+			errorEl.setAttribute("message", msg("patientdocuments.visitSummary.common.sectionError",
+					"Unable to load data for this section"));
 			root.appendChild(errorEl);
 		}
 	}

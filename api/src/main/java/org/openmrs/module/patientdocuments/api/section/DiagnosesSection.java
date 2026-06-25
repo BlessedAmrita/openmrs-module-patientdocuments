@@ -25,6 +25,8 @@ public class DiagnosesSection extends TypedSection<List<DiagnosisEntry>> {
 
 	private static final int DEFAULT_ORDER = 400;
 
+	private static final String KEY_PREFIX = "patientdocuments.visitSummary.section.diagnoses.";
+
 	@Override
 	protected int getDefaultOrder() {
 		return DEFAULT_ORDER;
@@ -65,18 +67,28 @@ public class DiagnosesSection extends TypedSection<List<DiagnosisEntry>> {
 	@Override
 	protected void renderXml(Document doc, Element root, List<DiagnosisEntry> diagnoses) {
 		Element section = doc.createElement("diagnoses");
-		section.setAttribute("heading", "Diagnoses");
-		section.setAttribute("col-name", "Diagnosis");
-		section.setAttribute("col-certainty", "Certainty");
-		section.setAttribute("col-rank", "Rank");
+		section.setAttribute("heading", msg(KEY_PREFIX + "heading", "Diagnoses"));
+		section.setAttribute("col-name", msg(KEY_PREFIX + "col.name", "Diagnosis"));
+		section.setAttribute("col-certainty", msg(KEY_PREFIX + "col.certainty", "Certainty"));
+		section.setAttribute("col-rank", msg(KEY_PREFIX + "col.rank", "Rank"));
 		root.appendChild(section);
 
 		for (DiagnosisEntry diag : diagnoses) {
 			Element diagEl = doc.createElement("diagnosis");
 			diagEl.setAttribute("name", nvl(diag.getName()));
-			diagEl.setAttribute("certainty", nvl(diag.getCertainty()));
+			diagEl.setAttribute("certainty", localizeCertainty(diag.getCertainty()));
 			diagEl.setAttribute("rank", nvl(diag.getRank()));
 			section.appendChild(diagEl);
 		}
+	}
+
+	// Localizes the certainty value; unknown values fall back to a title-cased form rather than a missing-key string.
+	private String localizeCertainty(String certainty) {
+		String name = nvl(certainty);
+		if (name.isEmpty()) {
+			return "";
+		}
+		String fallback = formatEnumName(name);
+		return msg("patientdocuments.visitSummary.certainty." + name.toLowerCase(), fallback);
 	}
 }

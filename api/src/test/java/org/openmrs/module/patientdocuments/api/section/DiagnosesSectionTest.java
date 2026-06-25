@@ -108,8 +108,42 @@ public class DiagnosesSectionTest extends BaseModuleContextSensitiveTest {
 		Element first = (Element) diagnosesEl.getChildNodes().item(0);
 		Assertions.assertEquals("diagnosis", first.getNodeName());
 		Assertions.assertEquals("Malaria", first.getAttribute("name"));
-		Assertions.assertEquals("CONFIRMED", first.getAttribute("certainty"));
+		Assertions.assertEquals("Confirmed", first.getAttribute("certainty"));
 		Assertions.assertEquals("1", first.getAttribute("rank"));
+	}
+
+	@Test
+	public void renderXml_provisionalCertainty_localizesToBundleValue() throws Exception {
+		Element diag = renderSingleDiagnosis(new DiagnosisEntry("Anemia", "PROVISIONAL", "2"));
+
+		Assertions.assertEquals("Provisional", diag.getAttribute("certainty"));
+	}
+
+	@Test
+	public void renderXml_unknownCertainty_fallsBackToTitleCase() throws Exception {
+		Element diag = renderSingleDiagnosis(new DiagnosisEntry("Something", "DIFFERENTIAL", "1"));
+
+		String certainty = diag.getAttribute("certainty");
+		Assertions.assertEquals("Differential", certainty);
+		Assertions.assertFalse(certainty.contains("patientdocuments"),
+		    "Unknown certainty must degrade to a readable label, not a raw message key");
+	}
+
+	@Test
+	public void renderXml_unknownMultiWordCertainty_fallsBackToTitleCasedWords() throws Exception {
+		Element diag = renderSingleDiagnosis(new DiagnosisEntry("Something", "ENTERED_IN_ERROR", "1"));
+
+		String certainty = diag.getAttribute("certainty");
+		Assertions.assertEquals("Entered In Error", certainty);
+		Assertions.assertFalse(certainty.contains("_"),
+		    "Multi-word certainty must not leak underscores into the rendered label");
+	}
+
+	@Test
+	public void renderXml_emptyCertainty_staysEmpty() throws Exception {
+		Element diag = renderSingleDiagnosis(new DiagnosisEntry("Something", "", "1"));
+
+		Assertions.assertEquals("", diag.getAttribute("certainty"));
 	}
 
 	// ── isEnabled tests ───────────────────────────────────────────────────────
@@ -121,5 +155,17 @@ public class DiagnosesSectionTest extends BaseModuleContextSensitiveTest {
 		Context.getAdministrationService().saveGlobalProperty(gp);
 
 		Assertions.assertFalse(section.isEnabled());
+	}
+
+	// Renders a single diagnosis entry and returns its <diagnosis> element.
+	private Element renderSingleDiagnosis(DiagnosisEntry entry) throws Exception {
+		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+		Element root = doc.createElement("root");
+		doc.appendChild(root);
+
+		section.renderXml(doc, root, Arrays.asList(entry));
+
+		Element diagnosesEl = (Element) root.getChildNodes().item(0);
+		return (Element) diagnosesEl.getChildNodes().item(0);
 	}
 }

@@ -9,6 +9,7 @@
  */
 package org.openmrs.module.patientdocuments.api.section;
 
+import org.apache.commons.lang3.StringUtils;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.patientdocuments.common.PatientDocumentsConstants;
 import org.openmrs.util.ConfigUtil;
@@ -86,12 +87,18 @@ public abstract class AbstractVisitSummarySection implements VisitSummarySection
 	}
 
 	protected String nvl(String value) {
-		return value != null ? value : "";
+		return StringUtils.defaultString(value);
 	}
 
 	// Looks up a message by key for the current locale; returns the fallback (not the raw key) if the key is missing.
 	protected String msg(String key, String fallback) {
-		return Context.getMessageSourceService().getMessage(key, null, fallback, Context.getLocale());
+		try {
+			return Context.getMessageSourceService().getMessage(key, null, fallback, Context.getLocale());
+		}
+		catch (Exception e) {
+			log.warn("Message lookup failed for key '{}'; using fallback", key, e);
+			return fallback;
+		}
 	}
 
 	// "ENTERED_IN_ERROR" -> "Entered In Error", "CONFIRMED" -> "Confirmed"; "" for null/empty.

@@ -17,6 +17,4 @@ public class ConditionEntry {
 	String name;
 
 	String onsetDate;
-
-	String verificationStatus;
 }

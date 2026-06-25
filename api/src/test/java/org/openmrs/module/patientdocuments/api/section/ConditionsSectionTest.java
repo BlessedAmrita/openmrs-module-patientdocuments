@@ -79,7 +79,7 @@ public class ConditionsSectionTest extends BaseModuleContextSensitiveTest {
 	}
 
 	@Test
-	public void gatherData_codedConditionWithOnsetDate_returnsFormattedDateAndConfirmedStatus() {
+	public void gatherData_codedConditionWithOnsetDate_returnsFormattedDate() {
 		Visit visit = Context.getVisitService().getVisit(401);
 
 		List<ConditionEntry> conditions = section.gatherData(visit);
@@ -88,7 +88,6 @@ public class ConditionsSectionTest extends BaseModuleContextSensitiveTest {
 		    .filter(c -> "Type 2 Diabetes Mellitus".equals(c.getName())).findFirst().orElse(null);
 		Assertions.assertNotNull(diabetes, "Expected Type 2 Diabetes Mellitus condition entry");
 		Assertions.assertEquals("2024-06-15", diabetes.getOnsetDate());
-		Assertions.assertEquals("CONFIRMED", diabetes.getVerificationStatus());
 	}
 
 	@Test
@@ -101,7 +100,6 @@ public class ConditionsSectionTest extends BaseModuleContextSensitiveTest {
 		    .filter(c -> "Seasonal Allergic Rhinitis".equals(c.getName())).findFirst().orElse(null);
 		Assertions.assertNotNull(rhinitis, "Expected Seasonal Allergic Rhinitis condition entry");
 		Assertions.assertEquals("", rhinitis.getOnsetDate());
-		Assertions.assertEquals("PROVISIONAL", rhinitis.getVerificationStatus());
 	}
 
 	@Test
@@ -122,8 +120,8 @@ public class ConditionsSectionTest extends BaseModuleContextSensitiveTest {
 		Element root = doc.createElement("root");
 		doc.appendChild(root);
 		List<ConditionEntry> entries = Arrays.asList(
-		    new ConditionEntry("Type 2 Diabetes Mellitus", "2024-06-15", "CONFIRMED"),
-		    new ConditionEntry("Seasonal Allergic Rhinitis", "", "PROVISIONAL")
+		    new ConditionEntry("Type 2 Diabetes Mellitus", "2024-06-15"),
+		    new ConditionEntry("Seasonal Allergic Rhinitis", "")
 		);
 
 		section.renderXml(doc, root, entries);
@@ -137,7 +135,6 @@ public class ConditionsSectionTest extends BaseModuleContextSensitiveTest {
 		Assertions.assertEquals("condition", first.getNodeName());
 		Assertions.assertEquals("Type 2 Diabetes Mellitus", first.getAttribute("name"));
 		Assertions.assertEquals("2024-06-15", first.getAttribute("onset"));
-		Assertions.assertEquals("CONFIRMED", first.getAttribute("verification"));
 	}
 
 	@Test

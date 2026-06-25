@@ -18,7 +18,6 @@ import org.openmrs.CodedOrFreeText;
 import org.openmrs.Concept;
 import org.openmrs.ConceptName;
 import org.openmrs.Condition;
-import org.openmrs.ConditionVerificationStatus;
 import org.openmrs.Visit;
 import org.openmrs.api.ConditionService;
 import org.openmrs.api.context.Context;
@@ -50,8 +49,7 @@ public class ConditionsSection extends TypedSection<List<ConditionEntry>> {
 				.getActiveConditions(visit.getPatient())) {
 			conditions.add(new ConditionEntry(
 			    extractName(condition),
-			    formatDate(condition.getOnsetDate()),
-			    extractVerificationStatus(condition)
+			    formatDate(condition.getOnsetDate())
 			));
 		}
 		return conditions;
@@ -80,28 +78,18 @@ public class ConditionsSection extends TypedSection<List<ConditionEntry>> {
 		return "Unknown";
 	}
 
-	private String extractVerificationStatus(Condition condition) {
-		ConditionVerificationStatus status = condition.getVerificationStatus();
-		if (status == null) {
-			return "";
-		}
-		return status.name();
-	}
-
 	@Override
 	protected void renderXml(Document doc, Element root, List<ConditionEntry> conditions) {
 		Element section = doc.createElement("conditions");
 		section.setAttribute("heading", "Conditions");
 		section.setAttribute("col-name", "Condition");
 		section.setAttribute("col-onset", "Onset Date");
-		section.setAttribute("col-verification", "Verification Status");
 		root.appendChild(section);
 
 		for (ConditionEntry condition : conditions) {
 			Element conditionEl = doc.createElement("condition");
 			conditionEl.setAttribute("name", nvl(condition.getName()));
 			conditionEl.setAttribute("onset", nvl(condition.getOnsetDate()));
-			conditionEl.setAttribute("verification", nvl(condition.getVerificationStatus()));
 			section.appendChild(conditionEl);
 		}
 	}

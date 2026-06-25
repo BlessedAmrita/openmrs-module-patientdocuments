@@ -357,9 +357,9 @@
     </xsl:template>
 
     <!-- ═══════════════════════════════════════════════════
-         Conditions — 3-column table (name, onset date, verification status).
+         Conditions — 2-column table (name, onset date).
          Column headers come from conditions/@col-* attributes set by the renderer.
-         Each <condition> carries @name, @onset, @verification.
+         Each <condition> carries @name, @onset.
          ═══════════════════════════════════════════════════ -->
     <xsl:template name="conditions">
         <fo:block font-family="{$label-font-family}" margin-bottom="4mm">
@@ -371,9 +371,8 @@
             <xsl:choose>
                 <xsl:when test="conditions/condition">
                     <fo:table width="100%" table-layout="fixed">
-                        <fo:table-column column-width="50%"/>
-                        <fo:table-column column-width="25%"/>
-                        <fo:table-column column-width="25%"/>
+                        <fo:table-column column-width="65%"/>
+                        <fo:table-column column-width="35%"/>
                         <fo:table-body>
                             <fo:table-row background-color="#f5f5f5">
                                 <fo:table-cell padding="1mm 2mm"
@@ -388,12 +387,6 @@
                                         <xsl:value-of select="conditions/@col-onset"/>
                                     </fo:block>
                                 </fo:table-cell>
-                                <fo:table-cell padding="1mm 2mm"
-                                    border-bottom="0.5pt solid #cccccc">
-                                    <fo:block font-size="8pt" font-weight="bold" color="#444444">
-                                        <xsl:value-of select="conditions/@col-verification"/>
-                                    </fo:block>
-                                </fo:table-cell>
                             </fo:table-row>
                             <xsl:for-each select="conditions/condition">
                                 <fo:table-row>
@@ -405,11 +398,6 @@
                                     <fo:table-cell padding="1mm 2mm">
                                         <fo:block font-size="9pt">
                                             <xsl:value-of select="@onset"/>
-                                        </fo:block>
-                                    </fo:table-cell>
-                                    <fo:table-cell padding="1mm 2mm">
-                                        <fo:block font-size="9pt">
-                                            <xsl:value-of select="@verification"/>
                                         </fo:block>
                                     </fo:table-cell>
                                 </fo:table-row>

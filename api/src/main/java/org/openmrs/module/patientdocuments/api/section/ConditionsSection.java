@@ -32,6 +32,8 @@ public class ConditionsSection extends TypedSection<List<ConditionEntry>> {
 
 	private static final int DEFAULT_ORDER = 450;
 
+	private static final String KEY_PREFIX = "patientdocuments.visitSummary.section.conditions.";
+
 	@Override
 	protected int getDefaultOrder() {
 		return DEFAULT_ORDER;
@@ -60,7 +62,7 @@ public class ConditionsSection extends TypedSection<List<ConditionEntry>> {
 		if (codedOrFreeText == null) {
 			log.warn("Condition {} has null coded-or-free-text wrapper",
 				condition.getUuid());
-			return "Unknown";
+			return msg(KEY_PREFIX + "unknown", "Unknown");
 		}
 		Concept coded = codedOrFreeText.getCoded();
 		if (coded != null) {
@@ -75,15 +77,15 @@ public class ConditionsSection extends TypedSection<List<ConditionEntry>> {
 		log.warn("Condition {} has coded-or-free-text wrapper but "
 			+ "neither coded concept name nor non-coded text resolved",
 			condition.getUuid());
-		return "Unknown";
+		return msg(KEY_PREFIX + "unknown", "Unknown");
 	}
 
 	@Override
 	protected void renderXml(Document doc, Element root, List<ConditionEntry> conditions) {
 		Element section = doc.createElement("conditions");
-		section.setAttribute("heading", "Conditions");
-		section.setAttribute("col-name", "Condition");
-		section.setAttribute("col-onset", "Onset Date");
+		section.setAttribute("heading", msg(KEY_PREFIX + "heading", "Conditions"));
+		section.setAttribute("col-name", msg(KEY_PREFIX + "col.name", "Condition"));
+		section.setAttribute("col-onset", msg(KEY_PREFIX + "col.onset", "Onset Date"));
 		root.appendChild(section);
 
 		for (ConditionEntry condition : conditions) {

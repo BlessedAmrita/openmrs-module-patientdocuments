@@ -36,10 +36,12 @@ import java.util.List;
  *
  * Dataset layout:
  *   Visit 401 — patient 2, who has 3 conditions:
- *     Condition 401 — Type 2 Diabetes Mellitus (coded), ACTIVE, CONFIRMED, onset 2024-06-15
- *     Condition 402 — "Seasonal Allergic Rhinitis" (non-coded), ACTIVE, PROVISIONAL, no onset
- *     Condition 403 — Chronic Sinusitis (coded), INACTIVE, CONFIRMED (must be excluded)
+ *     Condition 401 — Type 2 Diabetes Mellitus (coded), ACTIVE, onset 2024-06-15
+ *     Condition 402 — "Seasonal Allergic Rhinitis" (non-coded), ACTIVE, no onset
+ *     Condition 403 — Chronic Sinusitis (coded), INACTIVE (must be excluded)
  *   Visit 402 — patient 7, who has no conditions
+ *   Visit 403 — patient 8, whose single condition has neither a coded concept
+ *               nor non-coded text (name falls back to "Unknown")
  */
 public class ConditionsSectionTest extends BaseModuleContextSensitiveTest {
 
@@ -100,6 +102,18 @@ public class ConditionsSectionTest extends BaseModuleContextSensitiveTest {
 		    .filter(c -> "Seasonal Allergic Rhinitis".equals(c.getName())).findFirst().orElse(null);
 		Assertions.assertNotNull(rhinitis, "Expected Seasonal Allergic Rhinitis condition entry");
 		Assertions.assertEquals("", rhinitis.getOnsetDate());
+	}
+
+	@Test
+	public void gatherData_conditionWithNoCodedOrNonCodedValue_returnsUnknownName() {
+		// Visit 403's patient (patient 8) has a single condition with neither a
+		// coded concept nor non-coded free text, so the name falls back to "Unknown"
+		Visit visit = Context.getVisitService().getVisit(403);
+
+		List<ConditionEntry> conditions = section.gatherData(visit);
+
+		Assertions.assertEquals(1, conditions.size());
+		Assertions.assertEquals("Unknown", conditions.get(0).getName());
 	}
 
 	@Test

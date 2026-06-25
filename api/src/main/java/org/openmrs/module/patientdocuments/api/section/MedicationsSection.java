@@ -41,6 +41,8 @@ public class MedicationsSection extends TypedSection<List<MedicationEntry>> {
 	// the visual order in the PDF.
 	private static final int DEFAULT_ORDER = 550;
 
+	private static final String KEY_PREFIX = "patientdocuments.visitSummary.section.medications.";
+
 	@Override
 	protected int getDefaultOrder() {
 		return DEFAULT_ORDER;
@@ -158,11 +160,11 @@ public class MedicationsSection extends TypedSection<List<MedicationEntry>> {
 	@Override
 	protected void renderXml(Document doc, Element root, List<MedicationEntry> medications) {
 		Element section = doc.createElement("medications");
-		section.setAttribute("heading", "Active Medications");
-		section.setAttribute("col-name", "Medication");
-		section.setAttribute("col-dosing", "Dosing");
-		section.setAttribute("col-duration", "Duration");
-		section.setAttribute("col-start", "Start Date");
+		section.setAttribute("heading", msg(KEY_PREFIX + "heading", "Active Medications"));
+		section.setAttribute("col-name", msg(KEY_PREFIX + "col.name", "Medication"));
+		section.setAttribute("col-dosing", msg(KEY_PREFIX + "col.dosing", "Dosing"));
+		section.setAttribute("col-duration", msg(KEY_PREFIX + "col.duration", "Duration"));
+		section.setAttribute("col-start", msg(KEY_PREFIX + "col.start", "Start Date"));
 		root.appendChild(section);
 
 		for (MedicationEntry medication : medications) {

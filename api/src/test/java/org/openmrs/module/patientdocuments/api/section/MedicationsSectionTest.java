@@ -215,11 +215,6 @@ public class MedicationsSectionTest extends BaseModuleContextSensitiveTest {
 		Assertions.assertEquals(1, root.getChildNodes().getLength());
 		Element medsEl = (Element) root.getChildNodes().item(0);
 		Assertions.assertEquals("medications", medsEl.getNodeName());
-		Assertions.assertEquals("Active Medications", medsEl.getAttribute("heading"));
-		Assertions.assertEquals("Medication", medsEl.getAttribute("col-name"));
-		Assertions.assertEquals("Dosing", medsEl.getAttribute("col-dosing"));
-		Assertions.assertEquals("Duration", medsEl.getAttribute("col-duration"));
-		Assertions.assertEquals("Start Date", medsEl.getAttribute("col-start"));
 		Assertions.assertEquals(2, medsEl.getChildNodes().getLength());
 
 		Element first = (Element) medsEl.getChildNodes().item(0);

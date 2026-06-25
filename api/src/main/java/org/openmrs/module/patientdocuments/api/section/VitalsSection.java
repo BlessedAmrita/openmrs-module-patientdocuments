@@ -46,6 +46,8 @@ public class VitalsSection extends TypedSection<List<Vital>> {
 
 	private static final int DEFAULT_ORDER = 300;
 
+	private static final String KEY_PREFIX = "patientdocuments.visitSummary.section.vitals.";
+
 	@Override
 	public String getSectionKey() {
 		return "vitals";
@@ -123,7 +125,8 @@ public class VitalsSection extends TypedSection<List<Vital>> {
 	private Vital buildBpVital(Double systolicValue, Double diastolicValue) {
 		String s = systolicValue != null ? formatNumeric(systolicValue) : "?";
 		String d = diastolicValue != null ? formatNumeric(diastolicValue) : "?";
-		return new Vital("Blood Pressure", s + "/" + d + " mmHg");
+		String unit = msg(KEY_PREFIX + "unit.mmHg", "mmHg");
+		return new Vital(msg(KEY_PREFIX + "bloodPressure", "Blood Pressure"), s + "/" + d + " " + unit);
 	}
 
 	private Vital buildVital(Concept concept, Map<Integer, Double> obsMap) {
@@ -142,7 +145,7 @@ public class VitalsSection extends TypedSection<List<Vital>> {
 	@Override
 	protected void renderXml(Document doc, Element root, List<Vital> vitals) {
 		Element section = doc.createElement("vitals");
-		section.setAttribute("heading", "Vital Signs");
+		section.setAttribute("heading", msg(KEY_PREFIX + "heading", "Vital Signs"));
 		root.appendChild(section);
 
 		for (Vital vital : vitals) {

@@ -25,6 +25,8 @@ public class FooterSection extends TypedSection<FooterInfo> {
 
 	private static final int DEFAULT_ORDER = 900;
 
+	private static final String KEY_PREFIX = "patientdocuments.visitSummary.section.footer.";
+
 	@Override
 	protected int getDefaultOrder() {
 		return DEFAULT_ORDER;
@@ -60,8 +62,8 @@ public class FooterSection extends TypedSection<FooterInfo> {
 	@Override
 	protected void renderXml(Document doc, Element root, FooterInfo data) {
 		Element footer = doc.createElement("footer");
-		footer.setAttribute("lbl-printed-by", "Printed by:");
-		footer.setAttribute("lbl-system-id", "System ID:");
+		footer.setAttribute("lbl-printed-by", msg(KEY_PREFIX + "lbl.printedBy", "Printed by:"));
+		footer.setAttribute("lbl-system-id", msg(KEY_PREFIX + "lbl.systemId", "System ID:"));
 		root.appendChild(footer);
 		addTextElement(doc, footer, "printedBy", data.getPrintedBy());
 		addTextElement(doc, footer, "timestamp", data.getTimestamp());

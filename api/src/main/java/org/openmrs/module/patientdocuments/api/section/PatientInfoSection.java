@@ -26,6 +26,8 @@ public class PatientInfoSection extends TypedSection<PatientVisitInfo> {
 
 	private static final int DEFAULT_ORDER = 200;
 
+	private static final String KEY_PREFIX = "patientdocuments.visitSummary.section.patientInfo.";
+
 	@Override
 	protected int getDefaultOrder() {
 		return DEFAULT_ORDER;
@@ -78,14 +80,14 @@ public class PatientInfoSection extends TypedSection<PatientVisitInfo> {
 	@Override
 	protected void renderXml(Document doc, Element root, PatientVisitInfo data) {
 		Element section = doc.createElement("patientInfo");
-		section.setAttribute("heading", "Patient Information");
-		section.setAttribute("lbl-patient-name", "Patient Name");
-		section.setAttribute("lbl-patient-id", "Patient ID");
-		section.setAttribute("lbl-dob", "Date of Birth");
-		section.setAttribute("lbl-gender", "Gender");
-		section.setAttribute("lbl-visit-date", "Visit Date");
-		section.setAttribute("lbl-visit-type", "Visit Type");
-		section.setAttribute("lbl-location", "Location");
+		section.setAttribute("heading", msg(KEY_PREFIX + "heading", "Patient Information"));
+		section.setAttribute("lbl-patient-name", msg(KEY_PREFIX + "lbl.patientName", "Patient Name"));
+		section.setAttribute("lbl-patient-id", msg(KEY_PREFIX + "lbl.patientId", "Patient ID"));
+		section.setAttribute("lbl-dob", msg(KEY_PREFIX + "lbl.dob", "Date of Birth"));
+		section.setAttribute("lbl-gender", msg(KEY_PREFIX + "lbl.gender", "Gender"));
+		section.setAttribute("lbl-visit-date", msg(KEY_PREFIX + "lbl.visitDate", "Visit Date"));
+		section.setAttribute("lbl-visit-type", msg(KEY_PREFIX + "lbl.visitType", "Visit Type"));
+		section.setAttribute("lbl-location", msg(KEY_PREFIX + "lbl.location", "Location"));
 		root.appendChild(section);
 
 		addTextElement(doc, section, "patientName", data.getPatientName());

@@ -70,6 +70,17 @@ public class AllergiesSectionTest extends BaseModuleContextSensitiveTest {
 	}
 
 	@Test
+	public void gatherData_allergenWithNoResolvableName_returnsUnknown() {
+		// Visit 303's patient (patient 8) has one allergy whose coded allergen has no concept name, so the allergen name cannot be resolved
+		Visit visit = Context.getVisitService().getVisit(303);
+
+		List<AllergyEntry> allergies = section.gatherData(visit);
+
+		Assertions.assertEquals(1, allergies.size());
+		Assertions.assertEquals("Unknown", allergies.get(0).getAllergen());
+	}
+
+	@Test
 	public void gatherData_patientWithNoAllergies_returnsEmptyList() {
 		// Visit 302's patient (patient 7) has no allergy records
 		Visit visit = Context.getVisitService().getVisit(302);

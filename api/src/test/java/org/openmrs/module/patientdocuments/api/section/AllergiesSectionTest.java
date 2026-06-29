@@ -39,6 +39,8 @@ import java.util.List;
  *     Allergy 301 — Penicillin (DRUG), severity Severe, reactions Rash + Nausea
  *     Allergy 302 — Peanuts (FOOD), severity Mild, reaction Rash
  *   Visit 302 — patient 7, who has no allergies
+ *   Visit 303 — patient 8, who has 1 allergy:
+ *     Allergy 303 — coded allergen with no name, falls back to Unknown
  */
 public class AllergiesSectionTest extends BaseModuleContextSensitiveTest {
 

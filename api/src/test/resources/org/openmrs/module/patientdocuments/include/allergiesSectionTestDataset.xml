@@ -5,7 +5,7 @@
     allergy_reaction table (FK: allergy_id). getAllergies(patient) returns ALL allergies
     for a patient regardless of visit, so allergies are patient-scoped, not visit-scoped.
 
-    Concept IDs 7001-7006 to avoid conflicts with vitalsSectionTestDataset (5001-5009)
+    Concept IDs 7001-7007 to avoid conflicts with vitalsSectionTestDataset (5001-5009)
     and diagnosesSectionTestDataset (6001-6003).
     Visit IDs 301+ to avoid conflicts with vitals (101-106) and diagnoses (201-204).
     Allergy/allergy_reaction IDs 301+ for the same reason.

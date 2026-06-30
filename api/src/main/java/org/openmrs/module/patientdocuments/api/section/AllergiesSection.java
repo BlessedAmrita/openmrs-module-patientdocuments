@@ -12,6 +12,9 @@ package org.openmrs.module.patientdocuments.api.section;
 import java.util.ArrayList;
 import java.util.List;
 
+import lombok.extern.slf4j.Slf4j;
+
+import org.apache.commons.lang3.StringUtils;
 import org.openmrs.Allergy;
 import org.openmrs.AllergyReaction;
 import org.openmrs.Visit;
@@ -22,6 +25,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 @Component
+@Slf4j
 public class AllergiesSection extends TypedSection<List<AllergyEntry>> {
 
 	private static final int DEFAULT_ORDER = 500;
@@ -52,7 +56,10 @@ public class AllergiesSection extends TypedSection<List<AllergyEntry>> {
 	}
 
 	private String extractAllergenName(Allergy allergy) {
-		if (allergy.getAllergen() == null) return "";
+		if (allergy.getAllergen() == null) {
+			log.warn("Allergy {} has null allergen", allergy.getUuid());
+			return msg(KEY_PREFIX + "unknown", "Unknown");
+		}
 		if (allergy.getAllergen().getCodedAllergen() != null
 				&& allergy.getAllergen().getCodedAllergen().getName() != null) {
 			return allergy.getAllergen().getCodedAllergen().getName().getName();
@@ -60,7 +67,9 @@ public class AllergiesSection extends TypedSection<List<AllergyEntry>> {
 		if (allergy.getAllergen().getNonCodedAllergen() != null) {
 			return allergy.getAllergen().getNonCodedAllergen();
 		}
-		return "";
+		log.warn("Allergy {} has allergen but neither coded allergen name "
+			+ "nor non-coded allergen text resolved", allergy.getUuid());
+		return msg(KEY_PREFIX + "unknown", "Unknown");
 	}
 
 	private String extractSeverity(Allergy allergy) {
@@ -95,9 +104,9 @@ public class AllergiesSection extends TypedSection<List<AllergyEntry>> {
 
 		for (AllergyEntry allergy : allergies) {
 			Element allergyEl = doc.createElement("allergy");
-			allergyEl.setAttribute("allergen", nvl(allergy.getAllergen()));
-			allergyEl.setAttribute("severity", nvl(allergy.getSeverity()));
-			allergyEl.setAttribute("reactions", nvl(allergy.getReactions()));
+			allergyEl.setAttribute("allergen", StringUtils.defaultString(allergy.getAllergen()));
+			allergyEl.setAttribute("severity", StringUtils.defaultString(allergy.getSeverity()));
+			allergyEl.setAttribute("reactions", StringUtils.defaultString(allergy.getReactions()));
 			section.appendChild(allergyEl);
 		}
 	}

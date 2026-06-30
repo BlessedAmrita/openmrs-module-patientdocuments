@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.apache.commons.lang3.StringUtils;
 import org.openmrs.Concept;
+import org.openmrs.Drug;
 import org.openmrs.DrugOrder;
 import org.openmrs.FreeTextDosingInstructions;
 import org.openmrs.Order;
@@ -34,11 +35,8 @@ import org.w3c.dom.Element;
 @Slf4j
 public class MedicationsSection extends TypedSection<List<MedicationEntry>> {
 
-	// Sorts after Allergies (500) and before Footer (900), following the +50
-	// spacing convention (Conditions = 450). NOTE: the printed position of this
-	// section is fixed by the XSLT main template (it renders after allergies);
-	// DEFAULT_ORDER governs the section-error grouping/ordering convention, not
-	// the visual order in the PDF.
+	// DEFAULT_ORDER governs section-error grouping, not the printed position —
+	// the XSLT main template fixes the visual order, rendering medications after allergies.
 	private static final int DEFAULT_ORDER = 550;
 
 	private static final String KEY_PREFIX = "patientdocuments.visitSummary.section.medications.";
@@ -91,12 +89,7 @@ public class MedicationsSection extends TypedSection<List<MedicationEntry>> {
 			}
 		}
 		if (order.getDrug() != null) {
-			String name = order.getDrug().getName();
-			String strength = order.getDrug().getStrength();
-			if (strength != null && !strength.trim().isEmpty()
-			        && (name == null || !name.contains(strength.trim()))) {
-				name = ((name != null ? name : "") + " " + strength.trim()).trim();
-			}
+			String name = codedDrugName(order.getDrug());
 			if (StringUtils.isNotBlank(name)) {
 				return name;
 			}
@@ -110,6 +103,18 @@ public class MedicationsSection extends TypedSection<List<MedicationEntry>> {
 		log.warn("Drug order {} has no resolvable drug, non-coded drug, or concept name; using 'Unknown'",
 		    order.getOrderId());
 		return msg(KEY_PREFIX + "unknown", "Unknown");
+	}
+
+	// Combines the drug's name with its strength (e.g. "Aspirin 81mg"), unless the name
+	// already includes the strength. Returns the bare name when no strength is recorded.
+	private String codedDrugName(Drug drug) {
+		String name = drug.getName();
+		String strength = drug.getStrength();
+		if (strength != null && !strength.trim().isEmpty()
+		        && (name == null || !name.contains(strength.trim()))) {
+			name = ((name != null ? name : "") + " " + strength.trim()).trim();
+		}
+		return name;
 	}
 
 	private String buildDosing(DrugOrder order) {

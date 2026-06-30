@@ -14,6 +14,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import lombok.extern.slf4j.Slf4j;
+
 import org.apache.commons.lang3.StringUtils;
 import org.openmrs.Concept;
 import org.openmrs.DrugOrder;
@@ -24,16 +26,13 @@ import org.openmrs.Patient;
 import org.openmrs.Visit;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.patientdocuments.api.model.MedicationEntry;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 @Component
+@Slf4j
 public class MedicationsSection extends TypedSection<List<MedicationEntry>> {
-
-	private static final Logger log = LoggerFactory.getLogger(MedicationsSection.class);
 
 	// Sorts after Allergies (500) and before Footer (900), following the +50
 	// spacing convention (Conditions = 450). NOTE: the printed position of this
@@ -115,7 +114,7 @@ public class MedicationsSection extends TypedSection<List<MedicationEntry>> {
 
 	private String buildDosing(DrugOrder order) {
 		if (FreeTextDosingInstructions.class.equals(order.getDosingType())) {
-			return nvl(order.getDosingInstructions());
+			return StringUtils.defaultString(order.getDosingInstructions());
 		}
 		// SimpleDosingInstructions (the default) — build the string ourselves so a
 		// null dose/units/route/frequency can't NPE (as it would in
@@ -179,10 +178,10 @@ public class MedicationsSection extends TypedSection<List<MedicationEntry>> {
 
 		for (MedicationEntry medication : medications) {
 			Element medEl = doc.createElement("medication");
-			medEl.setAttribute("name", nvl(medication.getName()));
-			medEl.setAttribute("dosing", nvl(medication.getDosing()));
-			medEl.setAttribute("duration", nvl(medication.getDuration()));
-			medEl.setAttribute("start", nvl(medication.getStartDate()));
+			medEl.setAttribute("name", StringUtils.defaultString(medication.getName()));
+			medEl.setAttribute("dosing", StringUtils.defaultString(medication.getDosing()));
+			medEl.setAttribute("duration", StringUtils.defaultString(medication.getDuration()));
+			medEl.setAttribute("start", StringUtils.defaultString(medication.getStartDate()));
 			section.appendChild(medEl);
 		}
 	}

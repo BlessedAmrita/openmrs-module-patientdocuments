@@ -35,11 +35,12 @@ import java.util.List;
  * active drug orders for the patient regardless of which visit is passed in.
  *
  * Dataset layout:
- *   Visit 8001 — patient 6, who has 4 active drug orders:
+ *   Visit 8001 — patient 6, who has 5 active drug orders:
  *     Order 8001 — coded drug Lisinopril, 5 mg Oral Twice daily, 10 days
  *     Order 8002 — non-coded "Paracetamol syrup", 2.5 mg Oral Twice daily, no duration
  *     Order 8003 — concept-only Metformin, free-text dosing instructions
  *     Order 8004 — non-coded "Ibuprofen", 250 mg only (no route/frequency/duration)
+ *     Order 8005 — concept-only (concept 8008 has no name), no drug/non-coded text → "Unknown"
  *   Visit 8002 — patient 8, who has no drug orders
  */
 public class MedicationsSectionTest extends BaseModuleContextSensitiveTest {
@@ -68,12 +69,24 @@ public class MedicationsSectionTest extends BaseModuleContextSensitiveTest {
 
 	@Test
 	public void gatherData_patientWithActiveOrders_returnsAllMedicationEntries() {
-		// Visit 8001's patient (patient 6) has 4 active drug orders
+		// Visit 8001's patient (patient 6) has 5 active drug orders
 		Visit visit = Context.getVisitService().getVisit(8001);
 
 		List<MedicationEntry> meds = section.gatherData(visit);
 
-		Assertions.assertEquals(4, meds.size());
+		Assertions.assertEquals(5, meds.size());
+	}
+
+	@Test
+	public void gatherData_drugWithNoResolvableName_returnsUnknown() {
+		// Order 8005 references concept 8008, which has no name, and has no drug or
+		// non-coded text, so buildDrugName falls through every step to "Unknown".
+		Visit visit = Context.getVisitService().getVisit(8001);
+
+		List<MedicationEntry> meds = section.gatherData(visit);
+
+		MedicationEntry unknown = findByName(meds, "Unknown");
+		Assertions.assertNotNull(unknown, "Expected a medication entry with name 'Unknown'");
 	}
 
 	@Test

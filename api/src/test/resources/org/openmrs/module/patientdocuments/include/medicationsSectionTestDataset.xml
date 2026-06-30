@@ -18,11 +18,13 @@
     (7xxx/3xx) datasets. Dose units, route, frequency and the generic non-coded
     concept are all defined locally so assertions don't depend on core concepts.
 
-    Patient 6 — 4 active drug orders:
+    Patient 6 — 5 active drug orders:
       Order 8001 — coded drug Lisinopril, dose 5 mg Oral Twice daily, 10 days
       Order 8002 — non-coded "Paracetamol syrup", dose 2.5 mg Oral Twice daily, no duration
       Order 8003 — concept-only (Metformin), free-text dosing instructions
       Order 8004 — non-coded "Ibuprofen", dose 250 mg only (no route/frequency/duration)
+      Order 8005 — concept-only (concept 8008, which has no name) and no drug/non-coded
+                   text → drug name falls back to "Unknown"
     Patient 8 — no drug orders (empty-state test)
 -->
 <dataset>
@@ -87,6 +89,14 @@
                 creator="1" date_created="2025-01-01 00:00:00.0" voided="false"
                 uuid="8007cc00-name-0007-0007-000000008007"
                 concept_name_type="FULLY_SPECIFIED" locale_preferred="1"/>
+
+  <!-- Concept with NO concept_name child: concept.getName() is null, so
+       conceptName(...) resolves to blank. This is the realistic trigger for the
+       "Unknown" drug-name fallback — a concept present in messy data at a
+       low-resource site but with no name recorded (see order 8005). -->
+  <concept concept_id="8008" retired="false" datatype_id="4" class_id="3" is_set="false"
+           creator="1" date_created="2025-01-01 00:00:00.0"
+           uuid="8008cccc-0008-0008-0008-000000008008"/>
 
   <!-- ── Order frequency (references concept 8004 "Twice daily") ─────────── -->
 
@@ -158,6 +168,19 @@
           uuid="8004a0a0-0004-0004-0004-000000008004"/>
   <drug_order order_id="8004" dose="250" dose_units="8006" as_needed="false"
               drug_non_coded="Ibuprofen"
+              dosing_type="org.openmrs.SimpleDosingInstructions"
+              dispense_as_written="0"/>
+
+  <!-- ── Order 8005: concept-only (concept 8008 has no name), no drug, not
+       non-coded → buildDrugName falls through every step to "Unknown" ─────── -->
+
+  <orders order_id="8005" order_type_id="1" order_number="MED-8005" urgency="ROUTINE"
+          order_action="NEW" concept_id="8008" orderer="1"
+          date_activated="2025-03-01 00:00:00.0" creator="1"
+          date_created="2025-03-01 00:00:00.0" voided="false" patient_id="6"
+          care_setting="1" encounter_id="8001"
+          uuid="8005a0a0-0005-0005-0005-000000008005"/>
+  <drug_order order_id="8005" as_needed="false"
               dosing_type="org.openmrs.SimpleDosingInstructions"
               dispense_as_written="0"/>
 

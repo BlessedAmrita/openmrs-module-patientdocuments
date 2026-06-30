@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.openmrs.Concept;
 import org.openmrs.DrugOrder;
 import org.openmrs.FreeTextDosingInstructions;
@@ -85,22 +86,31 @@ public class MedicationsSection extends TypedSection<List<MedicationEntry>> {
 
 	private String buildDrugName(DrugOrder order) {
 		if (order.isNonCodedDrug()) {
-			return order.getDrugNonCoded();
+			String nonCoded = order.getDrugNonCoded();
+			if (StringUtils.isNotBlank(nonCoded)) {
+				return nonCoded;
+			}
 		}
 		if (order.getDrug() != null) {
 			String name = order.getDrug().getName();
 			String strength = order.getDrug().getStrength();
 			if (strength != null && !strength.trim().isEmpty()
 			        && (name == null || !name.contains(strength.trim()))) {
-				return (name != null ? name : "") + " " + strength.trim();
+				name = ((name != null ? name : "") + " " + strength.trim()).trim();
 			}
-			return name != null ? name : "";
+			if (StringUtils.isNotBlank(name)) {
+				return name;
+			}
 		}
 		if (order.getConcept() != null) {
-			return conceptName(order.getConcept());
+			String name = conceptName(order.getConcept());
+			if (StringUtils.isNotBlank(name)) {
+				return name;
+			}
 		}
-		log.warn("Drug order {} has no drug, non-coded drug, or concept; using 'Unknown'", order.getOrderId());
-		return "Unknown";
+		log.warn("Drug order {} has no resolvable drug, non-coded drug, or concept name; using 'Unknown'",
+		    order.getOrderId());
+		return msg(KEY_PREFIX + "unknown", "Unknown");
 	}
 
 	private String buildDosing(DrugOrder order) {

@@ -12,6 +12,7 @@ package org.openmrs.module.patientdocuments.api.section;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.openmrs.Diagnosis;
 import org.openmrs.Visit;
 import org.openmrs.api.context.Context;
@@ -75,16 +76,16 @@ public class DiagnosesSection extends TypedSection<List<DiagnosisEntry>> {
 
 		for (DiagnosisEntry diag : diagnoses) {
 			Element diagEl = doc.createElement("diagnosis");
-			diagEl.setAttribute("name", nvl(diag.getName()));
+			diagEl.setAttribute("name", StringUtils.defaultString(diag.getName()));
 			diagEl.setAttribute("certainty", localizeCertainty(diag.getCertainty()));
-			diagEl.setAttribute("rank", nvl(diag.getRank()));
+			diagEl.setAttribute("rank", StringUtils.defaultString(diag.getRank()));
 			section.appendChild(diagEl);
 		}
 	}
 
 	// Localizes the certainty value; unknown values fall back to a title-cased form rather than a missing-key string.
 	private String localizeCertainty(String certainty) {
-		String name = nvl(certainty);
+		String name = StringUtils.defaultString(certainty);
 		if (name.isEmpty()) {
 			return "";
 		}

@@ -12,6 +12,7 @@ package org.openmrs.module.patientdocuments.api.section;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import org.apache.commons.lang3.StringUtils;
 import org.openmrs.User;
 import org.openmrs.Visit;
 import org.openmrs.api.context.Context;
@@ -54,7 +55,7 @@ public class FooterSection extends TypedSection<FooterInfo> {
 				printedBy = currentUser.getUsername();
 			}
 		}
-		String systemId = currentUser != null ? nvl(currentUser.getSystemId()) : "";
+		String systemId = currentUser != null ? StringUtils.defaultString(currentUser.getSystemId()) : "";
 		String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
 		return new FooterInfo(printedBy, systemId, timestamp);
 	}

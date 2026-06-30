@@ -5,7 +5,7 @@
     allergy_reaction table (FK: allergy_id). getAllergies(patient) returns ALL allergies
     for a patient regardless of visit, so allergies are patient-scoped, not visit-scoped.
 
-    Concept IDs 7001-7006 to avoid conflicts with vitalsSectionTestDataset (5001-5009)
+    Concept IDs 7001-7007 to avoid conflicts with vitalsSectionTestDataset (5001-5009)
     and diagnosesSectionTestDataset (6001-6003).
     Visit IDs 301+ to avoid conflicts with vitals (101-106) and diagnoses (201-204).
     Allergy/allergy_reaction IDs 301+ for the same reason.
@@ -14,8 +14,13 @@
       Allergy 301 — Penicillin (DRUG), severity=Severe, reactions: Rash + Nausea
       Allergy 302 — Peanuts (FOOD), severity=Mild, reaction: Rash
 
+    Patient 8 (from standardTestDataset) — 1 allergy:
+      Allergy 303 — coded allergen 7007 (no concept_name), so the name cannot be
+                    resolved and falls back to "Unknown"
+
     Visit 301 — for patient 2 (has allergies)
     Visit 302 — for patient 7 (no allergies, empty-list test)
+    Visit 303 — for patient 8 (allergen with unresolvable name)
 -->
 <dataset>
 
@@ -95,6 +100,20 @@
   <allergy_reaction allergy_reaction_id="303" allergy_id="302" reaction_concept_id="7005"
            uuid="a11e9ea0-0303-0303-0303-000000000303"/>
 
+  <!-- ── Allergen concept with no name (unknown-name fallback test) ───────── -->
+
+  <concept concept_id="7007" retired="false" datatype_id="4" class_id="1" is_set="false"
+           creator="1" date_created="2025-01-01 00:00:00.0"
+           uuid="7007aaaa-0007-0007-0007-000000007007"/>
+
+  <!-- ── Allergy 303: coded allergen 7007 has no concept_name, no non-coded
+       allergen, so the name cannot be resolved (falls back to "Unknown") ──── -->
+
+  <allergy allergy_id="303" patient_id="8" allergen_type="OTHER" coded_allergen="7007"
+           voided="0"
+           creator="1" date_created="2025-01-01 00:00:00.0"
+           uuid="0a11e269-0303-0303-0303-000000000303"/>
+
   <!-- ── Visit 301: patient 2 (has allergies) ────────────────────────────── -->
 
   <visit visit_id="301" patient_id="2" visit_type_id="1"
@@ -108,5 +127,12 @@
          date_started="2025-02-02 00:00:00.0"
          creator="1" date_created="2025-02-02 00:00:00.0" voided="0"
          uuid="00000302-0302-0302-0302-000000000302"/>
+
+  <!-- ── Visit 303: patient 8 (allergen with unresolvable name) ──────────── -->
+
+  <visit visit_id="303" patient_id="8" visit_type_id="1"
+         date_started="2025-02-03 00:00:00.0"
+         creator="1" date_created="2025-02-03 00:00:00.0" voided="0"
+         uuid="00000303-0303-0303-0303-000000000303"/>
 
 </dataset>

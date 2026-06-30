@@ -14,6 +14,7 @@ import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
+import org.apache.commons.lang3.StringUtils;
 import org.openmrs.CodedOrFreeText;
 import org.openmrs.Concept;
 import org.openmrs.ConceptName;
@@ -90,8 +91,8 @@ public class ConditionsSection extends TypedSection<List<ConditionEntry>> {
 
 		for (ConditionEntry condition : conditions) {
 			Element conditionEl = doc.createElement("condition");
-			conditionEl.setAttribute("name", nvl(condition.getName()));
-			conditionEl.setAttribute("onset", nvl(condition.getOnsetDate()));
+			conditionEl.setAttribute("name", StringUtils.defaultString(condition.getName()));
+			conditionEl.setAttribute("onset", StringUtils.defaultString(condition.getOnsetDate()));
 			section.appendChild(conditionEl);
 		}
 	}

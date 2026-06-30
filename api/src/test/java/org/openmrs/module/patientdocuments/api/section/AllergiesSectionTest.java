@@ -39,6 +39,8 @@ import java.util.List;
  *     Allergy 301 — Penicillin (DRUG), severity Severe, reactions Rash + Nausea
  *     Allergy 302 — Peanuts (FOOD), severity Mild, reaction Rash
  *   Visit 302 — patient 7, who has no allergies
+ *   Visit 303 — patient 8, who has 1 allergy:
+ *     Allergy 303 — coded allergen with no name, falls back to Unknown
  */
 public class AllergiesSectionTest extends BaseModuleContextSensitiveTest {
 
@@ -67,6 +69,17 @@ public class AllergiesSectionTest extends BaseModuleContextSensitiveTest {
 		Assertions.assertEquals("Penicillin", first.getAllergen());
 		Assertions.assertEquals("Severe", first.getSeverity());
 		Assertions.assertEquals("Rash, Nausea", first.getReactions());
+	}
+
+	@Test
+	public void gatherData_allergenWithNoResolvableName_returnsUnknown() {
+		// Visit 303's patient (patient 8) has one allergy whose coded allergen has no concept name, so the allergen name cannot be resolved
+		Visit visit = Context.getVisitService().getVisit(303);
+
+		List<AllergyEntry> allergies = section.gatherData(visit);
+
+		Assertions.assertEquals(1, allergies.size());
+		Assertions.assertEquals("Unknown", allergies.get(0).getAllergen());
 	}
 
 	@Test

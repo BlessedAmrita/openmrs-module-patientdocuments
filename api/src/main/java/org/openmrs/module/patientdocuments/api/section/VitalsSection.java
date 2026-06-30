@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
 import org.openmrs.Concept;
 import org.openmrs.ConceptNumeric;
 import org.openmrs.Encounter;
@@ -150,8 +151,8 @@ public class VitalsSection extends TypedSection<List<Vital>> {
 
 		for (Vital vital : vitals) {
 			Element vitalEl = doc.createElement("vital");
-			vitalEl.setAttribute("label", nvl(vital.getLabel()));
-			vitalEl.setAttribute("value", nvl(vital.getValue()));
+			vitalEl.setAttribute("label", StringUtils.defaultString(vital.getLabel()));
+			vitalEl.setAttribute("value", StringUtils.defaultString(vital.getValue()));
 			section.appendChild(vitalEl);
 		}
 	}

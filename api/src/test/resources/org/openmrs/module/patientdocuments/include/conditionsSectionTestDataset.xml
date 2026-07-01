@@ -1,0 +1,103 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!--
+    Test dataset for ConditionsSectionTest.
+    Conditions are stored in the conditions table (PK: condition_id).
+    getActiveConditions(patient) returns rows where clinical_status is ACTIVE and
+    voided = false, ordered by date_created desc, regardless of which visit is
+    passed in — conditions are patient-scoped, not visit-scoped.
+
+    Concept IDs 8001-8002 to avoid conflicts with vitalsSectionTestDataset (5001-5009),
+    diagnosesSectionTestDataset (6001-6003) and allergiesSectionTestDataset (7001-7006).
+    Visit/condition IDs 401+ to avoid conflicts with vitals (101-106), diagnoses (201-204)
+    and allergies (301-302).
+
+    Patient 2 (from standardTestDataset) — 3 conditions:
+      Condition 401 — Type 2 Diabetes Mellitus (coded, concept 8001), ACTIVE,
+                       onset date 2024-06-15, date_created 2025-01-02 (newest -> returned first)
+      Condition 402 — "Seasonal Allergic Rhinitis" (non-coded freetext), ACTIVE,
+                       no onset date, date_created 2025-01-01
+      Condition 403 — Chronic Sinusitis (coded, concept 8002), INACTIVE
+                       (must be excluded by getActiveConditions)
+
+    Patient 8 (from standardTestDataset) — 1 condition:
+      Condition 404 — neither coded concept nor non-coded text, ACTIVE
+                       (name falls back to "Unknown")
+
+    Visit 401 — for patient 2 (has active conditions)
+    Visit 402 — for patient 7 (no conditions, empty-list test)
+    Visit 403 — for patient 8 (single condition with no coded/non-coded value)
+-->
+<dataset>
+
+  <!-- ── Condition concepts ────────────────────────────────────────────── -->
+
+  <concept concept_id="8001" retired="false" datatype_id="4" class_id="1" is_set="false"
+           creator="1" date_created="2025-01-01 00:00:00.0"
+           uuid="8001aaaa-0001-0001-0001-000000008001"/>
+  <concept_name concept_name_id="8001" concept_id="8001" name="Type 2 Diabetes Mellitus" locale="en"
+                creator="1" date_created="2025-01-01 00:00:00.0" voided="false"
+                uuid="8001aa00-name-0001-0001-000000008001"
+                concept_name_type="FULLY_SPECIFIED" locale_preferred="1"/>
+
+  <concept concept_id="8002" retired="false" datatype_id="4" class_id="1" is_set="false"
+           creator="1" date_created="2025-01-01 00:00:00.0"
+           uuid="8002aaaa-0002-0002-0002-000000008002"/>
+  <concept_name concept_name_id="8002" concept_id="8002" name="Chronic Sinusitis" locale="en"
+                creator="1" date_created="2025-01-01 00:00:00.0" voided="false"
+                uuid="8002aa00-name-0002-0002-000000008002"
+                concept_name_type="FULLY_SPECIFIED" locale_preferred="1"/>
+
+  <!-- ── Condition 401: Type 2 Diabetes Mellitus, ACTIVE, onset set ──── -->
+
+  <conditions condition_id="401" patient_id="2" condition_coded="8001"
+           clinical_status="ACTIVE"
+           onset_date="2024-06-15 00:00:00.0" voided="0"
+           creator="1" date_created="2025-01-02 00:00:00.0"
+           uuid="0c0d1710-0401-0401-0401-000000000401"/>
+
+  <!-- ── Condition 402: "Seasonal Allergic Rhinitis" (non-coded), ACTIVE, no onset ── -->
+
+  <conditions condition_id="402" patient_id="2" condition_non_coded="Seasonal Allergic Rhinitis"
+           clinical_status="ACTIVE"
+           voided="0"
+           creator="1" date_created="2025-01-01 00:00:00.0"
+           uuid="0c0d1710-0402-0402-0402-000000000402"/>
+
+  <!-- ── Condition 403: Chronic Sinusitis, INACTIVE (must be excluded) ───────────── -->
+
+  <conditions condition_id="403" patient_id="2" condition_coded="8002"
+           clinical_status="INACTIVE"
+           onset_date="2023-01-01 00:00:00.0" voided="0"
+           creator="1" date_created="2025-01-03 00:00:00.0"
+           uuid="0c0d1710-0403-0403-0403-000000000403"/>
+
+  <!-- ── Condition 404: neither coded nor non-coded, ACTIVE (name falls back to "Unknown") ── -->
+
+  <conditions condition_id="404" patient_id="8"
+           clinical_status="ACTIVE"
+           voided="0"
+           creator="1" date_created="2025-01-04 00:00:00.0"
+           uuid="0c0d1710-0404-0404-0404-000000000404"/>
+
+  <!-- ── Visit 401: patient 2 (has active conditions) ────────────────────── -->
+
+  <visit visit_id="401" patient_id="2" visit_type_id="1"
+         date_started="2025-02-01 00:00:00.0"
+         creator="1" date_created="2025-02-01 00:00:00.0" voided="0"
+         uuid="00000401-0401-0401-0401-000000000401"/>
+
+  <!-- ── Visit 402: patient 7 (no conditions — empty-list test) ──────────── -->
+
+  <visit visit_id="402" patient_id="7" visit_type_id="1"
+         date_started="2025-02-02 00:00:00.0"
+         creator="1" date_created="2025-02-02 00:00:00.0" voided="0"
+         uuid="00000402-0402-0402-0402-000000000402"/>
+
+  <!-- ── Visit 403: patient 8 (single condition with no coded/non-coded value) ── -->
+
+  <visit visit_id="403" patient_id="8" visit_type_id="1"
+         date_started="2025-02-03 00:00:00.0"
+         creator="1" date_created="2025-02-03 00:00:00.0" voided="0"
+         uuid="00000403-0403-0403-0403-000000000403"/>
+
+</dataset>

@@ -9,9 +9,7 @@
  */
 package org.openmrs.module.patientdocuments.api.section;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
@@ -162,13 +160,6 @@ public class MedicationsSection extends TypedSection<List<MedicationEntry>> {
 			return concept.getName().getName();
 		}
 		return "";
-	}
-
-	private String formatDate(Date date) {
-		if (date == null) {
-			return "";
-		}
-		return new SimpleDateFormat("yyyy-MM-dd").format(date);
 	}
 
 	@Override

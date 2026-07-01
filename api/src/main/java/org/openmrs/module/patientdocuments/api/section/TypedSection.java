@@ -9,9 +9,9 @@
  */
 package org.openmrs.module.patientdocuments.api.section;
 
+import lombok.extern.slf4j.Slf4j;
+
 import org.openmrs.Visit;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -21,9 +21,8 @@ import org.w3c.dom.Element;
  * The VisitSummarySection interface remains open for implementations that don't
  * fit the typed flow (e.g. sections that stream data or delegate to sub-renderers).
  */
+@Slf4j
 public abstract class TypedSection<T> extends AbstractVisitSummarySection {
-
-	private static final Logger log = LoggerFactory.getLogger(TypedSection.class);
 
 	/**
 	 * Gather this section's data from the visit.

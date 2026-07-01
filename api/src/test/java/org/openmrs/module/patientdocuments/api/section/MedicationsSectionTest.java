@@ -69,12 +69,12 @@ public class MedicationsSectionTest extends BaseModuleContextSensitiveTest {
 
 	@Test
 	public void gatherData_patientWithActiveOrders_returnsAllMedicationEntries() {
-		// Visit 8001's patient (patient 6) has 5 active drug orders
+		// Visit 8001's patient (patient 6) has 7 active drug orders
 		Visit visit = Context.getVisitService().getVisit(8001);
 
 		List<MedicationEntry> meds = section.gatherData(visit);
 
-		Assertions.assertEquals(5, meds.size());
+		Assertions.assertEquals(7, meds.size());
 	}
 
 	@Test
@@ -98,6 +98,31 @@ public class MedicationsSectionTest extends BaseModuleContextSensitiveTest {
 		MedicationEntry lisinopril = findByName(meds, "Lisinopril");
 		Assertions.assertNotNull(lisinopril, "Expected coded drug Lisinopril entry");
 		Assertions.assertEquals("2025-03-01", lisinopril.getStartDate());
+	}
+
+	@Test
+	public void gatherData_codedDrugWithStrength_appendsStrengthToName() {
+		// Drug 8009 is "Aspirin" with strength "81mg" → name renders as "Aspirin 81mg".
+		Visit visit = Context.getVisitService().getVisit(8001);
+
+		List<MedicationEntry> meds = section.gatherData(visit);
+
+		MedicationEntry aspirin = findByName(meds, "Aspirin 81mg");
+		Assertions.assertNotNull(aspirin, "Expected coded drug name to include its strength: 'Aspirin 81mg'");
+	}
+
+	@Test
+	public void gatherData_codedDrugNameAlreadyContainsStrength_isNotDuplicated() {
+		// Drug 8010's name already contains its strength ("Amoxicillin 500mg", strength
+		// "500mg"), so the de-dup branch keeps it as-is rather than appending "500mg" again.
+		Visit visit = Context.getVisitService().getVisit(8001);
+
+		List<MedicationEntry> meds = section.gatherData(visit);
+
+		MedicationEntry amoxicillin = findByName(meds, "Amoxicillin 500mg");
+		Assertions.assertNotNull(amoxicillin, "Expected 'Amoxicillin 500mg' kept as-is");
+		Assertions.assertNull(findByName(meds, "Amoxicillin 500mg 500mg"),
+		    "Strength must not be appended when the name already contains it");
 	}
 
 	@Test

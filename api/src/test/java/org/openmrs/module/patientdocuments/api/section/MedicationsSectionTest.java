@@ -12,17 +12,23 @@ package org.openmrs.module.patientdocuments.api.section;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.openmrs.DosingInstructions;
+import org.openmrs.DrugOrder;
 import org.openmrs.GlobalProperty;
+import org.openmrs.OrderType;
 import org.openmrs.Visit;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.patientdocuments.api.model.MedicationEntry;
 import org.openmrs.test.jupiter.BaseModuleContextSensitiveTest;
+import org.springframework.validation.Errors;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Integration tests for MedicationsSection.
@@ -35,12 +41,14 @@ import java.util.List;
  * active drug orders for the patient regardless of which visit is passed in.
  *
  * Dataset layout:
- *   Visit 8001 — patient 6, who has 5 active drug orders:
+ *   Visit 8001 — patient 6, who has 7 active drug orders:
  *     Order 8001 — coded drug Lisinopril, 5 mg Oral Twice daily, 10 days
  *     Order 8002 — non-coded "Paracetamol syrup", 2.5 mg Oral Twice daily, no duration
  *     Order 8003 — concept-only Metformin, free-text dosing instructions
  *     Order 8004 — non-coded "Ibuprofen", 250 mg only (no route/frequency/duration)
  *     Order 8005 — concept-only (concept 8008 has no name), no drug/non-coded text → "Unknown"
+ *     Order 8006 — coded drug Aspirin, strength 81mg → "Aspirin 81mg"
+ *     Order 8007 — coded drug "Amoxicillin 500mg", strength 500mg → kept as-is (de-dup)
  *   Visit 8002 — patient 8, who has no drug orders
  */
 public class MedicationsSectionTest extends BaseModuleContextSensitiveTest {
@@ -236,6 +244,35 @@ public class MedicationsSectionTest extends BaseModuleContextSensitiveTest {
 		Assertions.assertEquals(0, meds.size());
 	}
 
+	@Test
+	public void gatherData_drugOrderTypeMissing_throwsIllegalStateException() {
+		// Simulate broken metadata: re-uuid the seeded drug order type so the lookup
+		// returns null. Plain SQL keeps the real code path (no mocks) and rolls back
+		// with the test transaction.
+		Context.getAdministrationService().executeSQL(
+		    "update order_type set uuid = 'ffffffff-ffff-ffff-ffff-ffffffffffff' where uuid = '"
+		            + OrderType.DRUG_ORDER_TYPE_UUID + "'", false);
+		Visit visit = Context.getVisitService().getVisit(8001);
+
+		Assertions.assertThrows(IllegalStateException.class, () -> section.gatherData(visit));
+	}
+
+	@Test
+	public void gatherData_unrecognizedDosingType_stillBuildsBestEffortDosing() {
+		// Point order 8004's dosing type at a class that is neither Simple nor
+		// FreeText: buildDosing must warn but still render the manual dose build.
+		Context.getAdministrationService().executeSQL(
+		    "update drug_order set dosing_type = '" + CustomDosingInstructions.class.getName()
+		            + "' where order_id = 8004", false);
+		Visit visit = Context.getVisitService().getVisit(8001);
+
+		List<MedicationEntry> meds = section.gatherData(visit);
+
+		MedicationEntry ibuprofen = findByName(meds, "Ibuprofen");
+		Assertions.assertNotNull(ibuprofen, "Expected order 8004 to still render");
+		Assertions.assertEquals("250 mg", ibuprofen.getDosing());
+	}
+
 	// ── renderXml tests ───────────────────────────────────────────────────────
 
 	@Test
@@ -292,5 +329,34 @@ public class MedicationsSectionTest extends BaseModuleContextSensitiveTest {
 	@Test
 	public void isEnabled_whenNoGlobalPropertySet_returnsTrue() {
 		Assertions.assertTrue(section.isEnabled());
+	}
+
+	// Minimal custom dosing type — exists only so Hibernate can hydrate a non-Simple/FreeText dosing_type for the unknown-type test.
+	public static class CustomDosingInstructions implements DosingInstructions {
+
+		@Override
+		public String getDosingInstructionsAsString(Locale locale) {
+			throw new UnsupportedOperationException("Test stub: not invoked by MedicationsSection");
+		}
+
+		@Override
+		public void setDosingInstructions(DrugOrder order) {
+			throw new UnsupportedOperationException("Test stub: not invoked by MedicationsSection");
+		}
+
+		@Override
+		public DosingInstructions getDosingInstructions(DrugOrder order) {
+			throw new UnsupportedOperationException("Test stub: not invoked by MedicationsSection");
+		}
+
+		@Override
+		public void validate(DrugOrder order, Errors errors) {
+			throw new UnsupportedOperationException("Test stub: not invoked by MedicationsSection");
+		}
+
+		@Override
+		public Date getAutoExpireDate(DrugOrder order) {
+			throw new UnsupportedOperationException("Test stub: not invoked by MedicationsSection");
+		}
 	}
 }

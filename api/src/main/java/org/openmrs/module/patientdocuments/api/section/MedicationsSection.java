@@ -22,6 +22,7 @@ import org.openmrs.FreeTextDosingInstructions;
 import org.openmrs.Order;
 import org.openmrs.OrderType;
 import org.openmrs.Patient;
+import org.openmrs.SimpleDosingInstructions;
 import org.openmrs.Visit;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.patientdocuments.api.model.MedicationEntry;
@@ -56,6 +57,10 @@ public class MedicationsSection extends TypedSection<List<MedicationEntry>> {
 
 		OrderType drugOrderType = Context.getOrderService()
 		        .getOrderTypeByUuid(OrderType.DRUG_ORDER_TYPE_UUID);
+		if (drugOrderType == null) {
+			throw new IllegalStateException("Drug order type not found for UUID "
+			        + OrderType.DRUG_ORDER_TYPE_UUID + "; cannot fetch active medications");
+		}
 
 		// careSetting = null → include both inpatient and outpatient orders.
 		// asOfDate = null → active as of now (print time). Verified null-safe in
@@ -116,8 +121,14 @@ public class MedicationsSection extends TypedSection<List<MedicationEntry>> {
 	}
 
 	private String buildDosing(DrugOrder order) {
-		if (FreeTextDosingInstructions.class.equals(order.getDosingType())) {
+		Class<?> dosingType = order.getDosingType();
+		if (FreeTextDosingInstructions.class.equals(dosingType)) {
 			return StringUtils.defaultString(order.getDosingInstructions());
+		}
+		// null dosingType → treated as Simple (core's DrugOrder field default); warn only on genuinely unknown types
+		if (dosingType != null && !SimpleDosingInstructions.class.equals(dosingType)) {
+			log.warn("Order {} has an unrecognized dosing type {}; rendering best-effort simple dosing",
+			    order.getOrderId(), dosingType.getName());
 		}
 		// SimpleDosingInstructions (the default) — build the string ourselves so a
 		// null dose/units/route/frequency can't NPE (as it would in

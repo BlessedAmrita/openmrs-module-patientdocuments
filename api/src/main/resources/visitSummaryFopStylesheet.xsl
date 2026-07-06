@@ -502,7 +502,9 @@
     </xsl:template>
 
     <!-- ═══════════════════════════════════════════════════
-         Medications (stub)
+         Medications — 4-column table (medication, dosing, duration, start date).
+         Column headers come from medications/@col-* attributes set by the renderer.
+         Each <medication> carries @name, @dosing, @duration, @start.
          ═══════════════════════════════════════════════════ -->
     <xsl:template name="medications">
         <fo:block font-family="{$label-font-family}" margin-bottom="4mm">
@@ -513,7 +515,64 @@
             </fo:block>
             <xsl:choose>
                 <xsl:when test="medications/medication">
-                    <!-- Data will be rendered here during implementation -->
+                    <fo:table width="100%" table-layout="fixed">
+                        <fo:table-column column-width="32%"/>
+                        <fo:table-column column-width="34%"/>
+                        <fo:table-column column-width="16%"/>
+                        <fo:table-column column-width="18%"/>
+                        <fo:table-body>
+                            <fo:table-row background-color="#f5f5f5">
+                                <fo:table-cell padding="1mm 2mm"
+                                    border-bottom="0.5pt solid #cccccc">
+                                    <fo:block font-size="8pt" font-weight="bold" color="#444444">
+                                        <xsl:value-of select="medications/@col-name"/>
+                                    </fo:block>
+                                </fo:table-cell>
+                                <fo:table-cell padding="1mm 2mm"
+                                    border-bottom="0.5pt solid #cccccc">
+                                    <fo:block font-size="8pt" font-weight="bold" color="#444444">
+                                        <xsl:value-of select="medications/@col-dosing"/>
+                                    </fo:block>
+                                </fo:table-cell>
+                                <fo:table-cell padding="1mm 2mm"
+                                    border-bottom="0.5pt solid #cccccc">
+                                    <fo:block font-size="8pt" font-weight="bold" color="#444444">
+                                        <xsl:value-of select="medications/@col-duration"/>
+                                    </fo:block>
+                                </fo:table-cell>
+                                <fo:table-cell padding="1mm 2mm"
+                                    border-bottom="0.5pt solid #cccccc">
+                                    <fo:block font-size="8pt" font-weight="bold" color="#444444">
+                                        <xsl:value-of select="medications/@col-start"/>
+                                    </fo:block>
+                                </fo:table-cell>
+                            </fo:table-row>
+                            <xsl:for-each select="medications/medication">
+                                <fo:table-row>
+                                    <fo:table-cell padding="1mm 2mm">
+                                        <fo:block font-size="9pt">
+                                            <xsl:value-of select="@name"/>
+                                        </fo:block>
+                                    </fo:table-cell>
+                                    <fo:table-cell padding="1mm 2mm">
+                                        <fo:block font-size="9pt">
+                                            <xsl:value-of select="@dosing"/>
+                                        </fo:block>
+                                    </fo:table-cell>
+                                    <fo:table-cell padding="1mm 2mm">
+                                        <fo:block font-size="9pt">
+                                            <xsl:value-of select="@duration"/>
+                                        </fo:block>
+                                    </fo:table-cell>
+                                    <fo:table-cell padding="1mm 2mm">
+                                        <fo:block font-size="9pt">
+                                            <xsl:value-of select="@start"/>
+                                        </fo:block>
+                                    </fo:table-cell>
+                                </fo:table-row>
+                            </xsl:for-each>
+                        </fo:table-body>
+                    </fo:table>
                 </xsl:when>
                 <xsl:otherwise>
                     <fo:block font-size="9pt" color="#999999" font-style="italic">None recorded</fo:block>

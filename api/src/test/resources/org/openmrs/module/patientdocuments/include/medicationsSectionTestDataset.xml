@@ -1,0 +1,258 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!--
+    Test dataset for MedicationsSectionTest.
+
+    Active drug orders are pre-loaded here rather than created programmatically:
+    drug orders carry many required relationships (Drug, Concept, OrderType,
+    CareSetting, Encounter, Provider, OrderFrequency) and building them in code
+    triggers validator NPEs.
+
+    Medications are patient-level: getActiveOrders(patient, drugOrderType, ...)
+    returns active drug orders for the patient regardless of visit.
+
+    Patients 6 and 8 (from standardTestDataset) have no pre-existing orders, so
+    they give clean, predictable assertions.
+
+    Concept IDs 8001-8010, order/encounter/visit/drug/order_frequency IDs 8001+
+    to avoid conflicts with vitals (5xxx/1xx), diagnoses (6xxx/2xx) and allergies
+    (7xxx/3xx) datasets. Dose units, route, frequency and the generic non-coded
+    concept are all defined locally so assertions don't depend on core concepts.
+
+    Patient 6 — 7 active drug orders:
+      Order 8001 — coded drug Lisinopril, dose 5 mg Oral Twice daily, 10 days
+      Order 8002 — non-coded "Paracetamol syrup", dose 2.5 mg Oral Twice daily, no duration
+      Order 8003 — concept-only (Metformin), free-text dosing instructions
+      Order 8004 — non-coded "Ibuprofen", dose 250 mg only (no route/frequency/duration)
+      Order 8005 — concept-only (concept 8008, which has no name) and no drug/non-coded
+                   text → drug name falls back to "Unknown"
+      Order 8006 — coded drug Aspirin with strength "81mg" → "Aspirin 81mg"
+                   (codedDrugName appends the strength)
+      Order 8007 — coded drug whose name already contains the strength
+                   ("Amoxicillin 500mg", strength "500mg") → kept as-is
+                   (codedDrugName's name.contains(strength) de-dup branch)
+    Patient 8 — no drug orders (empty-state test)
+-->
+<dataset>
+
+  <!-- ── Concepts ───────────────────────────────────────────────────────── -->
+
+  <concept concept_id="8001" retired="false" datatype_id="4" class_id="3" is_set="false"
+           creator="1" date_created="2025-01-01 00:00:00.0"
+           uuid="8001cccc-0001-0001-0001-000000008001"/>
+  <concept_name concept_name_id="8001" concept_id="8001" name="Lisinopril" locale="en"
+                creator="1" date_created="2025-01-01 00:00:00.0" voided="false"
+                uuid="8001cc00-name-0001-0001-000000008001"
+                concept_name_type="FULLY_SPECIFIED" locale_preferred="1"/>
+
+  <concept concept_id="8002" retired="false" datatype_id="4" class_id="1" is_set="false"
+           creator="1" date_created="2025-01-01 00:00:00.0"
+           uuid="8002cccc-0002-0002-0002-000000008002"/>
+  <concept_name concept_name_id="8002" concept_id="8002" name="Oral" locale="en"
+                creator="1" date_created="2025-01-01 00:00:00.0" voided="false"
+                uuid="8002cc00-name-0002-0002-000000008002"
+                concept_name_type="FULLY_SPECIFIED" locale_preferred="1"/>
+
+  <concept concept_id="8003" retired="false" datatype_id="4" class_id="1" is_set="false"
+           creator="1" date_created="2025-01-01 00:00:00.0"
+           uuid="8003cccc-0003-0003-0003-000000008003"/>
+  <concept_name concept_name_id="8003" concept_id="8003" name="days" locale="en"
+                creator="1" date_created="2025-01-01 00:00:00.0" voided="false"
+                uuid="8003cc00-name-0003-0003-000000008003"
+                concept_name_type="FULLY_SPECIFIED" locale_preferred="1"/>
+
+  <concept concept_id="8004" retired="false" datatype_id="4" class_id="1" is_set="false"
+           creator="1" date_created="2025-01-01 00:00:00.0"
+           uuid="8004cccc-0004-0004-0004-000000008004"/>
+  <concept_name concept_name_id="8004" concept_id="8004" name="Twice daily" locale="en"
+                creator="1" date_created="2025-01-01 00:00:00.0" voided="false"
+                uuid="8004cc00-name-0004-0004-000000008004"
+                concept_name_type="FULLY_SPECIFIED" locale_preferred="1"/>
+
+  <concept concept_id="8005" retired="false" datatype_id="4" class_id="3" is_set="false"
+           creator="1" date_created="2025-01-01 00:00:00.0"
+           uuid="8005cccc-0005-0005-0005-000000008005"/>
+  <concept_name concept_name_id="8005" concept_id="8005" name="Metformin" locale="en"
+                creator="1" date_created="2025-01-01 00:00:00.0" voided="false"
+                uuid="8005cc00-name-0005-0005-000000008005"
+                concept_name_type="FULLY_SPECIFIED" locale_preferred="1"/>
+
+  <!-- Dose-units concept, defined locally so assertions don't depend on a core concept -->
+  <concept concept_id="8006" retired="false" datatype_id="3" class_id="1" is_set="false"
+           creator="1" date_created="2025-01-01 00:00:00.0"
+           uuid="8006cccc-0006-0006-0006-000000008006"/>
+  <concept_name concept_name_id="8006" concept_id="8006" name="mg" locale="en"
+                creator="1" date_created="2025-01-01 00:00:00.0" voided="false"
+                uuid="8006cc00-name-0006-0006-000000008006"
+                concept_name_type="FULLY_SPECIFIED" locale_preferred="1"/>
+
+  <!-- Generic non-coded-drug concept, mirroring core's "DRUG OTHER" (drugOrder.drugOther):
+       non-coded orders point their concept_id here, not at a real drug's concept. -->
+  <concept concept_id="8007" retired="false" datatype_id="4" class_id="3" is_set="false"
+           creator="1" date_created="2025-01-01 00:00:00.0"
+           uuid="8007cccc-0007-0007-0007-000000008007"/>
+  <concept_name concept_name_id="8007" concept_id="8007" name="DRUG OTHER" locale="en"
+                creator="1" date_created="2025-01-01 00:00:00.0" voided="false"
+                uuid="8007cc00-name-0007-0007-000000008007"
+                concept_name_type="FULLY_SPECIFIED" locale_preferred="1"/>
+
+  <!-- Concept with NO concept_name child: concept.getName() is null, so
+       conceptName(...) resolves to blank. This is the realistic trigger for the
+       "Unknown" drug-name fallback — a concept present in messy data at a
+       low-resource site but with no name recorded (see order 8005). -->
+  <concept concept_id="8008" retired="false" datatype_id="4" class_id="3" is_set="false"
+           creator="1" date_created="2025-01-01 00:00:00.0"
+           uuid="8008cccc-0008-0008-0008-000000008008"/>
+
+  <!-- Concepts for the coded drugs that carry a strength (orders 8006/8007) -->
+  <concept concept_id="8009" retired="false" datatype_id="4" class_id="3" is_set="false"
+           creator="1" date_created="2025-01-01 00:00:00.0"
+           uuid="8009cccc-0009-0009-0009-000000008009"/>
+  <concept_name concept_name_id="8009" concept_id="8009" name="Aspirin" locale="en"
+                creator="1" date_created="2025-01-01 00:00:00.0" voided="false"
+                uuid="8009cc00-name-0009-0009-000000008009"
+                concept_name_type="FULLY_SPECIFIED" locale_preferred="1"/>
+
+  <concept concept_id="8010" retired="false" datatype_id="4" class_id="3" is_set="false"
+           creator="1" date_created="2025-01-01 00:00:00.0"
+           uuid="8010cccc-0010-0010-0010-000000008010"/>
+  <concept_name concept_name_id="8010" concept_id="8010" name="Amoxicillin" locale="en"
+                creator="1" date_created="2025-01-01 00:00:00.0" voided="false"
+                uuid="8010cc00-name-0010-0010-000000008010"
+                concept_name_type="FULLY_SPECIFIED" locale_preferred="1"/>
+
+  <!-- ── Order frequency (references concept 8004 "Twice daily") ─────────── -->
+
+  <order_frequency order_frequency_id="8001" concept_id="8004" creator="1"
+                   date_created="2025-01-01 00:00:00.0" retired="false"
+                   uuid="8001ffff-0001-0001-0001-000000008001"/>
+
+  <!-- ── Coded drug (no strength → name printed as-is) ──────────────────── -->
+
+  <drug drug_id="8001" concept_id="8001" name="Lisinopril" combination="false"
+        creator="1" date_created="2025-01-01 00:00:00.0" retired="false"
+        uuid="8001dddd-0001-0001-0001-000000008001"/>
+
+  <!-- Coded drug WITH strength → codedDrugName appends "81mg" → "Aspirin 81mg" -->
+  <drug drug_id="8009" concept_id="8009" name="Aspirin" strength="81mg" combination="false"
+        creator="1" date_created="2025-01-01 00:00:00.0" retired="false"
+        uuid="8009dddd-0009-0009-0009-000000008009"/>
+
+  <!-- Coded drug whose name already contains the strength → de-dup branch keeps
+       "Amoxicillin 500mg" (strength is not appended a second time) -->
+  <drug drug_id="8010" concept_id="8010" name="Amoxicillin 500mg" strength="500mg"
+        combination="false"
+        creator="1" date_created="2025-01-01 00:00:00.0" retired="false"
+        uuid="8010dddd-0010-0010-0010-000000008010"/>
+
+  <!-- ── Encounter for patient 6 (orders require an encounter) ──────────── -->
+
+  <encounter encounter_id="8001" encounter_type="1" patient_id="6" location_id="1"
+             encounter_datetime="2025-03-01 00:00:00.0"
+             creator="1" date_created="2025-03-01 00:00:00.0" voided="false"
+             uuid="8001eeee-0001-0001-0001-000000008001"/>
+
+  <!-- ── Order 8001: coded drug Lisinopril (Simple dosing, with duration) ── -->
+
+  <orders order_id="8001" order_type_id="1" order_number="MED-8001" urgency="ROUTINE"
+          order_action="NEW" concept_id="8001" orderer="1"
+          date_activated="2025-03-01 00:00:00.0" creator="1"
+          date_created="2025-03-01 00:00:00.0" voided="false" patient_id="6"
+          care_setting="1" encounter_id="8001"
+          uuid="8001a0a0-0001-0001-0001-000000008001"/>
+  <drug_order order_id="8001" drug_inventory_id="8001" dose="5.0" dose_units="8006"
+              as_needed="false" frequency="8001"
+              dosing_type="org.openmrs.SimpleDosingInstructions" route="8002"
+              duration="10" duration_units="8003" dispense_as_written="0"/>
+
+  <!-- ── Order 8002: non-coded drug (Simple dosing, no duration) ─────────── -->
+
+  <orders order_id="8002" order_type_id="1" order_number="MED-8002" urgency="ROUTINE"
+          order_action="NEW" concept_id="8007" orderer="1"
+          date_activated="2025-03-01 00:00:00.0" creator="1"
+          date_created="2025-03-01 00:00:00.0" voided="false" patient_id="6"
+          care_setting="1" encounter_id="8001"
+          uuid="8002a0a0-0002-0002-0002-000000008002"/>
+  <drug_order order_id="8002" dose="2.5" dose_units="8006" as_needed="false"
+              frequency="8001" drug_non_coded="Paracetamol syrup"
+              dosing_type="org.openmrs.SimpleDosingInstructions" route="8002"
+              dispense_as_written="0"/>
+
+  <!-- ── Order 8003: concept-only drug (Free-text dosing) ───────────────── -->
+
+  <orders order_id="8003" order_type_id="1" order_number="MED-8003" urgency="ROUTINE"
+          order_action="NEW" concept_id="8005" orderer="1"
+          date_activated="2025-03-01 00:00:00.0" creator="1"
+          date_created="2025-03-01 00:00:00.0" voided="false" patient_id="6"
+          care_setting="1" encounter_id="8001"
+          uuid="8003a0a0-0003-0003-0003-000000008003"/>
+  <drug_order order_id="8003" as_needed="false"
+              dosing_type="org.openmrs.FreeTextDosingInstructions"
+              dosing_instructions="Take one tablet as directed by physician"
+              dispense_as_written="0"/>
+
+  <!-- ── Order 8004: non-coded drug, Simple dosing with ONLY dose + units ──
+       (no route, no frequency, no duration) — exercises the null-safe dosing
+       builder; must yield "250 mg" with no trailing commas/empty segments. -->
+
+  <orders order_id="8004" order_type_id="1" order_number="MED-8004" urgency="ROUTINE"
+          order_action="NEW" concept_id="8007" orderer="1"
+          date_activated="2025-03-01 00:00:00.0" creator="1"
+          date_created="2025-03-01 00:00:00.0" voided="false" patient_id="6"
+          care_setting="1" encounter_id="8001"
+          uuid="8004a0a0-0004-0004-0004-000000008004"/>
+  <drug_order order_id="8004" dose="250" dose_units="8006" as_needed="false"
+              drug_non_coded="Ibuprofen"
+              dosing_type="org.openmrs.SimpleDosingInstructions"
+              dispense_as_written="0"/>
+
+  <!-- ── Order 8005: concept-only (concept 8008 has no name), no drug, not
+       non-coded → buildDrugName falls through every step to "Unknown" ─────── -->
+
+  <orders order_id="8005" order_type_id="1" order_number="MED-8005" urgency="ROUTINE"
+          order_action="NEW" concept_id="8008" orderer="1"
+          date_activated="2025-03-01 00:00:00.0" creator="1"
+          date_created="2025-03-01 00:00:00.0" voided="false" patient_id="6"
+          care_setting="1" encounter_id="8001"
+          uuid="8005a0a0-0005-0005-0005-000000008005"/>
+  <drug_order order_id="8005" as_needed="false"
+              dosing_type="org.openmrs.SimpleDosingInstructions"
+              dispense_as_written="0"/>
+
+  <!-- ── Order 8006: coded drug Aspirin with strength → "Aspirin 81mg" ───── -->
+
+  <orders order_id="8006" order_type_id="1" order_number="MED-8006" urgency="ROUTINE"
+          order_action="NEW" concept_id="8009" orderer="1"
+          date_activated="2025-03-01 00:00:00.0" creator="1"
+          date_created="2025-03-01 00:00:00.0" voided="false" patient_id="6"
+          care_setting="1" encounter_id="8001"
+          uuid="8006a0a0-0006-0006-0006-000000008006"/>
+  <drug_order order_id="8006" drug_inventory_id="8009" as_needed="false"
+              dosing_type="org.openmrs.SimpleDosingInstructions"
+              dispense_as_written="0"/>
+
+  <!-- ── Order 8007: coded drug whose name already includes the strength →
+       de-dup branch keeps "Amoxicillin 500mg" (no doubled strength) ──────── -->
+
+  <orders order_id="8007" order_type_id="1" order_number="MED-8007" urgency="ROUTINE"
+          order_action="NEW" concept_id="8010" orderer="1"
+          date_activated="2025-03-01 00:00:00.0" creator="1"
+          date_created="2025-03-01 00:00:00.0" voided="false" patient_id="6"
+          care_setting="1" encounter_id="8001"
+          uuid="8007a0a0-0007-0007-0007-000000008007"/>
+  <drug_order order_id="8007" drug_inventory_id="8010" as_needed="false"
+              dosing_type="org.openmrs.SimpleDosingInstructions"
+              dispense_as_written="0"/>
+
+  <!-- ── Visits: patient 6 (has meds), patient 8 (no meds) ──────────────── -->
+
+  <visit visit_id="8001" patient_id="6" visit_type_id="1"
+         date_started="2025-03-01 00:00:00.0"
+         creator="1" date_created="2025-03-01 00:00:00.0" voided="0"
+         uuid="80010001-0001-0001-0001-000000008001"/>
+
+  <visit visit_id="8002" patient_id="8" visit_type_id="1"
+         date_started="2025-03-02 00:00:00.0"
+         creator="1" date_created="2025-03-02 00:00:00.0" voided="0"
+         uuid="80020002-0002-0002-0002-000000008002"/>
+
+</dataset>

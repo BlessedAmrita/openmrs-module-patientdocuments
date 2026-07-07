@@ -413,7 +413,11 @@
     </xsl:template>
 
     <!-- ═══════════════════════════════════════════════════
-         Lab results (stub)
+         Lab results — 4-column table (test, result, reference range, flag).
+         Column headers come from labResults/@col-* attributes set by the renderer.
+         Standalone results are <lab> children; grouped panels are <lab-group heading="…">
+         wrappers whose heading spans the row, followed by their member <lab> rows.
+         Each <lab> carries @name, @value, @units, @range, @flag.
          ═══════════════════════════════════════════════════ -->
     <xsl:template name="lab-results">
         <fo:block font-family="{$label-font-family}" margin-bottom="4mm">
@@ -423,14 +427,96 @@
                 <xsl:value-of select="labResults/@heading"/>
             </fo:block>
             <xsl:choose>
-                <xsl:when test="labResults/lab">
-                    <!-- Data will be rendered here during implementation -->
+                <xsl:when test="labResults/lab or labResults/lab-group">
+                    <fo:table width="100%" table-layout="fixed">
+                        <fo:table-column column-width="40%"/>
+                        <fo:table-column column-width="22%"/>
+                        <fo:table-column column-width="26%"/>
+                        <fo:table-column column-width="12%"/>
+                        <fo:table-body>
+                            <fo:table-row background-color="#f5f5f5">
+                                <fo:table-cell padding="1mm 2mm" border-bottom="0.5pt solid #cccccc">
+                                    <fo:block font-size="8pt" font-weight="bold" color="#444444">
+                                        <xsl:value-of select="labResults/@col-test"/>
+                                    </fo:block>
+                                </fo:table-cell>
+                                <fo:table-cell padding="1mm 2mm" border-bottom="0.5pt solid #cccccc">
+                                    <fo:block font-size="8pt" font-weight="bold" color="#444444">
+                                        <xsl:value-of select="labResults/@col-result"/>
+                                    </fo:block>
+                                </fo:table-cell>
+                                <fo:table-cell padding="1mm 2mm" border-bottom="0.5pt solid #cccccc">
+                                    <fo:block font-size="8pt" font-weight="bold" color="#444444">
+                                        <xsl:value-of select="labResults/@col-range"/>
+                                    </fo:block>
+                                </fo:table-cell>
+                                <fo:table-cell padding="1mm 2mm" border-bottom="0.5pt solid #cccccc">
+                                    <fo:block font-size="8pt" font-weight="bold" color="#444444">
+                                        <xsl:value-of select="labResults/@col-flag"/>
+                                    </fo:block>
+                                </fo:table-cell>
+                            </fo:table-row>
+                            <!-- Grouped panels first: a heading row that spans the table, then member rows -->
+                            <xsl:for-each select="labResults/lab-group">
+                                <fo:table-row>
+                                    <fo:table-cell number-columns-spanned="4" padding="1mm 2mm"
+                                        background-color="#fafafa" border-bottom="0.25pt solid #eeeeee">
+                                        <fo:block font-size="9pt" font-weight="bold" color="#444444">
+                                            <xsl:value-of select="@heading"/>
+                                        </fo:block>
+                                    </fo:table-cell>
+                                </fo:table-row>
+                                <xsl:for-each select="lab">
+                                    <xsl:call-template name="lab-row">
+                                        <xsl:with-param name="indent" select="'4mm'"/>
+                                    </xsl:call-template>
+                                </xsl:for-each>
+                            </xsl:for-each>
+                            <!-- Standalone results -->
+                            <xsl:for-each select="labResults/lab">
+                                <xsl:call-template name="lab-row">
+                                    <xsl:with-param name="indent" select="'2mm'"/>
+                                </xsl:call-template>
+                            </xsl:for-each>
+                        </fo:table-body>
+                    </fo:table>
                 </xsl:when>
                 <xsl:otherwise>
                     <fo:block font-size="9pt" color="#999999" font-style="italic">None recorded</fo:block>
                 </xsl:otherwise>
             </xsl:choose>
         </fo:block>
+    </xsl:template>
+
+    <!-- Single lab result row. Result cell shows value plus units when present. -->
+    <xsl:template name="lab-row">
+        <xsl:param name="indent" select="'2mm'"/>
+        <fo:table-row>
+            <fo:table-cell padding="1mm 2mm" padding-left="{$indent}">
+                <fo:block font-size="9pt">
+                    <xsl:value-of select="@name"/>
+                </fo:block>
+            </fo:table-cell>
+            <fo:table-cell padding="1mm 2mm">
+                <fo:block font-size="9pt">
+                    <xsl:value-of select="@value"/>
+                    <xsl:if test="@units != ''">
+                        <xsl:text> </xsl:text>
+                        <xsl:value-of select="@units"/>
+                    </xsl:if>
+                </fo:block>
+            </fo:table-cell>
+            <fo:table-cell padding="1mm 2mm">
+                <fo:block font-size="9pt">
+                    <xsl:value-of select="@range"/>
+                </fo:block>
+            </fo:table-cell>
+            <fo:table-cell padding="1mm 2mm">
+                <fo:block font-size="9pt">
+                    <xsl:value-of select="@flag"/>
+                </fo:block>
+            </fo:table-cell>
+        </fo:table-row>
     </xsl:template>
 
     <!-- ═══════════════════════════════════════════════════

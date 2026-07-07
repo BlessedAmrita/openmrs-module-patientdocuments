@@ -1,0 +1,281 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!--
+    Test dataset for LabResultsSectionTest.
+
+    Lab results are anchored on obs whose concept class is a "lab" class. The section
+    resolves the configured class names (default "Test,LabSet") to ids and keeps only
+    obs in those classes; vitals-style observations (class "Finding") are excluded.
+
+    Concept classes come from standardTestDataset:
+      concept_class_id=1  Test
+      concept_class_id=8  LabSet
+      concept_class_id=5  Finding   (used to prove vitals are NOT rendered as labs)
+    Concept datatypes: 1=Numeric, 2=Coded, 3=Text, 4=N/A.
+
+    Concept IDs 9001-9013 avoid conflicts with vitals (5001-5009), diagnoses (6001-6003),
+    allergies (7001-7006) and conditions (8001-8002). Visit/encounter/obs IDs 501+ / 9101+.
+
+    Visit 501 — patient 2, one encounter with:
+      Glucose (9001) 9.5, interpretation HIGH, no obs-level range
+                       -> range from ConceptNumeric normals "4 – 7 mmol/L", flag "High"
+      Hemoglobin (9002) 8.0, interpretation LOW, obs-level reference range 12–16
+                       -> range from the per-obs snapshot "12 – 16 g/dL", flag "Low"
+      Malaria Smear (9003) coded = Positive (9004) -> value "Positive", blank range
+      Culture Notes (9005) text -> value text, blank range
+      Weight (9009, class Finding) -> excluded from labs
+      Complete Blood Count (9006, class LabSet) obs group with members
+        WBC (9007) 6.5 and Platelets (9008) 250 -> rendered as a grouped panel
+      A voided Glucose (9001) obs -> excluded
+    Visit 502 — patient 7, encounter with no obs (None recorded)
+    Visit 503 — patient 2, one encounter exercising range/interpretation edges:
+      Sodium (9010) low-bound-only -> "≥ 135 mmol/L"; Total Bilirubin (9011) high-bound-only
+      -> "≤ 1.2 mg/dL"; Potassium (9012) interpretation NORMAL -> no flag; Lactate (9013)
+      no bounds/snapshot -> blank range and flag
+    Visit 504 — patient 8, no encounters (empty early-return path)
+-->
+<dataset>
+
+  <!-- ── Lab concepts ──────────────────────────────────────────────────── -->
+
+  <concept concept_id="9001" retired="false" datatype_id="1" class_id="1" is_set="false"
+           creator="1" date_created="2025-01-01 00:00:00.0"
+           uuid="9001aaaa-0001-0001-0001-000000009001"/>
+  <concept_name concept_name_id="9001" concept_id="9001" name="Serum Glucose" locale="en"
+                creator="1" date_created="2025-01-01 00:00:00.0" voided="false"
+                uuid="9001aa00-name-0001-0001-000000009001"
+                concept_name_type="FULLY_SPECIFIED" locale_preferred="1"/>
+
+  <concept concept_id="9002" retired="false" datatype_id="1" class_id="1" is_set="false"
+           creator="1" date_created="2025-01-01 00:00:00.0"
+           uuid="9002aaaa-0002-0002-0002-000000009002"/>
+  <concept_name concept_name_id="9002" concept_id="9002" name="Hemoglobin" locale="en"
+                creator="1" date_created="2025-01-01 00:00:00.0" voided="false"
+                uuid="9002aa00-name-0002-0002-000000009002"
+                concept_name_type="FULLY_SPECIFIED" locale_preferred="1"/>
+
+  <concept concept_id="9003" retired="false" datatype_id="2" class_id="1" is_set="false"
+           creator="1" date_created="2025-01-01 00:00:00.0"
+           uuid="9003aaaa-0003-0003-0003-000000009003"/>
+  <concept_name concept_name_id="9003" concept_id="9003" name="Malaria Smear" locale="en"
+                creator="1" date_created="2025-01-01 00:00:00.0" voided="false"
+                uuid="9003aa00-name-0003-0003-000000009003"
+                concept_name_type="FULLY_SPECIFIED" locale_preferred="1"/>
+
+  <!-- Coded answer concept for the Malaria Smear result -->
+  <concept concept_id="9004" retired="false" datatype_id="4" class_id="5" is_set="false"
+           creator="1" date_created="2025-01-01 00:00:00.0"
+           uuid="9004aaaa-0004-0004-0004-000000009004"/>
+  <concept_name concept_name_id="9004" concept_id="9004" name="Positive" locale="en"
+                creator="1" date_created="2025-01-01 00:00:00.0" voided="false"
+                uuid="9004aa00-name-0004-0004-000000009004"
+                concept_name_type="FULLY_SPECIFIED" locale_preferred="1"/>
+
+  <concept concept_id="9005" retired="false" datatype_id="3" class_id="1" is_set="false"
+           creator="1" date_created="2025-01-01 00:00:00.0"
+           uuid="9005aaaa-0005-0005-0005-000000009005"/>
+  <concept_name concept_name_id="9005" concept_id="9005" name="Culture Notes" locale="en"
+                creator="1" date_created="2025-01-01 00:00:00.0" voided="false"
+                uuid="9005aa00-name-0005-0005-000000009005"
+                concept_name_type="FULLY_SPECIFIED" locale_preferred="1"/>
+
+  <!-- Complete Blood Count panel — class LabSet -->
+  <concept concept_id="9006" retired="false" datatype_id="4" class_id="8" is_set="true"
+           creator="1" date_created="2025-01-01 00:00:00.0"
+           uuid="9006aaaa-0006-0006-0006-000000009006"/>
+  <concept_name concept_name_id="9006" concept_id="9006" name="Complete Blood Count" locale="en"
+                creator="1" date_created="2025-01-01 00:00:00.0" voided="false"
+                uuid="9006aa00-name-0006-0006-000000009006"
+                concept_name_type="FULLY_SPECIFIED" locale_preferred="1"/>
+
+  <concept concept_id="9007" retired="false" datatype_id="1" class_id="1" is_set="false"
+           creator="1" date_created="2025-01-01 00:00:00.0"
+           uuid="9007aaaa-0007-0007-0007-000000009007"/>
+  <concept_name concept_name_id="9007" concept_id="9007" name="White Blood Cell Count" locale="en"
+                creator="1" date_created="2025-01-01 00:00:00.0" voided="false"
+                uuid="9007aa00-name-0007-0007-000000009007"
+                concept_name_type="FULLY_SPECIFIED" locale_preferred="1"/>
+
+  <concept concept_id="9008" retired="false" datatype_id="1" class_id="1" is_set="false"
+           creator="1" date_created="2025-01-01 00:00:00.0"
+           uuid="9008aaaa-0008-0008-0008-000000009008"/>
+  <concept_name concept_name_id="9008" concept_id="9008" name="Platelet Count" locale="en"
+                creator="1" date_created="2025-01-01 00:00:00.0" voided="false"
+                uuid="9008aa00-name-0008-0008-000000009008"
+                concept_name_type="FULLY_SPECIFIED" locale_preferred="1"/>
+
+  <!-- Weight — class Finding (a vital); must be excluded from labs -->
+  <concept concept_id="9009" retired="false" datatype_id="1" class_id="5" is_set="false"
+           creator="1" date_created="2025-01-01 00:00:00.0"
+           uuid="9009aaaa-0009-0009-0009-000000009009"/>
+  <concept_name concept_name_id="9009" concept_id="9009" name="Weight" locale="en"
+                creator="1" date_created="2025-01-01 00:00:00.0" voided="false"
+                uuid="9009aa00-name-0009-0009-000000009009"
+                concept_name_type="FULLY_SPECIFIED" locale_preferred="1"/>
+
+  <!-- Sodium — numeric Test, LOW bound only (range renders as "≥ low") -->
+  <concept concept_id="9010" retired="false" datatype_id="1" class_id="1" is_set="false"
+           creator="1" date_created="2025-01-01 00:00:00.0"
+           uuid="9010aaaa-0010-0010-0010-000000009010"/>
+  <concept_name concept_name_id="9010" concept_id="9010" name="Sodium" locale="en"
+                creator="1" date_created="2025-01-01 00:00:00.0" voided="false"
+                uuid="9010aa00-name-0010-0010-000000009010"
+                concept_name_type="FULLY_SPECIFIED" locale_preferred="1"/>
+
+  <!-- Total Bilirubin — numeric Test, HIGH bound only (range renders as "≤ high") -->
+  <concept concept_id="9011" retired="false" datatype_id="1" class_id="1" is_set="false"
+           creator="1" date_created="2025-01-01 00:00:00.0"
+           uuid="9011aaaa-0011-0011-0011-000000009011"/>
+  <concept_name concept_name_id="9011" concept_id="9011" name="Total Bilirubin" locale="en"
+                creator="1" date_created="2025-01-01 00:00:00.0" voided="false"
+                uuid="9011aa00-name-0011-0011-000000009011"
+                concept_name_type="FULLY_SPECIFIED" locale_preferred="1"/>
+
+  <!-- Potassium — numeric Test, low+high bounds, obs carries interpretation NORMAL (no flag) -->
+  <concept concept_id="9012" retired="false" datatype_id="1" class_id="1" is_set="false"
+           creator="1" date_created="2025-01-01 00:00:00.0"
+           uuid="9012aaaa-0012-0012-0012-000000009012"/>
+  <concept_name concept_name_id="9012" concept_id="9012" name="Potassium" locale="en"
+                creator="1" date_created="2025-01-01 00:00:00.0" voided="false"
+                uuid="9012aa00-name-0012-0012-000000009012"
+                concept_name_type="FULLY_SPECIFIED" locale_preferred="1"/>
+
+  <!-- Lactate — numeric Test, no normal bounds and no obs snapshot (range renders blank) -->
+  <concept concept_id="9013" retired="false" datatype_id="1" class_id="1" is_set="false"
+           creator="1" date_created="2025-01-01 00:00:00.0"
+           uuid="9013aaaa-0013-0013-0013-000000009013"/>
+  <concept_name concept_name_id="9013" concept_id="9013" name="Lactate" locale="en"
+                creator="1" date_created="2025-01-01 00:00:00.0" voided="false"
+                uuid="9013aa00-name-0013-0013-000000009013"
+                concept_name_type="FULLY_SPECIFIED" locale_preferred="1"/>
+
+  <!-- ── concept_numeric — units and normal bounds ─────────────────────── -->
+
+  <concept_numeric concept_id="9001" units="mmol/L" low_normal="4.0" hi_normal="7.0" allow_decimal="true"/>
+  <concept_numeric concept_id="9002" units="g/dL" allow_decimal="true"/>
+  <concept_numeric concept_id="9007" units="10^3/uL" allow_decimal="true"/>
+  <concept_numeric concept_id="9008" units="10^3/uL" allow_decimal="true"/>
+  <concept_numeric concept_id="9009" units="kg" allow_decimal="true"/>
+  <concept_numeric concept_id="9010" units="mmol/L" low_normal="135.0" allow_decimal="true"/>
+  <concept_numeric concept_id="9011" units="mg/dL" hi_normal="1.2" allow_decimal="true"/>
+  <concept_numeric concept_id="9012" units="mmol/L" low_normal="3.5" hi_normal="5.0" allow_decimal="true"/>
+  <concept_numeric concept_id="9013" units="mmol/L" allow_decimal="true"/>
+
+  <!-- ── Visit 501: patient 2 — full lab scenario ──────────────────────── -->
+
+  <visit visit_id="501" patient_id="2" visit_type_id="1"
+         date_started="2025-03-01 00:00:00.0"
+         creator="1" date_created="2025-03-01 00:00:00.0" voided="0"
+         uuid="00000501-0501-0501-0501-000000000501"/>
+  <encounter encounter_id="501" encounter_type="1" patient_id="2" location_id="1"
+             visit_id="501" encounter_datetime="2025-03-01 09:00:00.0"
+             creator="1" date_created="2025-03-01 00:00:00.0" voided="false"
+             uuid="00000501-enc1-enc1-enc1-000000000501"/>
+
+  <!-- Glucose: HIGH, range falls back to ConceptNumeric normals -->
+  <obs obs_id="9101" person_id="2" concept_id="9001" encounter_id="501"
+       obs_datetime="2025-03-01 09:00:00.0" value_numeric="9.5" interpretation="HIGH"
+       location_id="1" creator="1" date_created="2025-03-01 00:00:00.0"
+       voided="false" uuid="00009101-0000-0000-0000-000000009101" status="FINAL"/>
+
+  <!-- Hemoglobin: LOW, per-obs reference range snapshot -->
+  <obs obs_id="9102" person_id="2" concept_id="9002" encounter_id="501"
+       obs_datetime="2025-03-01 09:00:00.0" value_numeric="8.0" interpretation="LOW"
+       location_id="1" creator="1" date_created="2025-03-01 00:00:00.0"
+       voided="false" uuid="00009102-0000-0000-0000-000000009102" status="FINAL"/>
+  <!-- obs_reference_range_id matches obs_id: Obs.referenceRange is a shared-PK one-to-one -->
+  <obs_reference_range obs_reference_range_id="9102" obs_id="9102"
+       low_normal="12.0" hi_normal="16.0"
+       uuid="00009102-rr00-rr00-rr00-000000009102"/>
+
+  <!-- Malaria Smear: coded Positive -->
+  <obs obs_id="9103" person_id="2" concept_id="9003" encounter_id="501"
+       obs_datetime="2025-03-01 09:00:00.0" value_coded="9004"
+       location_id="1" creator="1" date_created="2025-03-01 00:00:00.0"
+       voided="false" uuid="00009103-0000-0000-0000-000000009103" status="FINAL"/>
+
+  <!-- Culture Notes: free text -->
+  <obs obs_id="9104" person_id="2" concept_id="9005" encounter_id="501"
+       obs_datetime="2025-03-01 09:00:00.0" value_text="No growth after 48 hours"
+       location_id="1" creator="1" date_created="2025-03-01 00:00:00.0"
+       voided="false" uuid="00009104-0000-0000-0000-000000009104" status="FINAL"/>
+
+  <!-- Weight: class Finding — must be excluded from labs -->
+  <obs obs_id="9105" person_id="2" concept_id="9009" encounter_id="501"
+       obs_datetime="2025-03-01 09:00:00.0" value_numeric="70.0"
+       location_id="1" creator="1" date_created="2025-03-01 00:00:00.0"
+       voided="false" uuid="00009105-0000-0000-0000-000000009105" status="FINAL"/>
+
+  <!-- CBC panel: group parent + two members -->
+  <obs obs_id="9106" person_id="2" concept_id="9006" encounter_id="501"
+       obs_datetime="2025-03-01 09:00:00.0"
+       location_id="1" creator="1" date_created="2025-03-01 00:00:00.0"
+       voided="false" uuid="00009106-0000-0000-0000-000000009106" status="FINAL"/>
+  <obs obs_id="9107" person_id="2" concept_id="9007" encounter_id="501" obs_group_id="9106"
+       obs_datetime="2025-03-01 09:00:00.0" value_numeric="6.5"
+       location_id="1" creator="1" date_created="2025-03-01 00:00:00.0"
+       voided="false" uuid="00009107-0000-0000-0000-000000009107" status="FINAL"/>
+  <obs obs_id="9108" person_id="2" concept_id="9008" encounter_id="501" obs_group_id="9106"
+       obs_datetime="2025-03-01 09:00:00.0" value_numeric="250.0"
+       location_id="1" creator="1" date_created="2025-03-01 00:00:00.0"
+       voided="false" uuid="00009108-0000-0000-0000-000000009108" status="FINAL"/>
+
+  <!-- Voided Glucose obs — must be excluded -->
+  <obs obs_id="9109" person_id="2" concept_id="9001" encounter_id="501"
+       obs_datetime="2025-03-01 09:00:00.0" value_numeric="99.0"
+       location_id="1" creator="1" date_created="2025-03-01 00:00:00.0"
+       voided="true" uuid="00009109-0000-0000-0000-000000009109" status="FINAL"/>
+
+  <!-- ── Visit 502: patient 7 — encounter with no obs (None recorded) ──── -->
+
+  <visit visit_id="502" patient_id="7" visit_type_id="1"
+         date_started="2025-03-02 00:00:00.0"
+         creator="1" date_created="2025-03-02 00:00:00.0" voided="0"
+         uuid="00000502-0502-0502-0502-000000000502"/>
+  <encounter encounter_id="502" encounter_type="1" patient_id="7" location_id="1"
+             visit_id="502" encounter_datetime="2025-03-02 09:00:00.0"
+             creator="1" date_created="2025-03-02 00:00:00.0" voided="false"
+             uuid="00000502-enc2-enc2-enc2-000000000502"/>
+
+  <!-- ── Visit 503: patient 2 — range-shape and interpretation edge cases ── -->
+
+  <visit visit_id="503" patient_id="2" visit_type_id="1"
+         date_started="2025-03-03 00:00:00.0"
+         creator="1" date_created="2025-03-03 00:00:00.0" voided="0"
+         uuid="00000503-0503-0503-0503-000000000503"/>
+  <encounter encounter_id="503" encounter_type="1" patient_id="2" location_id="1"
+             visit_id="503" encounter_datetime="2025-03-03 09:00:00.0"
+             creator="1" date_created="2025-03-03 00:00:00.0" voided="false"
+             uuid="00000503-enc3-enc3-enc3-000000000503"/>
+
+  <!-- Sodium: low-bound-only range -> "≥ 135 mmol/L" -->
+  <obs obs_id="9110" person_id="2" concept_id="9010" encounter_id="503"
+       obs_datetime="2025-03-03 09:00:00.0" value_numeric="140.0"
+       location_id="1" creator="1" date_created="2025-03-03 00:00:00.0"
+       voided="false" uuid="00009110-0000-0000-0000-000000009110" status="FINAL"/>
+
+  <!-- Total Bilirubin: high-bound-only range -> "≤ 1.2 mg/dL" -->
+  <obs obs_id="9111" person_id="2" concept_id="9011" encounter_id="503"
+       obs_datetime="2025-03-03 09:00:00.0" value_numeric="0.8"
+       location_id="1" creator="1" date_created="2025-03-03 00:00:00.0"
+       voided="false" uuid="00009111-0000-0000-0000-000000009111" status="FINAL"/>
+
+  <!-- Potassium: interpretation NORMAL -> no flag, range "3.5 – 5 mmol/L" -->
+  <obs obs_id="9112" person_id="2" concept_id="9012" encounter_id="503"
+       obs_datetime="2025-03-03 09:00:00.0" value_numeric="4.2" interpretation="NORMAL"
+       location_id="1" creator="1" date_created="2025-03-03 00:00:00.0"
+       voided="false" uuid="00009112-0000-0000-0000-000000009112" status="FINAL"/>
+
+  <!-- Lactate: no normal bounds, no snapshot, no interpretation -> blank range and flag -->
+  <obs obs_id="9113" person_id="2" concept_id="9013" encounter_id="503"
+       obs_datetime="2025-03-03 09:00:00.0" value_numeric="1.0"
+       location_id="1" creator="1" date_created="2025-03-03 00:00:00.0"
+       voided="false" uuid="00009113-0000-0000-0000-000000009113" status="FINAL"/>
+
+  <!-- ── Visit 504: patient 8 — no encounters (empty early-return path) ─── -->
+
+  <visit visit_id="504" patient_id="8" visit_type_id="1"
+         date_started="2025-03-04 00:00:00.0"
+         creator="1" date_created="2025-03-04 00:00:00.0" voided="0"
+         uuid="00000504-0504-0504-0504-000000000504"/>
+
+</dataset>

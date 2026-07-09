@@ -12,7 +12,7 @@
       concept_class_id=5  Finding   (used to prove vitals are NOT rendered as labs)
     Concept datatypes: 1=Numeric, 2=Coded, 3=Text, 4=N/A.
 
-    Concept IDs 9001-9013 avoid conflicts with vitals (5001-5009), diagnoses (6001-6003),
+    Concept IDs 9001-9018 avoid conflicts with vitals (5001-5009), diagnoses (6001-6003),
     allergies (7001-7006) and conditions (8001-8002). Visit/encounter/obs IDs 501+ / 9101+.
 
     Visit 501 — patient 2, one encounter with:
@@ -32,6 +32,10 @@
       -> "≤ 1.2 mg/dL"; Potassium (9012) interpretation NORMAL -> no flag; Lactate (9013)
       no bounds/snapshot -> blank range and flag
     Visit 504 — patient 8, no encounters (empty early-return path)
+    Visit 505 — patient 2, one encounter exercising numeric formatting and flag localization:
+      TSH (9014) 0.04 -> "0.04"; HIV Viral Load (9015) 3000000000 -> "3000000000"; Serum
+      Amylase (9016) no value -> ""; Ferritin (9017) OFF_SCALE_HIGH -> flag via message key
+      "Off-scale High"; Aerobic Culture (9018) RESISTANT -> unmapped, falls back to "Resistant"
 -->
 <dataset>
 
@@ -148,6 +152,52 @@
                 uuid="9013aa00-name-0013-0013-000000009013"
                 concept_name_type="FULLY_SPECIFIED" locale_preferred="1"/>
 
+  <!-- Numeric-formatting edge cases (visit 505) -->
+  <!-- TSH — small decimal that must keep its precision (renders "0.04") -->
+  <concept concept_id="9014" retired="false" datatype_id="1" class_id="1" is_set="false"
+           creator="1" date_created="2025-01-01 00:00:00.0"
+           uuid="9014aaaa-0014-0014-0014-000000009014"/>
+  <concept_name concept_name_id="9014" concept_id="9014" name="Thyroid Stimulating Hormone" locale="en"
+                creator="1" date_created="2025-01-01 00:00:00.0" voided="false"
+                uuid="9014aa00-name-0014-0014-000000009014"
+                concept_name_type="FULLY_SPECIFIED" locale_preferred="1"/>
+
+  <!-- HIV Viral Load — whole value beyond Integer range (renders "3000000000") -->
+  <concept concept_id="9015" retired="false" datatype_id="1" class_id="1" is_set="false"
+           creator="1" date_created="2025-01-01 00:00:00.0"
+           uuid="9015aaaa-0015-0015-0015-000000009015"/>
+  <concept_name concept_name_id="9015" concept_id="9015" name="HIV Viral Load" locale="en"
+                creator="1" date_created="2025-01-01 00:00:00.0" voided="false"
+                uuid="9015aa00-name-0015-0015-000000009015"
+                concept_name_type="FULLY_SPECIFIED" locale_preferred="1"/>
+
+  <!-- Serum Amylase — numeric obs with no stored value (renders blank) -->
+  <concept concept_id="9016" retired="false" datatype_id="1" class_id="1" is_set="false"
+           creator="1" date_created="2025-01-01 00:00:00.0"
+           uuid="9016aaaa-0016-0016-0016-000000009016"/>
+  <concept_name concept_name_id="9016" concept_id="9016" name="Serum Amylase" locale="en"
+                creator="1" date_created="2025-01-01 00:00:00.0" voided="false"
+                uuid="9016aa00-name-0016-0016-000000009016"
+                concept_name_type="FULLY_SPECIFIED" locale_preferred="1"/>
+
+  <!-- Ferritin — interpretation OFF_SCALE_HIGH, resolves via the flag message key -->
+  <concept concept_id="9017" retired="false" datatype_id="1" class_id="1" is_set="false"
+           creator="1" date_created="2025-01-01 00:00:00.0"
+           uuid="9017aaaa-0017-0017-0017-000000009017"/>
+  <concept_name concept_name_id="9017" concept_id="9017" name="Ferritin" locale="en"
+                creator="1" date_created="2025-01-01 00:00:00.0" voided="false"
+                uuid="9017aa00-name-0017-0017-000000009017"
+                concept_name_type="FULLY_SPECIFIED" locale_preferred="1"/>
+
+  <!-- Aerobic Culture — interpretation RESISTANT, has no flag key so it falls back to the title-cased name "Resistant" -->
+  <concept concept_id="9018" retired="false" datatype_id="1" class_id="1" is_set="false"
+           creator="1" date_created="2025-01-01 00:00:00.0"
+           uuid="9018aaaa-0018-0018-0018-000000009018"/>
+  <concept_name concept_name_id="9018" concept_id="9018" name="Aerobic Culture" locale="en"
+                creator="1" date_created="2025-01-01 00:00:00.0" voided="false"
+                uuid="9018aa00-name-0018-0018-000000009018"
+                concept_name_type="FULLY_SPECIFIED" locale_preferred="1"/>
+
   <!-- ── concept_numeric — units and normal bounds ─────────────────────── -->
 
   <concept_numeric concept_id="9001" units="mmol/L" low_normal="4.0" hi_normal="7.0" allow_decimal="true"/>
@@ -159,6 +209,11 @@
   <concept_numeric concept_id="9011" units="mg/dL" hi_normal="1.2" allow_decimal="true"/>
   <concept_numeric concept_id="9012" units="mmol/L" low_normal="3.5" hi_normal="5.0" allow_decimal="true"/>
   <concept_numeric concept_id="9013" units="mmol/L" allow_decimal="true"/>
+  <concept_numeric concept_id="9014" units="mIU/L" allow_decimal="true"/>
+  <concept_numeric concept_id="9015" units="copies/mL" allow_decimal="true"/>
+  <concept_numeric concept_id="9016" units="U/L" allow_decimal="true"/>
+  <concept_numeric concept_id="9017" units="ng/mL" allow_decimal="true"/>
+  <concept_numeric concept_id="9018" allow_decimal="true"/>
 
   <!-- ── Visit 501: patient 2 — full lab scenario ──────────────────────── -->
 
@@ -277,5 +332,46 @@
          date_started="2025-03-04 00:00:00.0"
          creator="1" date_created="2025-03-04 00:00:00.0" voided="0"
          uuid="00000504-0504-0504-0504-000000000504"/>
+
+  <!-- ── Visit 505: patient 2 — numeric-formatting and flag-key edge cases ── -->
+
+  <visit visit_id="505" patient_id="2" visit_type_id="1"
+         date_started="2025-03-05 00:00:00.0"
+         creator="1" date_created="2025-03-05 00:00:00.0" voided="0"
+         uuid="00000505-0505-0505-0505-000000000505"/>
+  <encounter encounter_id="505" encounter_type="1" patient_id="2" location_id="1"
+             visit_id="505" encounter_datetime="2025-03-05 09:00:00.0"
+             creator="1" date_created="2025-03-05 00:00:00.0" voided="false"
+             uuid="00000505-enc5-enc5-enc5-000000000505"/>
+
+  <!-- TSH: 0.04 -> "0.04" (not rounded to "0.0") -->
+  <obs obs_id="9114" person_id="2" concept_id="9014" encounter_id="505"
+       obs_datetime="2025-03-05 09:00:00.0" value_numeric="0.04"
+       location_id="1" creator="1" date_created="2025-03-05 00:00:00.0"
+       voided="false" uuid="00009114-0000-0000-0000-000000009114" status="FINAL"/>
+
+  <!-- HIV Viral Load: 3000000000 -> "3000000000" (whole value beyond Integer range) -->
+  <obs obs_id="9115" person_id="2" concept_id="9015" encounter_id="505"
+       obs_datetime="2025-03-05 09:00:00.0" value_numeric="3000000000"
+       location_id="1" creator="1" date_created="2025-03-05 00:00:00.0"
+       voided="false" uuid="00009115-0000-0000-0000-000000009115" status="FINAL"/>
+
+  <!-- Serum Amylase: no value_numeric -> "" -->
+  <obs obs_id="9116" person_id="2" concept_id="9016" encounter_id="505"
+       obs_datetime="2025-03-05 09:00:00.0"
+       location_id="1" creator="1" date_created="2025-03-05 00:00:00.0"
+       voided="false" uuid="00009116-0000-0000-0000-000000009116" status="FINAL"/>
+
+  <!-- Ferritin: OFF_SCALE_HIGH -> flag "Off-scale High" via the message key -->
+  <obs obs_id="9117" person_id="2" concept_id="9017" encounter_id="505"
+       obs_datetime="2025-03-05 09:00:00.0" value_numeric="2000.0" interpretation="OFF_SCALE_HIGH"
+       location_id="1" creator="1" date_created="2025-03-05 00:00:00.0"
+       voided="false" uuid="00009117-0000-0000-0000-000000009117" status="FINAL"/>
+
+  <!-- Aerobic Culture: RESISTANT (no flag key) -> fallback "Resistant" -->
+  <obs obs_id="9118" person_id="2" concept_id="9018" encounter_id="505"
+       obs_datetime="2025-03-05 09:00:00.0" value_numeric="1.0" interpretation="RESISTANT"
+       location_id="1" creator="1" date_created="2025-03-05 00:00:00.0"
+       voided="false" uuid="00009118-0000-0000-0000-000000009118" status="FINAL"/>
 
 </dataset>

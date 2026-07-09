@@ -9,6 +9,7 @@
  */
 package org.openmrs.module.patientdocuments.api.section;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -50,6 +51,8 @@ public class LabResultsSection extends TypedSection<LabResultsData> {
 	private static final int DEFAULT_ORDER = 475;
 
 	private static final String KEY_PREFIX = "patientdocuments.visitSummary.section.labResults.";
+
+	private static final String HEADING = "heading";
 
 	@Override
 	public String getSectionKey() {
@@ -214,7 +217,8 @@ public class LabResultsSection extends TypedSection<LabResultsData> {
 		if (interpretation == null || interpretation == Obs.Interpretation.NORMAL) {
 			return "";
 		}
-		return formatEnumName(interpretation.name());
+		String name = interpretation.name();
+		return msg(KEY_PREFIX + "flag." + name.toLowerCase(), formatEnumName(name));
 	}
 
 	// Throws if none of the configured class names resolve (so a wholly invalid config surfaces as an error banner).
@@ -250,20 +254,18 @@ public class LabResultsSection extends TypedSection<LabResultsData> {
 		return encounters;
 	}
 
+	// Keeps the stored precision and strips trailing zeros; toPlainString avoids scientific notation.
 	private String formatNumeric(Double value) {
 		if (value == null) {
 			return "";
 		}
-		if (value == Math.floor(value) && !Double.isInfinite(value)) {
-			return String.valueOf(value.intValue());
-		}
-		return String.format("%.1f", value);
+		return BigDecimal.valueOf(value).stripTrailingZeros().toPlainString();
 	}
 
 	@Override
 	protected void renderXml(Document doc, Element root, LabResultsData data) {
 		Element section = doc.createElement("labResults");
-		section.setAttribute("heading", msg(KEY_PREFIX + "heading", "Lab Results"));
+		section.setAttribute(HEADING, msg(KEY_PREFIX + HEADING, "Lab Results"));
 		section.setAttribute("col-test", msg(KEY_PREFIX + "col.test", "Test"));
 		section.setAttribute("col-result", msg(KEY_PREFIX + "col.result", "Result"));
 		section.setAttribute("col-range", msg(KEY_PREFIX + "col.range", "Reference Range"));
@@ -272,7 +274,7 @@ public class LabResultsSection extends TypedSection<LabResultsData> {
 
 		for (LabResultGroup group : data.getGroups()) {
 			Element groupEl = doc.createElement("lab-group");
-			groupEl.setAttribute("heading", StringUtils.defaultString(group.getHeading()));
+			groupEl.setAttribute(HEADING, StringUtils.defaultString(group.getHeading()));
 			for (LabResult result : group.getResults()) {
 				groupEl.appendChild(buildLabElement(doc, result));
 			}

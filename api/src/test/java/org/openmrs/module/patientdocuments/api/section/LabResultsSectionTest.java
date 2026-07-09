@@ -223,6 +223,69 @@ public class LabResultsSectionTest extends BaseModuleContextSensitiveTest {
 	}
 
 	@Test
+	public void gatherData_smallDecimalValue_keepsPrecisionWithoutRounding() {
+		Visit visit = Context.getVisitService().getVisit(505);
+
+		LabResult tsh = findStandalone(section.gatherData(visit), "Thyroid Stimulating Hormone");
+
+		Assertions.assertNotNull(tsh, "Expected a TSH result");
+		Assertions.assertEquals("0.04", tsh.getValue());
+	}
+
+	@Test
+	public void gatherData_largeWholeValue_isNotNarrowedToInt() {
+		Visit visit = Context.getVisitService().getVisit(505);
+
+		LabResult viralLoad = findStandalone(section.gatherData(visit), "HIV Viral Load");
+
+		Assertions.assertNotNull(viralLoad, "Expected an HIV Viral Load result");
+		// Value exceeds Integer.MAX_VALUE; the old int narrowing capped it at 2147483647
+		Assertions.assertEquals("3000000000", viralLoad.getValue());
+	}
+
+	@Test
+	public void gatherData_wholeNumberValue_hasNoTrailingDecimal() {
+		Visit visit = Context.getVisitService().getVisit(505);
+
+		LabResult viralLoad = findStandalone(section.gatherData(visit), "HIV Viral Load");
+
+		Assertions.assertNotNull(viralLoad, "Expected an HIV Viral Load result");
+		Assertions.assertFalse(viralLoad.getValue().contains("."), "Whole numbers must not carry a trailing decimal");
+	}
+
+	@Test
+	public void gatherData_numericObsWithNoValue_rendersBlankValue() {
+		Visit visit = Context.getVisitService().getVisit(505);
+
+		LabResult amylase = findStandalone(section.gatherData(visit), "Serum Amylase");
+
+		Assertions.assertNotNull(amylase, "Expected a Serum Amylase result");
+		Assertions.assertEquals("", amylase.getValue());
+	}
+
+	@Test
+	public void gatherData_mappedInterpretation_resolvesFlagThroughMessageKey() {
+		Visit visit = Context.getVisitService().getVisit(505);
+
+		LabResult ferritin = findStandalone(section.gatherData(visit), "Ferritin");
+
+		Assertions.assertNotNull(ferritin, "Expected a Ferritin result");
+		// "Off-scale High" (hyphen) only comes from the message key; formatEnumName would yield "Off Scale High"
+		Assertions.assertEquals("Off-scale High", ferritin.getFlag());
+	}
+
+	@Test
+	public void gatherData_unmappedInterpretation_fallsBackToFormattedEnumName() {
+		Visit visit = Context.getVisitService().getVisit(505);
+
+		LabResult culture = findStandalone(section.gatherData(visit), "Aerobic Culture");
+
+		Assertions.assertNotNull(culture, "Expected an Aerobic Culture result");
+		// RESISTANT has no flag message key, so it falls back to the title-cased enum name
+		Assertions.assertEquals("Resistant", culture.getFlag());
+	}
+
+	@Test
 	public void gatherData_someConceptClassesUnresolvable_skipsBadKeepsGood() {
 		// One resolvable ("Test") and one bogus name: the bad one is warned+skipped, the
 		// good one still resolves, so results are returned rather than an error.

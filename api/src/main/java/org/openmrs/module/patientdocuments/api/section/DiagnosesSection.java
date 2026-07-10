@@ -12,6 +12,8 @@ package org.openmrs.module.patientdocuments.api.section;
 import java.util.ArrayList;
 import java.util.List;
 
+import lombok.extern.slf4j.Slf4j;
+
 import org.apache.commons.lang3.StringUtils;
 import org.openmrs.Diagnosis;
 import org.openmrs.Visit;
@@ -22,6 +24,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 @Component
+@Slf4j
 public class DiagnosesSection extends TypedSection<List<DiagnosisEntry>> {
 
 	private static final int DEFAULT_ORDER = 400;
@@ -48,21 +51,30 @@ public class DiagnosesSection extends TypedSection<List<DiagnosisEntry>> {
 			return diagnoses;
 		}
 		for (Diagnosis diagnosis : diagnosisList) {
-			String name = "";
-			if (diagnosis.getDiagnosis() != null) {
-				if (diagnosis.getDiagnosis().getCoded() != null
-				        && diagnosis.getDiagnosis().getCoded().getName() != null) {
-					name = diagnosis.getDiagnosis().getCoded().getName().getName();
-				} else if (diagnosis.getDiagnosis().getNonCoded() != null) {
-					name = diagnosis.getDiagnosis().getNonCoded();
-				}
-			}
+			String name = extractDiagnosisName(diagnosis);
 			String certainty = diagnosis.getCertainty() != null ? diagnosis.getCertainty().name() : "";
 			String rank = diagnosis.getRank() != null ? String.valueOf(diagnosis.getRank()) : "";
 			diagnoses.add(new DiagnosisEntry(name, certainty, rank));
 		}
 
 		return diagnoses;
+	}
+
+	private String extractDiagnosisName(Diagnosis diagnosis) {
+		if (diagnosis.getDiagnosis() == null) {
+			log.warn("Diagnosis {} has null diagnosis value", diagnosis.getUuid());
+			return msg(KEY_PREFIX + "unknown", "Unknown");
+		}
+		if (diagnosis.getDiagnosis().getCoded() != null
+		        && diagnosis.getDiagnosis().getCoded().getName() != null) {
+			return diagnosis.getDiagnosis().getCoded().getName().getName();
+		}
+		if (diagnosis.getDiagnosis().getNonCoded() != null) {
+			return diagnosis.getDiagnosis().getNonCoded();
+		}
+		log.warn("Diagnosis {} has diagnosis value but neither coded diagnosis name "
+			+ "nor non-coded diagnosis text resolved", diagnosis.getUuid());
+		return msg(KEY_PREFIX + "unknown", "Unknown");
 	}
 
 	@Override

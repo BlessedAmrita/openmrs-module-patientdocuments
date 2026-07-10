@@ -9,6 +9,9 @@
  */
 package org.openmrs.module.patientdocuments.api.section;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import lombok.extern.slf4j.Slf4j;
 
 import org.openmrs.Visit;
@@ -31,6 +34,16 @@ public abstract class TypedSection<T> extends AbstractVisitSummarySection {
 	protected abstract T gatherData(Visit visit);
 
 	/**
+	 * Gather variant for sections with partial-failure modes: add a message to
+	 * {@code notices} for anything configured that could not be loaded, and it renders
+	 * as a warning banner alongside the section's data. The collector is per-call
+	 * because sections are singleton beans and renders can be concurrent.
+	 */
+	protected T gatherData(Visit visit, List<String> notices) {
+		return gatherData(visit);
+	}
+
+	/**
 	 * Build XML elements for this section's typed data.
 	 */
 	protected abstract void renderXml(Document doc, Element root, T data);
@@ -41,10 +54,17 @@ public abstract class TypedSection<T> extends AbstractVisitSummarySection {
 	 */
 	@Override
 	public final void renderXml(Document doc, Element root, Visit visit) {
+		List<String> notices = new ArrayList<>();
 		try {
-			T data = gatherData(visit);
+			T data = gatherData(visit, notices);
 			if (data != null) {
 				renderXml(doc, root, data);
+			}
+			for (String message : notices) {
+				Element noticeEl = doc.createElement("section-notice");
+				noticeEl.setAttribute("key", getSectionKey());
+				noticeEl.setAttribute("message", message);
+				root.appendChild(noticeEl);
 			}
 		}
 		catch (Exception e) {

@@ -21,6 +21,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import javax.xml.parsers.DocumentBuilderFactory;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -152,24 +153,54 @@ public class VitalsSectionTest extends BaseModuleContextSensitiveTest {
 	}
 
 	@Test
-	public void gatherData_withInvalidConceptMappingFormat_skipsInvalidAndContinues() {
-		// "BADFORMAT" has no colon separator. "CIEL:5085" is valid and should still resolve.
-		// CIEL:5085 is systolic-only → BP emitted as "120/? mmHg".
+	public void gatherData_someConceptEntriesUnresolvable_surfacesNoticeAndKeepsGood() {
+		// "BADFORMAT" has no colon separator, "NONEXISTENT:99999" doesn't resolve;
+		// "CIEL:5085" is valid → BP emitted as "120/? mmHg" (systolic-only).
 		GlobalProperty gp = new GlobalProperty(
-		    "report.visitSummary.vitals.concepts", "BADFORMAT,CIEL:5085");
+		    "report.visitSummary.vitals.concepts", "BADFORMAT,NONEXISTENT:99999,CIEL:5085");
 		Context.getAdministrationService().saveGlobalProperty(gp);
 		Visit visit = Context.getVisitService().getVisit(101);
+		List<String> notices = new ArrayList<>();
 
-		List<Vital> vitals = section.gatherData(visit);
+		List<Vital> vitals = section.gatherData(visit, notices);
 
-		// BADFORMAT skipped, CIEL:5085 resolved → exactly one BP vital
 		Assertions.assertEquals(1, vitals.size());
 		Assertions.assertEquals("Blood Pressure", vitals.get(0).getLabel());
 		Assertions.assertEquals("120/? mmHg", vitals.get(0).getValue());
+		Assertions.assertEquals(1, notices.size(), "Expected one notice covering all unresolved entries");
+		Assertions.assertTrue(notices.get(0).contains("BADFORMAT"),
+		    "Notice should name the malformed entry");
+		Assertions.assertTrue(notices.get(0).contains("NONEXISTENT:99999"),
+		    "Notice should name the unresolvable mapping");
 	}
 
 	@Test
-	public void gatherData_withUnresolvableConceptMapping_skipsEntry() {
+	public void renderXml_someConceptEntriesUnresolvable_emitsNoticeAlongsideData() throws Exception {
+		// The notice must be a sibling of the data element — data renders AND the gap is visible.
+		GlobalProperty gp = new GlobalProperty(
+		    "report.visitSummary.vitals.concepts", "BADFORMAT,CIEL:5085");
+		Context.getAdministrationService().saveGlobalProperty(gp);
+		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+		Element root = doc.createElement("root");
+		doc.appendChild(root);
+		Visit visit = Context.getVisitService().getVisit(101);
+
+		section.renderXml(doc, root, visit);
+
+		Assertions.assertEquals(2, root.getChildNodes().getLength());
+		Element dataEl = (Element) root.getChildNodes().item(0);
+		Assertions.assertEquals("vitals", dataEl.getNodeName());
+		Assertions.assertTrue(dataEl.getElementsByTagName("vital").getLength() > 0,
+		    "Resolved vitals should still render");
+		Element noticeEl = (Element) root.getChildNodes().item(1);
+		Assertions.assertEquals("section-notice", noticeEl.getNodeName());
+		Assertions.assertEquals("vitals", noticeEl.getAttribute("key"));
+		Assertions.assertTrue(noticeEl.getAttribute("message").contains("BADFORMAT"),
+		    "Notice message should name the unresolved entry");
+	}
+
+	@Test
+	public void gatherData_allConceptEntriesUnresolvable_throws() {
 		// All entries configured but none resolve — must throw so the error banner fires
 		GlobalProperty gp = new GlobalProperty(
 		    "report.visitSummary.vitals.concepts", "NONEXISTENT:99999");

@@ -11,6 +11,7 @@ package org.openmrs.module.patientdocuments.api.section;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -96,6 +97,12 @@ public abstract class AbstractVisitSummarySection implements VisitSummarySection
 			log.warn("Message lookup failed for key '{}'; using fallback", key, e);
 			return fallback;
 		}
+	}
+
+	// msg() takes no message args, so the offending names are appended rather than templated.
+	protected String buildSectionNotice(List<String> unresolvedNames) {
+		return msg("patientdocuments.visitSummary.common.sectionNotice",
+				"Some configured items could not be loaded") + ": " + String.join(", ", unresolvedNames);
 	}
 
 	// "ENTERED_IN_ERROR" -> "Entered In Error", "CONFIRMED" -> "Confirmed"; "" for null/empty.

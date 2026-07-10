@@ -23,6 +23,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import javax.xml.parsers.DocumentBuilderFactory;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -39,6 +40,10 @@ import java.util.List;
  *               result, a Finding-class obs (excluded), a CBC panel (obs group), and a
  *               voided obs (excluded).
  *   Visit 502 — patient 7, encounter with no obs (None recorded).
+ *   Visit 503 — patient 2, range-shape and interpretation edge cases (bound-only
+ *               ranges, NORMAL interpretation, no range source).
+ *   Visit 504 — patient 8, no encounters.
+ *   Visit 505 — patient 2, numeric-formatting and flag-localization edge cases.
  */
 public class LabResultsSectionTest extends BaseModuleContextSensitiveTest {
 
@@ -286,17 +291,43 @@ public class LabResultsSectionTest extends BaseModuleContextSensitiveTest {
 	}
 
 	@Test
-	public void gatherData_someConceptClassesUnresolvable_skipsBadKeepsGood() {
-		// One resolvable ("Test") and one bogus name: the bad one is warned+skipped, the
-		// good one still resolves, so results are returned rather than an error.
+	public void gatherData_someConceptClassesUnresolvable_surfacesNoticeAndKeepsGood() {
 		Context.getAdministrationService().saveGlobalProperty(new GlobalProperty(
 		    LabResultsSection.CONCEPT_CLASSES_PROPERTY, "Test,NoSuchClass"));
 		Visit visit = Context.getVisitService().getVisit(501);
+		List<String> notices = new ArrayList<>();
 
-		LabResultsData data = section.gatherData(visit);
+		LabResultsData data = section.gatherData(visit, notices);
 
 		Assertions.assertNotNull(findStandalone(data, "Serum Glucose"),
 		    "Test-class results should still resolve when a sibling class name is invalid");
+		Assertions.assertEquals(1, notices.size(), "Expected one notice for the unresolved class");
+		Assertions.assertTrue(notices.get(0).contains("NoSuchClass"),
+		    "Notice should name the unresolved concept class");
+	}
+
+	@Test
+	public void renderXml_someConceptClassesUnresolvable_emitsNoticeAlongsideData() throws Exception {
+		// The notice must be a sibling of the data element — data renders AND the gap is visible.
+		Context.getAdministrationService().saveGlobalProperty(new GlobalProperty(
+		    LabResultsSection.CONCEPT_CLASSES_PROPERTY, "Test,NoSuchClass"));
+		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+		Element root = doc.createElement("root");
+		doc.appendChild(root);
+		Visit visit = Context.getVisitService().getVisit(501);
+
+		section.renderXml(doc, root, visit);
+
+		Assertions.assertEquals(2, root.getChildNodes().getLength());
+		Element dataEl = (Element) root.getChildNodes().item(0);
+		Assertions.assertEquals("labResults", dataEl.getNodeName());
+		Assertions.assertTrue(dataEl.getElementsByTagName("lab").getLength() > 0,
+		    "Resolved-class labs should still render");
+		Element noticeEl = (Element) root.getChildNodes().item(1);
+		Assertions.assertEquals("section-notice", noticeEl.getNodeName());
+		Assertions.assertEquals("labResults", noticeEl.getAttribute("key"));
+		Assertions.assertTrue(noticeEl.getAttribute("message").contains("NoSuchClass"),
+		    "Notice message should name the unresolved concept class");
 	}
 
 	@Test

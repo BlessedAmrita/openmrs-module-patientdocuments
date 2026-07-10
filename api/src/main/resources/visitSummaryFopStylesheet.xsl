@@ -45,6 +45,7 @@
                     <xsl:if test="vitals">
                         <xsl:call-template name="vitals"/>
                     </xsl:if>
+                    <xsl:apply-templates select="section-notice[@key='vitals']"/>
                     <xsl:apply-templates select="section-error[@key='vitals']"/>
 
                     <!-- Diagnoses -->
@@ -63,6 +64,7 @@
                     <xsl:if test="labResults">
                         <xsl:call-template name="lab-results"/>
                     </xsl:if>
+                    <xsl:apply-templates select="section-notice[@key='labResults']"/>
                     <xsl:apply-templates select="section-error[@key='labResults']"/>
 
                     <!-- Allergies -->
@@ -755,9 +757,24 @@
                   space-before="6pt" space-after="6pt"
                   padding="4pt" border="0.5pt solid #CC0000"
                   background-color="#FFF0F0">
-            <fo:inline font-weight="bold">⚠ </fo:inline>
+            <!-- Bundled Plex Sans Arabic has no U+26A0, so a warning-sign ⚠ glyph renders as "#" -->
+            <fo:inline font-weight="bold">! </fo:inline>
             <xsl:value-of select="@key"/>
             <xsl:text>: </xsl:text>
+            <xsl:value-of select="@message"/>
+        </fo:block>
+    </xsl:template>
+
+    <!-- ═══════════════════════════════════════════════════
+         Section notice — partial data loaded (non-fatal warning)
+         ═══════════════════════════════════════════════════ -->
+    <xsl:template match="section-notice">
+        <fo:block font-size="9pt" font-style="italic" color="#B8860B"
+                  space-before="6pt" space-after="6pt"
+                  padding="4pt" border="0.5pt solid #B8860B"
+                  background-color="#FFF8E1">
+            <!-- Bundled Plex Sans Arabic has no U+26A0, so a warning-sign ⚠ glyph renders as "#" -->
+            <fo:inline font-weight="bold">! </fo:inline>
             <xsl:value-of select="@message"/>
         </fo:block>
     </xsl:template>

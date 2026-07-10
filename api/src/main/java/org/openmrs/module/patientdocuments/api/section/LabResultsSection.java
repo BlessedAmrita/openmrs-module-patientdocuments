@@ -66,6 +66,11 @@ public class LabResultsSection extends TypedSection<LabResultsData> {
 
 	@Override
 	protected LabResultsData gatherData(Visit visit) {
+		return gatherData(visit, new ArrayList<>());
+	}
+
+	@Override
+	protected LabResultsData gatherData(Visit visit, List<String> notices) {
 		List<LabResultGroup> groups = new ArrayList<>();
 		List<LabResult> standalone = new ArrayList<>();
 
@@ -74,7 +79,7 @@ public class LabResultsSection extends TypedSection<LabResultsData> {
 			return new LabResultsData(groups, standalone);
 		}
 
-		Set<Integer> labClassIds = resolveLabConceptClassIds();
+		Set<Integer> labClassIds = resolveLabConceptClassIds(notices);
 
 		List<Obs> obsList = Context.getObsService().getObservations(
 		    null, encounters, null, null, null, null,
@@ -221,10 +226,11 @@ public class LabResultsSection extends TypedSection<LabResultsData> {
 		return msg(KEY_PREFIX + "flag." + name.toLowerCase(), formatEnumName(name));
 	}
 
-	// Throws if none of the configured class names resolve (so a wholly invalid config surfaces as an error banner).
-	private Set<Integer> resolveLabConceptClassIds() {
+	// No names resolving -> throw (error banner); some unresolved -> notice alongside the labs that did load.
+	private Set<Integer> resolveLabConceptClassIds(List<String> notices) {
 		String raw = ConfigUtil.getProperty(CONCEPT_CLASSES_PROPERTY, DEFAULT_LAB_CONCEPT_CLASSES);
 		Set<Integer> classIds = new LinkedHashSet<>();
+		List<String> unresolved = new ArrayList<>();
 		for (String entry : raw.split(",")) {
 			String name = entry.trim();
 			if (name.isEmpty()) {
@@ -233,6 +239,7 @@ public class LabResultsSection extends TypedSection<LabResultsData> {
 			ConceptClass conceptClass = Context.getConceptService().getConceptClassByName(name);
 			if (conceptClass == null) {
 				log.warn("Lab-result concept class '{}' could not be resolved; skipping", name);
+				unresolved.add(name);
 			} else {
 				classIds.add(conceptClass.getConceptClassId());
 			}
@@ -240,6 +247,9 @@ public class LabResultsSection extends TypedSection<LabResultsData> {
 		if (classIds.isEmpty()) {
 			throw new IllegalStateException(
 			    "None of the configured lab-result concept classes could be resolved; check " + CONCEPT_CLASSES_PROPERTY);
+		}
+		if (!unresolved.isEmpty()) {
+			notices.add(buildSectionNotice(unresolved));
 		}
 		return classIds;
 	}

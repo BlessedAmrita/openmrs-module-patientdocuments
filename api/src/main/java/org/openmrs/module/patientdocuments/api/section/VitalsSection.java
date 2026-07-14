@@ -60,13 +60,18 @@ public class VitalsSection extends TypedSection<List<Vital>> {
 
 	@Override
 	protected List<Vital> gatherData(Visit visit) {
+		return gatherData(visit, new ArrayList<>());
+	}
+
+	@Override
+	protected List<Vital> gatherData(Visit visit, List<String> notices) {
 		List<Vital> vitals = new ArrayList<>();
 		List<Encounter> encounters = getNonVoidedEncounters(visit);
 		if (encounters.isEmpty()) {
 			return vitals;
 		}
 
-		List<Concept> vitalConcepts = resolveVitalConcepts();
+		List<Concept> vitalConcepts = resolveVitalConcepts(notices);
 		if (vitalConcepts.isEmpty()) {
 			throw new IllegalStateException(
 			    "None of the configured vital concepts could be resolved; check report.visitSummary.vitals.concepts");
@@ -160,26 +165,35 @@ public class VitalsSection extends TypedSection<List<Vital>> {
 	 * Resolves the ordered list of vital concepts from
 	 * report.visitSummary.vitals.concepts (defaults to DEFAULT_VITAL_CONCEPTS).
 	 * Each entry must be in "source:code" format. Entries that cannot be parsed
-	 * or resolved are logged and skipped rather than crashing the PDF.
+	 * or resolved are surfaced as a section notice, since a dropped vital is
+	 * otherwise indistinguishable from an unmeasured one on the PDF. If nothing
+	 * resolves, no notice is added — the empty return makes gatherData throw,
+	 * which surfaces as a section error instead.
 	 */
-	private List<Concept> resolveVitalConcepts() {
+	private List<Concept> resolveVitalConcepts(List<String> notices) {
 		String raw = ConfigUtil.getProperty("report.visitSummary.vitals.concepts", DEFAULT_VITAL_CONCEPTS);
 		List<Concept> concepts = new ArrayList<>();
+		List<String> unresolved = new ArrayList<>();
 		for (String entry : raw.split(",")) {
 			entry = entry.trim();
 			String[] parts = entry.split(":");
 			if (parts.length != 2) {
 				log.warn("Vitals concept entry '{}' is not in source:code format; skipping", entry);
+				unresolved.add(entry);
 			} else {
 				String source = parts[0].trim();
 				String code = parts[1].trim();
 				Concept concept = Context.getConceptService().getConceptByMapping(code, source);
 				if (concept == null) {
 					log.warn("Concept mapping {}:{} could not be resolved; skipping", source, code);
+					unresolved.add(entry);
 				} else {
 					concepts.add(concept);
 				}
 			}
+		}
+		if (!concepts.isEmpty() && !unresolved.isEmpty()) {
+			notices.add(buildSectionNotice(unresolved));
 		}
 		return concepts;
 	}

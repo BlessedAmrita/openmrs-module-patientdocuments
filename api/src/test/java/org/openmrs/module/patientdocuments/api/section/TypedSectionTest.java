@@ -24,7 +24,8 @@ import static org.mockito.Mockito.mock;
 
 /**
  * Unit tests for the TypedSection gather→render orchestration.
- * No Spring context is needed: TypedSection.renderXml(doc, root, visit) makes no Context calls.
+ * No Spring context is needed: the only Context call (the msg() lookup for the
+ * error banner) falls back safely when no context is open.
  */
 public class TypedSectionTest {
 

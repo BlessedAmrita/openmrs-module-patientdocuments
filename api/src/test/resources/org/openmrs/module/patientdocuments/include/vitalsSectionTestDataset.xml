@@ -11,11 +11,12 @@
 
     Concept reference terms (ids 100+) and maps (ids 100+) link concept_ids to CIEL codes.
 
-    Visit 101 — bp scenario: systolic 120 (newer) + older systolic 110 + diastolic 80
+    Visit 101 — bp scenario: systolic 120 (newer) + older systolic 110 + diastolic 80, plus heart rate 72 and SpO2 98
     Visit 102 — only systolic 120 (blood-pressure partial format test)
     Visit 103 — weight 70 + height 175 (separate vitals test)
     Visit 104 — encounter with no vitals obs (empty-list test)
     Visit 105 — custom concept mapping override (global-property test)
+    Visit 106 — no encounters (empty-list test)
 -->
 <dataset>
 

@@ -39,6 +39,8 @@ import java.util.List;
  *   Visit 104 — encounter with no vitals obs
  *   Visit 105 — custom concept (TEST:custom001) obs 118 (concept-mapping override test)
  *   Visit 106 — no encounters
+ *   Visit 107 — valueless current obs: systolic (older valued 120) + diastolic 80,
+ *               heart rate (older valued 72), weight (no older reading)
  */
 public class VitalsSectionTest extends BaseModuleContextSensitiveTest {
 
@@ -120,6 +122,47 @@ public class VitalsSectionTest extends BaseModuleContextSensitiveTest {
 		    .anyMatch(v -> "Height (cm)".equals(v.getLabel()) && "175 cm".equals(v.getValue()));
 		Assertions.assertTrue(hasWeight, "Expected Weight (kg) vital with value '70 kg'");
 		Assertions.assertTrue(hasHeight, "Expected Height (cm) vital with value '175 cm'");
+	}
+
+	@Test
+	public void gatherData_currentObsHasNoValue_rendersPlaceholderInsteadOfDropping() {
+		// Visit 107: the only weight obs is valueless — the row must still appear, marked
+		Visit visit = Context.getVisitService().getVisit(107);
+
+		List<Vital> vitals = section.gatherData(visit);
+
+		Vital weight = vitals.stream()
+		    .filter(v -> "Weight (kg)".equals(v.getLabel())).findFirst().orElse(null);
+		Assertions.assertNotNull(weight, "A valueless vital must render a marked row, not disappear");
+		Assertions.assertEquals("—", weight.getValue());
+	}
+
+	@Test
+	public void gatherData_currentObsHasNoValue_doesNotFallBackToOlderValue() {
+		// Visit 107: heart rate @12:00 is valueless, @11:00 has 72 — the stale 72 must not
+		// print as if it were the current reading
+		Visit visit = Context.getVisitService().getVisit(107);
+
+		List<Vital> vitals = section.gatherData(visit);
+
+		Vital heartRate = vitals.stream()
+		    .filter(v -> "Heart Rate".equals(v.getLabel())).findFirst().orElse(null);
+		Assertions.assertNotNull(heartRate, "Expected a Heart Rate vital");
+		Assertions.assertEquals("—", heartRate.getValue());
+	}
+
+	@Test
+	public void gatherData_currentBpComponentHasNoValue_rendersQuestionMarkNotStaleValue() {
+		// Visit 107: systolic @12:00 is valueless, @11:00 has 120, diastolic is 80 —
+		// the combined BP must show "?" for systolic, not the stale 120
+		Visit visit = Context.getVisitService().getVisit(107);
+
+		List<Vital> vitals = section.gatherData(visit);
+
+		Vital bp = vitals.stream()
+		    .filter(v -> "Blood Pressure".equals(v.getLabel())).findFirst().orElse(null);
+		Assertions.assertNotNull(bp, "Expected combined Blood Pressure vital");
+		Assertions.assertEquals("?/80 mmHg", bp.getValue());
 	}
 
 	@Test

@@ -130,7 +130,7 @@ public class LabResultsSection extends TypedSection<LabResultsData> {
 			renderedMemberObsIds.add(member.getObsId());
 			results.add(buildResult(member));
 		}
-		return new LabResultGroup(conceptName(groupObs.getConcept()), results);
+		return new LabResultGroup(resolveConceptName(groupObs), results);
 	}
 
 	private boolean isLabConcept(Obs obs, Set<Integer> labClassIds) {
@@ -143,7 +143,7 @@ public class LabResultsSection extends TypedSection<LabResultsData> {
 
 	private LabResult buildResult(Obs obs) {
 		Concept concept = obs.getConcept();
-		String name = conceptName(concept);
+		String name = resolveConceptName(obs);
 		ConceptDatatype datatype = concept != null ? concept.getDatatype() : null;
 
 		String value;
@@ -163,8 +163,25 @@ public class LabResultsSection extends TypedSection<LabResultsData> {
 			value = textValue(obs);
 		}
 
+		if (value.isEmpty()) {
+			log.warn("Lab obs {} has no recorded value; rendering placeholder", obs.getUuid());
+			// No units with the placeholder — a bare unit in the Result column reads as a value.
+			value = "—";
+			units = "";
+		}
+
 		String flag = formatInterpretation(obs.getInterpretation());
 		return new LabResult(name, value, units, range, flag);
+	}
+
+	// Missing names show a visible "Unknown" plus a warn, matching the sibling sections.
+	private String resolveConceptName(Obs obs) {
+		String name = conceptName(obs.getConcept());
+		if (name.isEmpty()) {
+			log.warn("Lab obs {} has no resolvable concept name; using 'Unknown'", obs.getUuid());
+			return msg(KEY_PREFIX + "unknown", "Unknown");
+		}
+		return name;
 	}
 
 	private String codedValue(Obs obs) {
@@ -252,16 +269,6 @@ public class LabResultsSection extends TypedSection<LabResultsData> {
 			notices.add(buildSectionNotice(unresolved));
 		}
 		return classIds;
-	}
-
-	private List<Encounter> getNonVoidedEncounters(Visit visit) {
-		List<Encounter> encounters = new ArrayList<>();
-		for (Encounter e : visit.getEncounters()) {
-			if (!Boolean.TRUE.equals(e.getVoided())) {
-				encounters.add(e);
-			}
-		}
-		return encounters;
 	}
 
 	// Keeps the stored precision and strips trailing zeros; toPlainString avoids scientific notation.

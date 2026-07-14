@@ -36,6 +36,7 @@ import java.util.List;
  *   Visit 202 — Hypertension (CONFIRMED, rank=1)
  *   Visit 203 — encounter with no diagnoses
  *   Visit 204 — no encounters
+ *   Visit 205 — diagnosis with neither coded nor non-coded value (renders "Unknown")
  */
 public class DiagnosesSectionTest extends BaseModuleContextSensitiveTest {
 
@@ -84,6 +85,18 @@ public class DiagnosesSectionTest extends BaseModuleContextSensitiveTest {
 		List<DiagnosisEntry> diagnoses = section.gatherData(visit);
 
 		Assertions.assertEquals(0, diagnoses.size());
+	}
+
+	@Test
+	public void gatherData_diagnosisWithNoCodedOrNonCodedValue_rendersLocalizedUnknown() {
+		// Visit 205's diagnosis has neither coded nor non-coded value
+		Visit visit = Context.getVisitService().getVisit(205);
+
+		List<DiagnosisEntry> diagnoses = section.gatherData(visit);
+
+		Assertions.assertEquals(1, diagnoses.size());
+		Assertions.assertEquals("Unknown", diagnoses.get(0).getName(),
+		    "Unresolvable diagnosis name must degrade to the localized Unknown, not blank");
 	}
 
 	// ── renderXml tests ───────────────────────────────────────────────────────

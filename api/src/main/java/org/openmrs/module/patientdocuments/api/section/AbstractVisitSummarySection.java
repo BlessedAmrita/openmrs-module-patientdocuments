@@ -10,11 +10,14 @@
 package org.openmrs.module.patientdocuments.api.section;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 
+import org.openmrs.Encounter;
+import org.openmrs.Visit;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.patientdocuments.common.PatientDocumentsConstants;
 import org.openmrs.util.ConfigUtil;
@@ -130,5 +133,15 @@ public abstract class AbstractVisitSummarySection implements VisitSummarySection
 			return "";
 		}
 		return new SimpleDateFormat("yyyy-MM-dd").format(date);
+	}
+
+	protected List<Encounter> getNonVoidedEncounters(Visit visit) {
+		List<Encounter> encounters = new ArrayList<>();
+		for (Encounter e : visit.getEncounters()) {
+			if (!Boolean.TRUE.equals(e.getVoided())) {
+				encounters.add(e);
+			}
+		}
+		return encounters;
 	}
 }

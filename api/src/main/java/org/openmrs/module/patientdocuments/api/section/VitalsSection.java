@@ -77,48 +77,47 @@ public class VitalsSection extends TypedSection<List<Vital>> {
 			    "None of the configured vital concepts could be resolved; check report.visitSummary.vitals.concepts");
 		}
 
-		Map<Integer, Double> obsMap = buildObsMap(encounters, vitalConcepts);
+		Map<Integer, Obs> obsMap = buildObsMap(encounters, vitalConcepts);
 		emitVitals(vitals, vitalConcepts, obsMap);
 		return vitals;
 	}
 
-	private Map<Integer, Double> buildObsMap(List<Encounter> encounters, List<Concept> vitalConcepts) {
+	private Map<Integer, Obs> buildObsMap(List<Encounter> encounters, List<Concept> vitalConcepts) {
 		List<Obs> obsList = Context.getObsService().getObservations(
 		    null, encounters, vitalConcepts, null, null, null,
 		    Collections.singletonList("obsDatetime desc"),
 		    null, null, null, null, false
 		);
-		Map<Integer, Double> obsMap = new HashMap<>();
+		Map<Integer, Obs> obsMap = new HashMap<>();
 		for (Obs obs : obsList) {
-			Integer conceptId = obs.getConcept().getConceptId();
-			if (!obsMap.containsKey(conceptId) && obs.getValueNumeric() != null) {
-				obsMap.put(conceptId, obs.getValueNumeric());
-			}
+			// The newest obs wins even when valueless — skipping it would print an older
+			// reading as if it were current.
+			obsMap.putIfAbsent(obs.getConcept().getConceptId(), obs);
 		}
 		return obsMap;
 	}
 
-	private void emitVitals(List<Vital> vitals, List<Concept> vitalConcepts, Map<Integer, Double> obsMap) {
-		Double systolicValue = null;
-		Double diastolicValue = null;
+	private void emitVitals(List<Vital> vitals, List<Concept> vitalConcepts, Map<Integer, Obs> obsMap) {
+		Obs systolicObs = null;
+		Obs diastolicObs = null;
 		for (Concept concept : vitalConcepts) {
 			if (isCielCode(concept, "5085")) {
-				systolicValue = obsMap.get(concept.getConceptId());
+				systolicObs = obsMap.get(concept.getConceptId());
 			} else if (isCielCode(concept, "5086")) {
-				diastolicValue = obsMap.get(concept.getConceptId());
+				diastolicObs = obsMap.get(concept.getConceptId());
 			}
 		}
 
-		boolean hasBpData = systolicValue != null || diastolicValue != null;
+		boolean hasBpData = systolicObs != null || diastolicObs != null;
 		boolean bpEmitted = false;
 		for (Concept concept : vitalConcepts) {
 			if (isBpComponent(concept)) {
 				if (!bpEmitted && hasBpData) {
-					vitals.add(buildBpVital(systolicValue, diastolicValue));
+					vitals.add(buildBpVital(systolicObs, diastolicObs));
 					bpEmitted = true;
 				}
 			} else if (obsMap.containsKey(concept.getConceptId())) {
-				vitals.add(buildVital(concept, obsMap));
+				vitals.add(buildVital(concept, obsMap.get(concept.getConceptId())));
 			}
 		}
 	}
@@ -127,16 +126,34 @@ public class VitalsSection extends TypedSection<List<Vital>> {
 		return isCielCode(concept, "5085") || isCielCode(concept, "5086");
 	}
 
-	private Vital buildBpVital(Double systolicValue, Double diastolicValue) {
-		String s = systolicValue != null ? formatNumeric(systolicValue) : "?";
-		String d = diastolicValue != null ? formatNumeric(diastolicValue) : "?";
+	private Vital buildBpVital(Obs systolicObs, Obs diastolicObs) {
+		String s = bpComponent(systolicObs);
+		String d = bpComponent(diastolicObs);
 		String unit = msg(KEY_PREFIX + "unit.mmHg", "mmHg");
 		return new Vital(msg(KEY_PREFIX + "bloodPressure", "Blood Pressure"), s + "/" + d + " " + unit);
 	}
 
-	private Vital buildVital(Concept concept, Map<Integer, Double> obsMap) {
+	// "?" covers both an unmeasured component and a valueless obs; only the latter is a
+	// data problem, so only it is logged.
+	private String bpComponent(Obs obs) {
+		if (obs == null) {
+			return "?";
+		}
+		if (obs.getValueNumeric() == null) {
+			log.warn("Vital obs {} has no recorded value; rendering '?'", obs.getUuid());
+			return "?";
+		}
+		return formatNumeric(obs.getValueNumeric());
+	}
+
+	private Vital buildVital(Concept concept, Obs obs) {
 		String label = concept.getName() != null ? concept.getName().getName() : "";
-		String value = formatNumeric(obsMap.get(concept.getConceptId()));
+		if (obs.getValueNumeric() == null) {
+			// No unit with the placeholder — a bare unit would read as a value.
+			log.warn("Vital obs {} has no recorded value; rendering placeholder", obs.getUuid());
+			return new Vital(label, "—");
+		}
+		String value = formatNumeric(obs.getValueNumeric());
 		String unit = "";
 		if (concept instanceof ConceptNumeric) {
 			String conceptUnit = ((ConceptNumeric) concept).getUnits();
@@ -207,16 +224,6 @@ public class VitalsSection extends TypedSection<List<Vital>> {
 		return concept.getConceptMappings().stream().anyMatch(mapping ->
 		    "CIEL".equals(mapping.getConceptReferenceTerm().getConceptSource().getName())
 		    && cielCode.equals(mapping.getConceptReferenceTerm().getCode()));
-	}
-
-	private List<Encounter> getNonVoidedEncounters(Visit visit) {
-		List<Encounter> encounters = new ArrayList<>();
-		for (Encounter e : visit.getEncounters()) {
-			if (!Boolean.TRUE.equals(e.getVoided())) {
-				encounters.add(e);
-			}
-		}
-		return encounters;
 	}
 
 	private String formatNumeric(Double value) {

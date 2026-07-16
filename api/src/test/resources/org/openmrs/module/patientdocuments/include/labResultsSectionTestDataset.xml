@@ -34,8 +34,12 @@
     Visit 504 — patient 8, no encounters (empty early-return path)
     Visit 505 — patient 2, one encounter exercising numeric formatting and flag localization:
       TSH (9014) 0.04 -> "0.04"; HIV Viral Load (9015) 3000000000 -> "3000000000"; Serum
-      Amylase (9016) no value -> ""; Ferritin (9017) OFF_SCALE_HIGH -> flag via message key
-      "Off-scale High"; Aerobic Culture (9018) RESISTANT -> unmapped, falls back to "Resistant"
+      Amylase (9016) no value + HIGH -> placeholder "—" with no units, flag kept; Ferritin
+      (9017) OFF_SCALE_HIGH -> flag via message key "Off-scale High"; Aerobic Culture (9018)
+      RESISTANT -> unmapped, falls back to "Resistant"; Basic Metabolic Panel (9019, LabSet)
+      with one member whose concept (9020) has NO name -> member renders "Unknown";
+      a panel whose own concept (9021) has NO name -> heading renders "Unknown"; a
+      standalone result whose concept (9022) has NO name -> name renders "Unknown"
 -->
 <dataset>
 
@@ -171,7 +175,7 @@
                 uuid="9015aa00-name-0015-0015-000000009015"
                 concept_name_type="FULLY_SPECIFIED" locale_preferred="1"/>
 
-  <!-- Serum Amylase — numeric obs with no stored value (renders blank) -->
+  <!-- Serum Amylase — numeric obs with no stored value (renders the "—" placeholder) -->
   <concept concept_id="9016" retired="false" datatype_id="1" class_id="1" is_set="false"
            creator="1" date_created="2025-01-01 00:00:00.0"
            uuid="9016aaaa-0016-0016-0016-000000009016"/>
@@ -197,6 +201,30 @@
                 creator="1" date_created="2025-01-01 00:00:00.0" voided="false"
                 uuid="9018aa00-name-0018-0018-000000009018"
                 concept_name_type="FULLY_SPECIFIED" locale_preferred="1"/>
+
+  <!-- Basic Metabolic Panel — class LabSet; hosts the nameless-member scenario -->
+  <concept concept_id="9019" retired="false" datatype_id="4" class_id="8" is_set="true"
+           creator="1" date_created="2025-01-01 00:00:00.0"
+           uuid="9019aaaa-0019-0019-0019-000000009019"/>
+  <concept_name concept_name_id="9019" concept_id="9019" name="Basic Metabolic Panel" locale="en"
+                creator="1" date_created="2025-01-01 00:00:00.0" voided="false"
+                uuid="9019aa00-name-0019-0019-000000009019"
+                concept_name_type="FULLY_SPECIFIED" locale_preferred="1"/>
+
+  <!-- Panel member concept with NO concept_name row — the name is unresolvable -->
+  <concept concept_id="9020" retired="false" datatype_id="1" class_id="1" is_set="false"
+           creator="1" date_created="2025-01-01 00:00:00.0"
+           uuid="9020aaaa-0020-0020-0020-000000009020"/>
+
+  <!-- Panel (LabSet) concept with NO concept_name row — the heading is unresolvable -->
+  <concept concept_id="9021" retired="false" datatype_id="4" class_id="8" is_set="true"
+           creator="1" date_created="2025-01-01 00:00:00.0"
+           uuid="9021aaaa-0021-0021-0021-000000009021"/>
+
+  <!-- Standalone Test-class concept with NO concept_name row — the name is unresolvable -->
+  <concept concept_id="9022" retired="false" datatype_id="1" class_id="1" is_set="false"
+           creator="1" date_created="2025-01-01 00:00:00.0"
+           uuid="9022aaaa-0022-0022-0022-000000009022"/>
 
   <!-- ── concept_numeric — units and normal bounds ─────────────────────── -->
 
@@ -356,9 +384,9 @@
        location_id="1" creator="1" date_created="2025-03-05 00:00:00.0"
        voided="false" uuid="00009115-0000-0000-0000-000000009115" status="FINAL"/>
 
-  <!-- Serum Amylase: no value_numeric -> "" -->
+  <!-- Serum Amylase: no value_numeric + HIGH -> "—" placeholder, no units, flag kept -->
   <obs obs_id="9116" person_id="2" concept_id="9016" encounter_id="505"
-       obs_datetime="2025-03-05 09:00:00.0"
+       obs_datetime="2025-03-05 09:00:00.0" interpretation="HIGH"
        location_id="1" creator="1" date_created="2025-03-05 00:00:00.0"
        voided="false" uuid="00009116-0000-0000-0000-000000009116" status="FINAL"/>
 
@@ -373,5 +401,31 @@
        obs_datetime="2025-03-05 09:00:00.0" value_numeric="1.0" interpretation="RESISTANT"
        location_id="1" creator="1" date_created="2025-03-05 00:00:00.0"
        voided="false" uuid="00009118-0000-0000-0000-000000009118" status="FINAL"/>
+
+  <!-- Basic Metabolic Panel: group parent + one member whose concept has no name -->
+  <obs obs_id="9119" person_id="2" concept_id="9019" encounter_id="505"
+       obs_datetime="2025-03-05 09:00:00.0"
+       location_id="1" creator="1" date_created="2025-03-05 00:00:00.0"
+       voided="false" uuid="00009119-0000-0000-0000-000000009119" status="FINAL"/>
+  <obs obs_id="9120" person_id="2" concept_id="9020" encounter_id="505" obs_group_id="9119"
+       obs_datetime="2025-03-05 09:00:00.0" value_numeric="42.0"
+       location_id="1" creator="1" date_created="2025-03-05 00:00:00.0"
+       voided="false" uuid="00009120-0000-0000-0000-000000009120" status="FINAL"/>
+
+  <!-- Nameless panel: group parent whose concept (9021) has no name + one named WBC member -->
+  <obs obs_id="9121" person_id="2" concept_id="9021" encounter_id="505"
+       obs_datetime="2025-03-05 09:00:00.0"
+       location_id="1" creator="1" date_created="2025-03-05 00:00:00.0"
+       voided="false" uuid="00009121-0000-0000-0000-000000009121" status="FINAL"/>
+  <obs obs_id="9122" person_id="2" concept_id="9007" encounter_id="505" obs_group_id="9121"
+       obs_datetime="2025-03-05 09:00:00.0" value_numeric="7.1"
+       location_id="1" creator="1" date_created="2025-03-05 00:00:00.0"
+       voided="false" uuid="00009122-0000-0000-0000-000000009122" status="FINAL"/>
+
+  <!-- Standalone result whose concept (9022) has no name -->
+  <obs obs_id="9123" person_id="2" concept_id="9022" encounter_id="505"
+       obs_datetime="2025-03-05 09:00:00.0" value_numeric="55.0"
+       location_id="1" creator="1" date_created="2025-03-05 00:00:00.0"
+       voided="false" uuid="00009123-0000-0000-0000-000000009123" status="FINAL"/>
 
 </dataset>

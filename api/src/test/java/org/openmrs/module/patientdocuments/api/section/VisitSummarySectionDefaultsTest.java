@@ -42,6 +42,7 @@ public class VisitSummarySectionDefaultsTest extends BaseModuleContextSensitiveT
 
 			@Override
 			public void renderXml(Document doc, Element root, Visit visit) {
+				// no-op: these tests exercise getLabel()/isToggleable() only, never rendering
 			}
 		};
 	}

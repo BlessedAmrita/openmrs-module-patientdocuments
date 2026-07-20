@@ -13,14 +13,31 @@
   <renderers>
     <renderer mime="application/pdf">
       <!-- Font configuration -->
-      <fonts>    
+      <fonts>
         <font kerning="yes" embed-url="./IBMPlexSansArabic-Regular.ttf">
           <font-triplet name="IBM Plex Sans Arabic" style="normal" weight="normal"/>
+          <font-triplet name="any" style="normal" weight="normal"/>
+          <font-triplet name="Helvetica" style="normal" weight="normal"/>
+          <font-triplet name="sans-serif" style="normal" weight="normal"/>
+          <font-triplet name="serif" style="normal" weight="normal"/>
+          <font-triplet name="Times" style="normal" weight="normal"/>
+          <font-triplet name="Times Roman" style="normal" weight="normal"/>
+          <font-triplet name="monospace" style="normal" weight="normal"/>
+          <font-triplet name="Courier" style="normal" weight="normal"/>
         </font>
         <font kerning="yes" embed-url="./IBMPlexSansArabic-Bold.ttf">
           <font-triplet name="IBM Plex Sans Arabic Bold" style="normal" weight="900"/>
+          <font-triplet name="IBM Plex Sans Arabic" style="normal" weight="bold"/>
+          <font-triplet name="any" style="normal" weight="bold"/>
+          <font-triplet name="Helvetica" style="normal" weight="bold"/>
+          <font-triplet name="sans-serif" style="normal" weight="bold"/>
+          <font-triplet name="serif" style="normal" weight="bold"/>
+          <font-triplet name="Times" style="normal" weight="bold"/>
+          <font-triplet name="Times Roman" style="normal" weight="bold"/>
+          <font-triplet name="monospace" style="normal" weight="bold"/>
+          <font-triplet name="Courier" style="normal" weight="bold"/>
         </font>
-      </fonts> 
+      </fonts>
     </renderer>
   </renderers>
 </fop>

@@ -13,7 +13,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.fop.apps.FOUserAgent;
 import org.apache.fop.apps.Fop;
 import org.apache.fop.apps.FopFactory;
+import org.apache.fop.apps.FopFactoryBuilder;
 import org.apache.fop.apps.MimeConstants;
+import org.apache.fop.configuration.Configuration;
+import org.apache.fop.configuration.DefaultConfigurationBuilder;
 import org.openmrs.Encounter;
 import org.openmrs.annotation.Handler;
 import org.openmrs.api.EncounterService;
@@ -26,6 +29,7 @@ import org.openmrs.module.reporting.report.ReportData;
 import org.openmrs.module.reporting.report.ReportRequest;
 import org.openmrs.module.reporting.report.renderer.RenderingException;
 import org.openmrs.module.reporting.report.renderer.ReportDesignRenderer;
+import org.openmrs.util.OpenmrsClassLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -43,7 +47,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.StringReader;
-import java.net.URI;
+import java.net.URL;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
@@ -54,6 +58,10 @@ import java.util.Locale;
 public class EncounterPdfReportRenderer extends ReportDesignRenderer {
 
 	private static final Logger log = LoggerFactory.getLogger(EncounterPdfReportRenderer.class);
+
+	private static final String FOP_CONFIG_PATH = "conf/fop.xconf.xml";
+
+	private static final String FONT_BASE_PATH = "fonts/";
 
 	@Override
 	public String getFilename(ReportRequest request) {
@@ -101,8 +109,8 @@ public class EncounterPdfReportRenderer extends ReportDesignRenderer {
 		return encounters;
 	}
 
-	private void transformXmlToPdf(String xmlData, OutputStream outStream) throws Exception {
-		FopFactory fopFactory = FopFactory.newInstance(new URI("."));
+	void transformXmlToPdf(String xmlData, OutputStream outStream) throws Exception {
+		FopFactory fopFactory = buildFopFactory();
 		FOUserAgent foUserAgent = fopFactory.newFOUserAgent();
 		Fop fop = fopFactory.newFop(MimeConstants.MIME_PDF, foUserAgent, outStream);
 
@@ -120,6 +128,20 @@ public class EncounterPdfReportRenderer extends ReportDesignRenderer {
 			Source src = new StreamSource(new StringReader(xmlData));
 			Result res = new SAXResult(fop.getDefaultHandler());
 			transformer.transform(src, res);
+		}
+	}
+
+	private FopFactory buildFopFactory() throws Exception {
+		URL fontBaseUrl = OpenmrsClassLoader.getInstance().getResource(FONT_BASE_PATH);
+		if (fontBaseUrl == null) {
+			throw new IllegalStateException("Bundled font directory not found on classpath: " + FONT_BASE_PATH);
+		}
+		try (InputStream fopConfigStream = Helper.getInputStreamByResource(FOP_CONFIG_PATH)) {
+			if (fopConfigStream == null) {
+				throw new IllegalStateException("Bundled FOP configuration not found on classpath: " + FOP_CONFIG_PATH);
+			}
+			Configuration cfg = new DefaultConfigurationBuilder().build(fopConfigStream);
+			return new FopFactoryBuilder(fontBaseUrl.toURI()).setConfiguration(cfg).build();
 		}
 	}
 

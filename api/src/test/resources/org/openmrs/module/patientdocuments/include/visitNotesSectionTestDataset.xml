@@ -1,0 +1,217 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!--
+    Test dataset for VisitNotesSectionTest.
+    Provides the visit-note text concept (with its CIEL:162169 mapping), a Clinician
+    encounter role, providers, visits, encounters, and note obs so that tests can call
+    gatherData() without going through saveObs() (which triggers a buggy
+    ConceptReferenceRange validator in OpenMRS 2.7.0).
+
+    Concept reference source (high ID to avoid conflicts with standardTestDataset):
+      concept_source_id=10  CIEL
+
+    Providers (person names come from standardTestDataset):
+      provider 100 = person 502 "Hippocrates of Cos"
+      provider 101 = person 501 "Bruno Otterbourg"
+
+    Visit 601 — two encounters, one note each (10:00 and 14:00) for chronological
+                ordering with per-note provider/datetime; plus a Weight obs (excluded
+                by the concept filter), a voided note obs (excluded), and a voided
+                encounter with a note obs (excluded).
+    Visit 602 — encounter with no obs (None recorded).
+    Visit 603 — no encounters at all (None recorded).
+    Visit 604 — provider edge cases: an encounter with no provider at all (renders
+                the localized "Unknown"), and an encounter whose only provider is
+                under the stock "Unknown" role (falls back to that provider).
+    Visit 605 — a note obs with no value_text (placeholder), and a note whose
+                encounter has two clinician-role providers (joined, sorted).
+-->
+<dataset>
+
+  <!-- ── Concept reference source ───────────────────────────────────────── -->
+
+  <concept_reference_source concept_source_id="10" name="CIEL"
+      description="Columbia International eHealth Laboratory" hl7_code="CIEL"
+      creator="1" date_created="2025-06-01 00:00:00.0" retired="false"
+      uuid="ciel0000-0000-0000-0000-000000000010"/>
+
+  <!-- ── Concepts ───────────────────────────────────────────────────────── -->
+
+  <!-- Visit-note narrative text (datatype 3 = Text), mapped to CIEL:162169 -->
+  <concept concept_id="6001" retired="false" datatype_id="3" class_id="1" is_set="false"
+           creator="1" date_created="2025-06-01 00:00:00.0"
+           uuid="6001aaaa-0001-0001-0001-000000006001"/>
+  <concept_name concept_name_id="6001" concept_id="6001" name="Text of encounter note" locale="en"
+                creator="1" date_created="2025-06-01 00:00:00.0" voided="false"
+                uuid="6001aa00-name-0001-0001-000000006001"
+                concept_name_type="FULLY_SPECIFIED" locale_preferred="1"/>
+
+  <!-- Non-note numeric concept; its obs must be excluded by the concept filter -->
+  <concept concept_id="6002" retired="false" datatype_id="1" class_id="1" is_set="false"
+           creator="1" date_created="2025-06-01 00:00:00.0"
+           uuid="6002aaaa-0002-0002-0002-000000006002"/>
+  <concept_name concept_name_id="6002" concept_id="6002" name="Weight" locale="en"
+                creator="1" date_created="2025-06-01 00:00:00.0" voided="false"
+                uuid="6002aa00-name-0002-0002-000000006002"
+                concept_name_type="FULLY_SPECIFIED" locale_preferred="1"/>
+
+  <concept_reference_term concept_reference_term_id="100" concept_source_id="10"
+      code="162169" name="Text of encounter note" retired="0"
+      creator="1" date_created="2025-06-01 00:00:00.0" uuid="ciel-term-162169"/>
+
+  <concept_reference_map concept_map_id="100" concept_id="6001"
+      concept_reference_term_id="100" concept_map_type_id="2"
+      creator="1" date_created="2025-06-01 00:00:00.0" uuid="cmap-6001-162169"/>
+
+  <!-- ── Clinician encounter role and providers ─────────────────────────── -->
+
+  <encounter_role encounter_role_id="100" name="Clinician"
+      description="Clinician role for VisitNotesSectionTest"
+      creator="1" date_created="2025-06-01 00:00:00.0" retired="false"
+      uuid="role0100-0000-0000-0000-000000000100"/>
+
+  <provider provider_id="100" person_id="502" identifier="PROV-100"
+      creator="1" date_created="2025-06-01 00:00:00.0" retired="false"
+      uuid="prov0100-0000-0000-0000-000000000100"/>
+  <provider provider_id="101" person_id="501" identifier="PROV-101"
+      creator="1" date_created="2025-06-01 00:00:00.0" retired="false"
+      uuid="prov0101-0000-0000-0000-000000000101"/>
+
+  <!-- ── Visit 601: two notes across two encounters + excluded obs ──────── -->
+
+  <visit visit_id="601" patient_id="2" visit_type_id="1"
+         date_started="2025-06-01 00:00:00.0"
+         creator="1" date_created="2025-06-01 00:00:00.0" voided="0"
+         uuid="00000601-0601-0601-0601-000000000601"/>
+
+  <encounter encounter_id="601" encounter_type="1" patient_id="2" location_id="1"
+             visit_id="601" encounter_datetime="2025-06-01 10:00:00.0"
+             creator="1" date_created="2025-06-01 00:00:00.0" voided="false"
+             uuid="00000601-enc1-enc1-enc1-000000000601"/>
+  <encounter_provider encounter_provider_id="100" encounter_id="601" provider_id="100"
+             encounter_role_id="100" creator="1" date_created="2025-06-01 00:00:00.0"
+             voided="false" uuid="0000ep01-0000-0000-0000-000000000100"/>
+
+  <encounter encounter_id="602" encounter_type="1" patient_id="2" location_id="1"
+             visit_id="601" encounter_datetime="2025-06-01 14:00:00.0"
+             creator="1" date_created="2025-06-01 00:00:00.0" voided="false"
+             uuid="00000602-enc2-enc2-enc2-000000000602"/>
+  <encounter_provider encounter_provider_id="101" encounter_id="602" provider_id="101"
+             encounter_role_id="100" creator="1" date_created="2025-06-01 00:00:00.0"
+             voided="false" uuid="0000ep02-0000-0000-0000-000000000101"/>
+
+  <!-- Morning note -->
+  <obs obs_id="20001" person_id="2" concept_id="6001" encounter_id="601"
+       obs_datetime="2025-06-01 10:00:00.0" value_text="Morning assessment note"
+       location_id="1" creator="1" date_created="2025-06-01 00:00:00.0"
+       voided="false" uuid="0obs2001-0000-0000-0000-000000020001" status="FINAL"/>
+  <!-- Afternoon note -->
+  <obs obs_id="20002" person_id="2" concept_id="6001" encounter_id="602"
+       obs_datetime="2025-06-01 14:00:00.0" value_text="Afternoon follow-up note"
+       location_id="1" creator="1" date_created="2025-06-01 00:00:00.0"
+       voided="false" uuid="0obs2002-0000-0000-0000-000000020002" status="FINAL"/>
+  <!-- Weight obs — different concept, must be excluded by the concept filter -->
+  <obs obs_id="20003" person_id="2" concept_id="6002" encounter_id="601"
+       obs_datetime="2025-06-01 10:00:00.0" value_numeric="70.0"
+       location_id="1" creator="1" date_created="2025-06-01 00:00:00.0"
+       voided="false" uuid="0obs2003-0000-0000-0000-000000020003" status="FINAL"/>
+  <!-- Voided note obs — must be excluded -->
+  <obs obs_id="20004" person_id="2" concept_id="6001" encounter_id="601"
+       obs_datetime="2025-06-01 10:30:00.0" value_text="Voided note"
+       location_id="1" creator="1" date_created="2025-06-01 00:00:00.0"
+       voided="true" uuid="0obs2004-0000-0000-0000-000000020004" status="FINAL"/>
+
+  <!-- Voided encounter with a live note obs — must be excluded via the encounter -->
+  <encounter encounter_id="603" encounter_type="1" patient_id="2" location_id="1"
+             visit_id="601" encounter_datetime="2025-06-01 16:00:00.0"
+             creator="1" date_created="2025-06-01 00:00:00.0" voided="true"
+             uuid="00000603-enc3-enc3-enc3-000000000603"/>
+  <obs obs_id="20005" person_id="2" concept_id="6001" encounter_id="603"
+       obs_datetime="2025-06-01 16:00:00.0" value_text="Note in voided encounter"
+       location_id="1" creator="1" date_created="2025-06-01 00:00:00.0"
+       voided="false" uuid="0obs2005-0000-0000-0000-000000020005" status="FINAL"/>
+
+  <!-- ── Visit 602: encounter with NO note obs ──────────────────────────── -->
+
+  <visit visit_id="602" patient_id="7" visit_type_id="1"
+         date_started="2025-06-02 00:00:00.0"
+         creator="1" date_created="2025-06-02 00:00:00.0" voided="0"
+         uuid="00000602-0602-0602-0602-000000000602"/>
+  <encounter encounter_id="604" encounter_type="1" patient_id="7" location_id="1"
+             visit_id="602" encounter_datetime="2025-06-02 09:00:00.0"
+             creator="1" date_created="2025-06-02 00:00:00.0" voided="false"
+             uuid="00000604-enc4-enc4-enc4-000000000604"/>
+
+  <!-- ── Visit 603: no encounters ───────────────────────────────────────── -->
+
+  <visit visit_id="603" patient_id="2" visit_type_id="1"
+         date_started="2025-06-03 00:00:00.0"
+         creator="1" date_created="2025-06-03 00:00:00.0" voided="0"
+         uuid="00000603-0603-0603-0603-000000000603"/>
+
+  <!-- ── Visit 604: provider edge cases ─────────────────────────────────── -->
+
+  <visit visit_id="604" patient_id="2" visit_type_id="1"
+         date_started="2025-06-04 00:00:00.0"
+         creator="1" date_created="2025-06-04 00:00:00.0" voided="0"
+         uuid="00000604-0604-0604-0604-000000000604"/>
+
+  <!-- Encounter with no provider at all -->
+  <encounter encounter_id="605" encounter_type="1" patient_id="2" location_id="1"
+             visit_id="604" encounter_datetime="2025-06-04 09:00:00.0"
+             creator="1" date_created="2025-06-04 00:00:00.0" voided="false"
+             uuid="00000605-enc5-enc5-enc5-000000000605"/>
+  <obs obs_id="20006" person_id="2" concept_id="6001" encounter_id="605"
+       obs_datetime="2025-06-04 09:00:00.0" value_text="Note without any provider"
+       location_id="1" creator="1" date_created="2025-06-04 00:00:00.0"
+       voided="false" uuid="0obs2006-0000-0000-0000-000000020006" status="FINAL"/>
+
+  <!-- Encounter whose only provider is under the standard "Unknown" role (id 1) -->
+  <encounter encounter_id="606" encounter_type="1" patient_id="2" location_id="1"
+             visit_id="604" encounter_datetime="2025-06-04 11:00:00.0"
+             creator="1" date_created="2025-06-04 00:00:00.0" voided="false"
+             uuid="00000606-enc6-enc6-enc6-000000000606"/>
+  <encounter_provider encounter_provider_id="102" encounter_id="606" provider_id="100"
+             encounter_role_id="1" creator="1" date_created="2025-06-04 00:00:00.0"
+             voided="false" uuid="0000ep03-0000-0000-0000-000000000102"/>
+  <obs obs_id="20007" person_id="2" concept_id="6001" encounter_id="606"
+       obs_datetime="2025-06-04 11:00:00.0" value_text="Note with non-clinician provider"
+       location_id="1" creator="1" date_created="2025-06-04 00:00:00.0"
+       voided="false" uuid="0obs2007-0000-0000-0000-000000020007" status="FINAL"/>
+
+  <!-- ── Visit 605: blank note text + multiple clinician providers ──────── -->
+
+  <visit visit_id="605" patient_id="2" visit_type_id="1"
+         date_started="2025-06-05 00:00:00.0"
+         creator="1" date_created="2025-06-05 00:00:00.0" voided="0"
+         uuid="00000605-0605-0605-0605-000000000605"/>
+
+  <!-- Note obs with NO value_text — renders the placeholder, never dropped -->
+  <encounter encounter_id="607" encounter_type="1" patient_id="2" location_id="1"
+             visit_id="605" encounter_datetime="2025-06-05 09:00:00.0"
+             creator="1" date_created="2025-06-05 00:00:00.0" voided="false"
+             uuid="00000607-enc7-enc7-enc7-000000000607"/>
+  <encounter_provider encounter_provider_id="103" encounter_id="607" provider_id="100"
+             encounter_role_id="100" creator="1" date_created="2025-06-05 00:00:00.0"
+             voided="false" uuid="0000ep04-0000-0000-0000-000000000103"/>
+  <obs obs_id="20008" person_id="2" concept_id="6001" encounter_id="607"
+       obs_datetime="2025-06-05 09:00:00.0"
+       location_id="1" creator="1" date_created="2025-06-05 00:00:00.0"
+       voided="false" uuid="0obs2008-0000-0000-0000-000000020008" status="FINAL"/>
+
+  <!-- Note whose encounter has two clinician-role providers -->
+  <encounter encounter_id="608" encounter_type="1" patient_id="2" location_id="1"
+             visit_id="605" encounter_datetime="2025-06-05 10:00:00.0"
+             creator="1" date_created="2025-06-05 00:00:00.0" voided="false"
+             uuid="00000608-enc8-enc8-enc8-000000000608"/>
+  <encounter_provider encounter_provider_id="104" encounter_id="608" provider_id="100"
+             encounter_role_id="100" creator="1" date_created="2025-06-05 00:00:00.0"
+             voided="false" uuid="0000ep05-0000-0000-0000-000000000104"/>
+  <encounter_provider encounter_provider_id="105" encounter_id="608" provider_id="101"
+             encounter_role_id="100" creator="1" date_created="2025-06-05 00:00:00.0"
+             voided="false" uuid="0000ep06-0000-0000-0000-000000000105"/>
+  <obs obs_id="20009" person_id="2" concept_id="6001" encounter_id="608"
+       obs_datetime="2025-06-05 10:00:00.0" value_text="Jointly written team note"
+       location_id="1" creator="1" date_created="2025-06-05 00:00:00.0"
+       voided="false" uuid="0obs2009-0000-0000-0000-000000020009" status="FINAL"/>
+
+</dataset>

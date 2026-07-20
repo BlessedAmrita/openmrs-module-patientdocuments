@@ -83,6 +83,7 @@
                     <xsl:if test="visitNotes">
                         <xsl:call-template name="visit-notes"/>
                     </xsl:if>
+                    <xsl:apply-templates select="section-notice[@key='visitNotes']"/>
                     <xsl:apply-templates select="section-error[@key='visitNotes']"/>
 
                     <!-- Billing -->
@@ -670,7 +671,8 @@
     </xsl:template>
 
     <!-- ═══════════════════════════════════════════════════
-         Visit notes (stub)
+         Visit notes: one block per note, oldest first, each with a
+         provenance line (encounter datetime — provider) above the narrative.
          ═══════════════════════════════════════════════════ -->
     <xsl:template name="visit-notes">
         <fo:block font-family="{$label-font-family}" margin-bottom="4mm">
@@ -681,7 +683,18 @@
             </fo:block>
             <xsl:choose>
                 <xsl:when test="visitNotes/note">
-                    <!-- Data will be rendered here during implementation -->
+                    <xsl:for-each select="visitNotes/note">
+                        <fo:block margin-bottom="2mm">
+                            <fo:block font-size="8pt" color="#666666" font-style="italic">
+                                <xsl:value-of select="@datetime"/>
+                                <xsl:text> — </xsl:text>
+                                <xsl:value-of select="@provider"/>
+                            </fo:block>
+                            <fo:block font-size="9pt" linefeed-treatment="preserve">
+                                <xsl:value-of select="."/>
+                            </fo:block>
+                        </fo:block>
+                    </xsl:for-each>
                 </xsl:when>
                 <xsl:otherwise>
                     <fo:block font-size="9pt" color="#999999" font-style="italic">None recorded</fo:block>

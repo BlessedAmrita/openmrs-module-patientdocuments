@@ -17,6 +17,9 @@
     Visit 104 — encounter with no vitals obs (empty-list test)
     Visit 105 — custom concept mapping override (global-property test)
     Visit 106 — no encounters (empty-list test)
+    Visit 107 — valueless-obs scenarios: systolic valueless (newer) + systolic 120 (older) +
+                diastolic 80, heart rate valueless (newer) + heart rate 72 (older),
+                weight valueless (only obs) — stale-value and placeholder tests
 -->
 <dataset>
 
@@ -283,5 +286,43 @@
        obs_datetime="2024-01-05 12:00:00.0" value_numeric="118.0"
        location_id="1" creator="1" date_created="2024-01-01 00:00:00.0"
        voided="false" uuid="0obs1007-0000-0000-0000-000000010007" status="FINAL"/>
+
+  <!-- ── Visit 107: valueless current obs — placeholder and stale-value tests ── -->
+
+  <visit visit_id="107" patient_id="2" visit_type_id="1"
+         date_started="2024-01-07 00:00:00.0"
+         creator="1" date_created="2024-01-01 00:00:00.0" voided="0"
+         uuid="00000107-0107-0107-0107-000000000107"/>
+  <encounter encounter_id="107" encounter_type="1" patient_id="2" location_id="1"
+             visit_id="107" encounter_datetime="2024-01-07 12:00:00.0"
+             creator="1" date_created="2024-01-01 00:00:00.0" voided="false"
+             uuid="00000107-enc7-enc7-enc7-000000000107"/>
+  <!-- Newer systolic with NO value; the older valued one must not print as current -->
+  <obs obs_id="10010" person_id="2" concept_id="5001" encounter_id="107"
+       obs_datetime="2024-01-07 12:00:00.0"
+       location_id="1" creator="1" date_created="2024-01-01 00:00:00.0"
+       voided="false" uuid="0obs1010-0000-0000-0000-000000010010" status="FINAL"/>
+  <obs obs_id="10011" person_id="2" concept_id="5001" encounter_id="107"
+       obs_datetime="2024-01-07 11:00:00.0" value_numeric="120.0"
+       location_id="1" creator="1" date_created="2024-01-01 00:00:00.0"
+       voided="false" uuid="0obs1011-0000-0000-0000-000000010011" status="FINAL"/>
+  <obs obs_id="10012" person_id="2" concept_id="5002" encounter_id="107"
+       obs_datetime="2024-01-07 12:00:00.0" value_numeric="80.0"
+       location_id="1" creator="1" date_created="2024-01-01 00:00:00.0"
+       voided="false" uuid="0obs1012-0000-0000-0000-000000010012" status="FINAL"/>
+  <!-- Newer heart rate with NO value; older valued heart rate 72 -->
+  <obs obs_id="10013" person_id="2" concept_id="5005" encounter_id="107"
+       obs_datetime="2024-01-07 12:00:00.0"
+       location_id="1" creator="1" date_created="2024-01-01 00:00:00.0"
+       voided="false" uuid="0obs1013-0000-0000-0000-000000010013" status="FINAL"/>
+  <obs obs_id="10014" person_id="2" concept_id="5005" encounter_id="107"
+       obs_datetime="2024-01-07 11:00:00.0" value_numeric="72.0"
+       location_id="1" creator="1" date_created="2024-01-01 00:00:00.0"
+       voided="false" uuid="0obs1014-0000-0000-0000-000000010014" status="FINAL"/>
+  <!-- Weight with NO value and no older reading -->
+  <obs obs_id="10015" person_id="2" concept_id="5003" encounter_id="107"
+       obs_datetime="2024-01-07 12:00:00.0"
+       location_id="1" creator="1" date_created="2024-01-01 00:00:00.0"
+       voided="false" uuid="0obs1015-0000-0000-0000-000000010015" status="FINAL"/>
 
 </dataset>

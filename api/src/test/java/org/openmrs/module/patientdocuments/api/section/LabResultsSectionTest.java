@@ -43,7 +43,10 @@ import java.util.List;
  *   Visit 503 — patient 2, range-shape and interpretation edge cases (bound-only
  *               ranges, NORMAL interpretation, no range source).
  *   Visit 504 — patient 8, no encounters.
- *   Visit 505 — patient 2, numeric-formatting and flag-localization edge cases.
+ *   Visit 505 — patient 2, numeric-formatting and flag-localization edge cases, a
+ *               valueless numeric obs (placeholder), and the unresolvable-name trio:
+ *               a panel member, a panel heading, and a standalone result whose concept
+ *               has no name (each renders "Unknown").
  */
 public class LabResultsSectionTest extends BaseModuleContextSensitiveTest {
 
@@ -259,13 +262,62 @@ public class LabResultsSectionTest extends BaseModuleContextSensitiveTest {
 	}
 
 	@Test
-	public void gatherData_numericObsWithNoValue_rendersBlankValue() {
+	public void gatherData_numericObsWithNoValue_rendersPlaceholderWithoutUnits() {
 		Visit visit = Context.getVisitService().getVisit(505);
 
 		LabResult amylase = findStandalone(section.gatherData(visit), "Serum Amylase");
 
 		Assertions.assertNotNull(amylase, "Expected a Serum Amylase result");
-		Assertions.assertEquals("", amylase.getValue());
+		Assertions.assertEquals("—", amylase.getValue());
+		// The concept defines units (U/L); they must not dangle next to a missing value
+		Assertions.assertEquals("", amylase.getUnits());
+		// A stored interpretation is real data and stays visible even without a value
+		Assertions.assertEquals("High", amylase.getFlag());
+	}
+
+	@Test
+	public void gatherData_panelMemberWithUnresolvableConceptName_rendersUnknown() {
+		Visit visit = Context.getVisitService().getVisit(505);
+
+		LabResultsData data = section.gatherData(visit);
+		LabResultGroup panel = data.getGroups().stream()
+		    .filter(g -> "Basic Metabolic Panel".equals(g.getHeading())).findFirst().orElse(null);
+
+		Assertions.assertNotNull(panel, "Expected the Basic Metabolic Panel group");
+		Assertions.assertEquals(1, panel.getResults().size());
+		LabResult member = panel.getResults().get(0);
+		Assertions.assertEquals("Unknown", member.getName());
+		Assertions.assertEquals("42", member.getValue());
+	}
+
+	@Test
+	public void gatherData_panelHeadingWithUnresolvableConceptName_rendersUnknown() {
+		Visit visit = Context.getVisitService().getVisit(505);
+
+		// Locate the panel by its member (WBC = 7.1), not by heading, so the heading
+		// assertion below is what fails when the "Unknown" fallback regresses.
+		LabResultsData data = section.gatherData(visit);
+		LabResultGroup panel = data.getGroups().stream()
+		    .filter(g -> g.getResults().stream().anyMatch(
+		        r -> "White Blood Cell Count".equals(r.getName()) && "7.1".equals(r.getValue())))
+		    .findFirst().orElse(null);
+
+		Assertions.assertNotNull(panel, "Expected the panel containing the WBC 7.1 member");
+		Assertions.assertEquals(1, panel.getResults().size());
+		Assertions.assertEquals("Unknown", panel.getHeading());
+	}
+
+	@Test
+	public void gatherData_standaloneResultWithUnresolvableConceptName_rendersUnknown() {
+		Visit visit = Context.getVisitService().getVisit(505);
+
+		// Locate the result by its value (55 is unique in visit 505), not by name, so
+		// the name assertion below is what fails when the "Unknown" fallback regresses.
+		LabResult result = section.gatherData(visit).getStandalone().stream()
+		    .filter(r -> "55".equals(r.getValue())).findFirst().orElse(null);
+
+		Assertions.assertNotNull(result, "Expected the standalone result with value 55");
+		Assertions.assertEquals("Unknown", result.getName());
 	}
 
 	@Test

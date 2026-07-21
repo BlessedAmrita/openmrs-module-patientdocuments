@@ -4,7 +4,7 @@
                 xmlns:fo="http://www.w3.org/1999/XSL/Format">
 
     <xsl:template match="/">
-        <fo:root>
+        <fo:root font-family="IBM Plex Sans Arabic">
             <fo:layout-master-set>
                 <fo:simple-page-master master-name="A4-with-logo" page-height="29.7cm" page-width="21cm" margin="1.5cm">
                     <fo:region-body margin-top="0.5cm" margin-bottom="1.5cm"/>

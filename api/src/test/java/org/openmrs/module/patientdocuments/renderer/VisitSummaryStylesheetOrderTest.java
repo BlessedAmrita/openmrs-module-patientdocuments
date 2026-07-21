@@ -109,4 +109,45 @@ public class VisitSummaryStylesheetOrderTest {
 		Assertions.assertFalse(output.contains("rawtext"),
 		    "unknown sections must not leak text content into the FO output");
 	}
+
+	/**
+	 * Guards the match-template conversion: the visit-notes body was written against a
+	 * named template called from the root, so its paths were visitNotes/note. Under
+	 * match="visitNotes" the context already is that element, and the stale path would
+	 * silently select nothing — a valid PDF with an empty section and no error.
+	 */
+	@Test
+	public void stylesheet_shouldRenderVisitNoteContentNotAnEmptySection() throws Exception {
+		String output = transform(visitSummaryXml(
+		    "<visitNotes heading=\"HEAD-visitNotes\">"
+		            + "<note provider=\"NOTE-provider\" datetime=\"NOTE-datetime\">NOTE-narrative</note>"
+		            + "</visitNotes>"));
+
+		Assertions.assertTrue(output.contains("NOTE-narrative"), "note narrative must render into the FO output");
+		Assertions.assertTrue(output.contains("NOTE-provider"), "note provider must render into the FO output");
+		Assertions.assertTrue(output.contains("NOTE-datetime"), "note datetime must render into the FO output");
+		Assertions.assertFalse(output.contains("None recorded"),
+		    "a section holding notes must not fall through to the empty-state branch");
+	}
+
+	@Test
+	public void stylesheet_shouldRenderEachVisitNoteInDocumentOrder() throws Exception {
+		String output = transform(visitSummaryXml(
+		    "<visitNotes heading=\"HEAD-visitNotes\">"
+		            + "<note provider=\"p\" datetime=\"d\">NOTE-first</note>"
+		            + "<note provider=\"p\" datetime=\"d\">NOTE-second</note>"
+		            + "</visitNotes>"));
+
+		int first = output.indexOf("NOTE-first");
+		int second = output.indexOf("NOTE-second");
+		Assertions.assertTrue(first >= 0 && second > first, "every note must render, oldest first");
+	}
+
+	@Test
+	public void stylesheet_shouldRenderEmptyStateWhenVisitNotesHoldsNoNotes() throws Exception {
+		String output = transform(visitSummaryXml("<visitNotes heading=\"HEAD-visitNotes\"/>"));
+
+		Assertions.assertTrue(output.contains("None recorded"),
+		    "a visit-notes section with no notes must render the empty state");
+	}
 }

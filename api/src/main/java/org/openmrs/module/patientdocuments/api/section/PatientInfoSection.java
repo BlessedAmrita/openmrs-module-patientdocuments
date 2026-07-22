@@ -41,6 +41,12 @@ public class PatientInfoSection extends TypedSection<PatientVisitInfo> {
 		return true;
 	}
 
+	/** Always on (see isEnabled), so config UIs must not offer a toggle. */
+	@Override
+	public boolean isToggleable() {
+		return false;
+	}
+
 	@Override
 	protected PatientVisitInfo gatherData(Visit visit) {
 		Patient patient = visit.getPatient();

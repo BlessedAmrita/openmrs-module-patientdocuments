@@ -34,8 +34,6 @@ import org.w3c.dom.Element;
 @Slf4j
 public class MedicationsSection extends TypedSection<List<MedicationEntry>> {
 
-	// DEFAULT_ORDER governs section-error grouping, not the printed position —
-	// the XSLT main template fixes the visual order, rendering medications after allergies.
 	private static final int DEFAULT_ORDER = 550;
 
 	private static final String KEY_PREFIX = "patientdocuments.visitSummary.section.medications.";

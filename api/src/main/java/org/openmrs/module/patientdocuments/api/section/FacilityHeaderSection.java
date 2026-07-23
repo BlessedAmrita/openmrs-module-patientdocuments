@@ -37,6 +37,12 @@ public class FacilityHeaderSection extends TypedSection<FacilityInfo> {
 		return true;
 	}
 
+	/** Always on (see isEnabled), so config UIs must not offer a toggle. */
+	@Override
+	public boolean isToggleable() {
+		return false;
+	}
+
 	@Override
 	protected FacilityInfo gatherData(Visit visit) {
 		if (visit.getLocation() == null) {

@@ -44,6 +44,12 @@ public class FooterSection extends TypedSection<FooterInfo> {
 		return true;
 	}
 
+	/** Always on (see isEnabled), so config UIs must not offer a toggle. */
+	@Override
+	public boolean isToggleable() {
+		return false;
+	}
+
 	@Override
 	protected FooterInfo gatherData(Visit visit) {
 		User currentUser = Context.getAuthenticatedUser();

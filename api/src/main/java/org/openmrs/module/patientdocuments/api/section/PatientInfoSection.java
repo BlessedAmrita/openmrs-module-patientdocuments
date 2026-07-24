@@ -51,7 +51,7 @@ public class PatientInfoSection extends TypedSection<PatientVisitInfo> {
 	protected PatientVisitInfo gatherData(Visit visit) {
 		Patient patient = visit.getPatient();
 		if (patient == null) {
-			return buildVisitInfo("", "", "", "", visit);
+			return buildVisitInfo("", "", "", "", "", visit);
 		}
 
 		PersonName name = patient.getPersonName();
@@ -61,17 +61,36 @@ public class PatientInfoSection extends TypedSection<PatientVisitInfo> {
 			name != null ? name.getFullName() : "",
 			preferredId != null ? preferredId.getIdentifier() : "",
 			patient.getBirthdate() != null ? formatDate(patient.getBirthdate()) : "",
+			deriveAge(patient, visit),
 			patient.getGender() != null ? patient.getGender() : "",
 			visit
 		);
 	}
 
+	/**
+	 * Derives the patient's age in years at the visit start date (or today when
+	 * the visit has no start date). Returns "" when the birthdate is missing or
+	 * postdates the visit, so the PDF omits the age instead of printing a
+	 * garbage or negative value.
+	 */
+	private String deriveAge(Patient patient, Visit visit) {
+		if (patient.getBirthdate() == null) {
+			return "";
+		}
+		Integer age = patient.getAge(visit.getStartDatetime());
+		if (age == null || age < 0) {
+			return "";
+		}
+		return String.valueOf(age);
+	}
+
 	private PatientVisitInfo buildVisitInfo(String patientName, String patientId,
-			String dateOfBirth, String gender, Visit visit) {
+			String dateOfBirth, String age, String gender, Visit visit) {
 		return PatientVisitInfo.builder()
 			.patientName(patientName)
 			.patientId(patientId)
 			.dateOfBirth(dateOfBirth)
+			.age(age)
 			.gender(gender)
 			.visitDate(visit.getStartDatetime() != null ? formatDate(visit.getStartDatetime()) : "")
 			.visitType(visit.getVisitType() != null ? visit.getVisitType().getName() : "")
@@ -87,6 +106,7 @@ public class PatientInfoSection extends TypedSection<PatientVisitInfo> {
 		section.setAttribute("lbl-patient-name", msg(KEY_PREFIX + "lbl.patientName", "Patient Name"));
 		section.setAttribute("lbl-patient-id", msg(KEY_PREFIX + "lbl.patientId", "Patient ID"));
 		section.setAttribute("lbl-dob", msg(KEY_PREFIX + "lbl.dob", "Date of Birth"));
+		section.setAttribute("lbl-age", msg(KEY_PREFIX + "lbl.age", "Age"));
 		section.setAttribute("lbl-gender", msg(KEY_PREFIX + "lbl.gender", "Gender"));
 		section.setAttribute("lbl-visit-date", msg(KEY_PREFIX + "lbl.visitDate", "Visit Date"));
 		section.setAttribute("lbl-visit-type", msg(KEY_PREFIX + "lbl.visitType", "Visit Type"));
@@ -96,6 +116,7 @@ public class PatientInfoSection extends TypedSection<PatientVisitInfo> {
 		addTextElement(doc, section, "patientName", data.getPatientName());
 		addTextElement(doc, section, "patientId", data.getPatientId());
 		addTextElement(doc, section, "dateOfBirth", data.getDateOfBirth());
+		addTextElement(doc, section, "age", data.getAge());
 		addTextElement(doc, section, "gender", data.getGender());
 		addTextElement(doc, section, "visitDate", data.getVisitDate());
 		addTextElement(doc, section, "visitType", data.getVisitType());

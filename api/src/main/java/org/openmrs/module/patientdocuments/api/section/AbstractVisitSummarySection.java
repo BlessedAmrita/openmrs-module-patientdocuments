@@ -13,6 +13,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -128,11 +129,38 @@ public abstract class AbstractVisitSummarySection implements VisitSummarySection
 		return sb.toString();
 	}
 
+	/**
+	 * Formats a date using the pattern from report.visitSummary.dateFormat
+	 * (default yyyy-MM-dd) in the authenticated user's locale. Returns "" for null dates.
+	 */
 	protected String formatDate(Date date) {
+		return formatWithConfiguredPattern(date, "report.visitSummary.dateFormat", "yyyy-MM-dd");
+	}
+
+	/**
+	 * Formats a timestamp using the pattern from report.visitSummary.datetimeFormat
+	 * (default yyyy-MM-dd HH:mm:ss) in the authenticated user's locale. Returns "" for null dates.
+	 */
+	protected String formatDatetime(Date date) {
+		return formatWithConfiguredPattern(date, "report.visitSummary.datetimeFormat", "yyyy-MM-dd HH:mm:ss");
+	}
+
+	// An invalid configured pattern is logged and the default pattern used instead,
+	// so a bad global property can never fail the whole PDF.
+	private String formatWithConfiguredPattern(Date date, String patternKey, String defaultPattern) {
 		if (date == null) {
 			return "";
 		}
-		return new SimpleDateFormat("yyyy-MM-dd").format(date);
+		String pattern = ConfigUtil.getProperty(patternKey, defaultPattern);
+		Locale locale = Context.getLocale();
+		try {
+			return new SimpleDateFormat(pattern, locale).format(date);
+		}
+		catch (IllegalArgumentException e) {
+			log.warn("Global property '{}' has invalid date pattern '{}'; defaulting to {}",
+					patternKey, pattern, defaultPattern);
+			return new SimpleDateFormat(defaultPattern, locale).format(date);
+		}
 	}
 
 	protected List<Encounter> getNonVoidedEncounters(Visit visit) {

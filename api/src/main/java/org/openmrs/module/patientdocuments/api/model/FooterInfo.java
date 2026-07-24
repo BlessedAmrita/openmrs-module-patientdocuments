@@ -9,9 +9,11 @@
  */
 package org.openmrs.module.patientdocuments.api.model;
 
+import lombok.Builder;
 import lombok.Value;
 
 @Value
+@Builder
 public class FooterInfo {
 
 	String printedBy;
@@ -19,4 +21,6 @@ public class FooterInfo {
 	String systemId;
 
 	String timestamp;
+
+	String facilityName;
 }

@@ -31,7 +31,9 @@ import javax.xml.transform.stream.StreamResult;
 
 import org.openmrs.Visit;
 import org.openmrs.annotation.Handler;
+import org.openmrs.api.context.Context;
 import org.openmrs.module.patientdocuments.api.section.VisitSummarySection;
+import org.openmrs.module.patientdocuments.common.PatientDocumentsConstants;
 import org.openmrs.util.ConfigUtil;
 import org.openmrs.module.reporting.common.Localized;
 import org.openmrs.module.reporting.dataset.DataSet;
@@ -91,6 +93,7 @@ public class VisitSummaryXmlReportRenderer extends ReportDesignRenderer {
 		Element root = doc.createElement("visitSummary");
 		doc.appendChild(root);
 		configurePageDimensions(root);
+		configureNoDataLabel(root);
 
 		if (results.getDataSets().containsKey(DATASET_KEY_VISIT_SUMMARY_FIELDS)) {
 			DataSet dataSet = results.getDataSets().get(DATASET_KEY_VISIT_SUMMARY_FIELDS);
@@ -115,6 +118,24 @@ public class VisitSummaryXmlReportRenderer extends ReportDesignRenderer {
 				}
 			}
 		}
+	}
+
+	/**
+	 * Sets the localized "no data recorded" label as a root attribute. It lives on
+	 * the root because the stylesheet's empty-state block is shared by every
+	 * section template.
+	 */
+	private void configureNoDataLabel(Element root) {
+		String label;
+		try {
+			label = Context.getMessageSourceService().getMessage(
+					"patientdocuments.visitSummary.common.noDataRecorded", null,
+					PatientDocumentsConstants.NO_DATA_RECORDED_PLACEHOLDER, Context.getLocale());
+		}
+		catch (Exception e) {
+			label = PatientDocumentsConstants.NO_DATA_RECORDED_PLACEHOLDER;
+		}
+		root.setAttribute("lbl-no-data", label);
 	}
 
 	private void configurePageDimensions(Element root) {

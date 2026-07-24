@@ -9,9 +9,11 @@
  */
 package org.openmrs.module.patientdocuments.api.model;
 
+import lombok.Builder;
 import lombok.Value;
 
 @Value
+@Builder
 public class FacilityInfo {
 
 	String facilityName;
@@ -19,4 +21,10 @@ public class FacilityInfo {
 	String facilityAddress;
 
 	String facilityPhone;
+
+	String logoData;
+
+	String documentTitle;
+
+	String visitDate;
 }

@@ -15,6 +15,7 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
 import org.apache.commons.lang3.StringUtils;
+import org.openmrs.ConditionVerificationStatus;
 import org.openmrs.Diagnosis;
 import org.openmrs.Visit;
 import org.openmrs.api.context.Context;
@@ -75,6 +76,23 @@ public class DiagnosesSection extends TypedSection<List<DiagnosisEntry>> {
 		log.warn("Diagnosis {} has diagnosis value but neither coded diagnosis name "
 			+ "nor non-coded diagnosis text resolved", diagnosis.getUuid());
 		return msg(KEY_PREFIX + "unknown", "Unknown");
+	}
+
+	/**
+	 * Sample diagnoses for the preview. Overridden because the real gather goes through
+	 * the diagnosis service; the names here are plain display text, and the certainty
+	 * values are the core enum names so they localize through the same path as real ones.
+	 */
+	@Override
+	protected List<DiagnosisEntry> gatherSampleData(List<String> notices) {
+		List<DiagnosisEntry> diagnoses = new ArrayList<>();
+		diagnoses.add(new DiagnosisEntry(
+		    VisitSummarySampleData.msg("diagnoses.primary", "Malaria, uncomplicated"),
+		    ConditionVerificationStatus.CONFIRMED.name(), "1"));
+		diagnoses.add(new DiagnosisEntry(
+		    VisitSummarySampleData.msg("diagnoses.secondary", "Iron deficiency anaemia"),
+		    ConditionVerificationStatus.PROVISIONAL.name(), "2"));
+		return diagnoses;
 	}
 
 	@Override

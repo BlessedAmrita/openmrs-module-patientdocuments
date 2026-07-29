@@ -20,6 +20,11 @@ import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+/**
+ * Audit footer printed on every page.
+ * The sample preview inherits the default renderSampleXml: gatherData() ignores the visit
+ * and reports who is printing and when, which is the correct footer to show, so no override.
+ */
 @Component
 public class FooterSection extends TypedSection<FooterInfo> {
 

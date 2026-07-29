@@ -34,6 +34,9 @@ public class PatientDocumentsConstants {
 
 	public static final String VISIT_SUMMARY_ID = "visitSummary";
 
+	/** URL segment of the sample preview endpoint, under the visit summary path. */
+	public static final String VISIT_SUMMARY_PREVIEW_ID = "preview";
+
 	public static final String COMPONENT_REPORTMANAGER_VISIT_SUMMARY = MODULE_ARTIFACT_ID + ".visitSummary";
 
 	/**

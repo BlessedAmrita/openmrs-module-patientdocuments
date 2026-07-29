@@ -81,6 +81,23 @@ public class ConditionsSection extends TypedSection<List<ConditionEntry>> {
 		return msg(KEY_PREFIX + "unknown", "Unknown");
 	}
 
+	/**
+	 * Sample conditions for the preview. Overridden because the real gather goes through
+	 * the condition service; the names are plain display text and the onset dates are
+	 * computed relative to now so the preview never shows a stale date.
+	 */
+	@Override
+	protected List<ConditionEntry> gatherSampleData(List<String> notices) {
+		List<ConditionEntry> conditions = new ArrayList<>();
+		conditions.add(new ConditionEntry(
+		    VisitSummarySampleData.msg("conditions.first", "Hypertension"),
+		    formatDate(VisitSummarySampleData.yearsAgo(3))));
+		conditions.add(new ConditionEntry(
+		    VisitSummarySampleData.msg("conditions.second", "Type 2 diabetes mellitus"),
+		    formatDate(VisitSummarySampleData.yearsAgo(1))));
+		return conditions;
+	}
+
 	@Override
 	protected void renderXml(Document doc, Element root, List<ConditionEntry> conditions) {
 		Element section = doc.createElement("conditions");

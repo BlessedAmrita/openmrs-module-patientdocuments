@@ -164,6 +164,30 @@ public class VitalsSection extends TypedSection<List<Vital>> {
 		return new Vital(label, value + unit);
 	}
 
+	/**
+	 * Sample vitals for the preview. Overridden because the real gather resolves concept
+	 * mappings, which a deployment with a different dictionary would fail to resolve —
+	 * these are plain label/value display strings instead.
+	 */
+	@Override
+	protected List<Vital> gatherSampleData(List<String> notices) {
+		List<Vital> vitals = new ArrayList<>();
+		vitals.add(sampleVital("bloodPressure", "Blood Pressure", "120/80 mmHg"));
+		vitals.add(sampleVital("heartRate", "Heart Rate", "72 bpm"));
+		vitals.add(sampleVital("temperature", "Temperature", "36.8 °C"));
+		vitals.add(sampleVital("respiratoryRate", "Respiratory Rate", "16 /min"));
+		vitals.add(sampleVital("oxygenSaturation", "Oxygen Saturation", "98 %"));
+		vitals.add(sampleVital("weight", "Weight", "62 kg"));
+		vitals.add(sampleVital("height", "Height", "165 cm"));
+		return vitals;
+	}
+
+	private Vital sampleVital(String keySuffix, String labelFallback, String valueFallback) {
+		return new Vital(
+		    VisitSummarySampleData.msg("vitals." + keySuffix + ".label", labelFallback),
+		    VisitSummarySampleData.msg("vitals." + keySuffix + ".value", valueFallback));
+	}
+
 	@Override
 	protected void renderXml(Document doc, Element root, List<Vital> vitals) {
 		Element section = doc.createElement("vitals");

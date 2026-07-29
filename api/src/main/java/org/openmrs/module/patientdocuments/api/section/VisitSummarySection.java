@@ -9,6 +9,8 @@
  */
 package org.openmrs.module.patientdocuments.api.section;
 
+import java.util.List;
+
 import org.openmrs.Visit;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.patientdocuments.common.PatientDocumentsConstants;
@@ -23,6 +25,8 @@ import org.w3c.dom.Element;
  * fit the gather-then-render flow.
  * Config UIs list the same beans via getLabel(), isEnabled(), getOrder() and
  * isToggleable() — sections need no extra registration to appear there.
+ * The same beans also drive the sample preview via renderSampleXml(), which has a
+ * working default so existing and downstream implementations need no changes.
  */
 public interface VisitSummarySection {
 
@@ -83,6 +87,27 @@ public interface VisitSummarySection {
 	 * TypedSection renders a section-error element on failure for clinical safety visibility.
 	 */
 	void renderXml(Document doc, Element root, Visit visit);
+
+	/**
+	 * Build this section's XML elements using sample content, for the settings-page
+	 * preview. No patient data is involved: the preview never loads a Visit from the
+	 * database, so implementations must not query for one either.
+	 * <p>
+	 * Add a message to {@code notices} for anything worth flagging on the preview; the
+	 * caller renders each one as a section-notice element. Throwing is safe — the caller
+	 * catches it and renders a visible section-error, so a broken sample never silently
+	 * removes the section from the preview.
+	 * <p>
+	 * The default feeds the transient sample Visit built by
+	 * {@link VisitSummarySampleData#newSampleVisit()} straight into renderXml(), which
+	 * keeps unmigrated and downstream sections rendering populated rather than blank.
+	 * Sections whose data comes from a service rather than the visit object graph should
+	 * override (TypedSection subclasses override gatherSampleData instead) so the preview
+	 * neither depends on a concept dictionary nor touches the database.
+	 */
+	default void renderSampleXml(Document doc, Element root, List<String> notices) {
+		renderXml(doc, root, VisitSummarySampleData.newSampleVisit());
+	}
 
 	/**
 	 * Splits a camelCase section key into capitalized words, e.g. "labResults" becomes

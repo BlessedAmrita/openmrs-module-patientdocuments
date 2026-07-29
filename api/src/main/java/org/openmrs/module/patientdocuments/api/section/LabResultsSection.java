@@ -279,6 +279,41 @@ public class LabResultsSection extends TypedSection<LabResultsData> {
 		return BigDecimal.valueOf(value).stripTrailingZeros().toPlainString();
 	}
 
+	/**
+	 * Sample lab results for the preview — one panel plus a standalone result, so both
+	 * layouts are visible. Overridden because the real gather resolves concept classes
+	 * and reads obs; the values here are plain display text. The flags reuse the same
+	 * flag.* message keys the real path localizes stored interpretations with.
+	 */
+	@Override
+	protected LabResultsData gatherSampleData(List<String> notices) {
+		List<LabResult> panelResults = new ArrayList<>();
+		panelResults.add(new LabResult(
+		    VisitSummarySampleData.msg("labResults.haemoglobin.name", "Haemoglobin"),
+		    VisitSummarySampleData.msg("labResults.haemoglobin.value", "11.2"),
+		    VisitSummarySampleData.msg("labResults.haemoglobin.units", "g/dL"),
+		    VisitSummarySampleData.msg("labResults.haemoglobin.range", "12 – 16 g/dL"),
+		    msg(KEY_PREFIX + "flag.low", "Low")));
+		panelResults.add(new LabResult(
+		    VisitSummarySampleData.msg("labResults.whiteCellCount.name", "White cell count"),
+		    VisitSummarySampleData.msg("labResults.whiteCellCount.value", "7.4"),
+		    VisitSummarySampleData.msg("labResults.whiteCellCount.units", "10^9/L"),
+		    VisitSummarySampleData.msg("labResults.whiteCellCount.range", "4 – 11 10^9/L"),
+		    ""));
+
+		List<LabResultGroup> groups = new ArrayList<>();
+		groups.add(new LabResultGroup(
+		    VisitSummarySampleData.msg("labResults.panel.heading", "Complete blood count"), panelResults));
+
+		List<LabResult> standalone = new ArrayList<>();
+		standalone.add(new LabResult(
+		    VisitSummarySampleData.msg("labResults.standalone.name", "Malaria rapid diagnostic test"),
+		    VisitSummarySampleData.msg("labResults.standalone.value", "Positive"),
+		    "", "", msg(KEY_PREFIX + "flag.abnormal", "Abnormal")));
+
+		return new LabResultsData(groups, standalone);
+	}
+
 	@Override
 	protected void renderXml(Document doc, Element root, LabResultsData data) {
 		Element section = doc.createElement("labResults");

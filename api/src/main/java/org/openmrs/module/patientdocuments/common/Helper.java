@@ -114,6 +114,7 @@ public class Helper {
 			}
 			return "data:" + mediaType + ";base64," + Base64.getEncoder().encodeToString(imageBytes);
 		} catch (IOException e) {
+			log.warn("Image '{}' could not be read; ignoring it", relativePath, e);
 			return null;
 		}
 	}

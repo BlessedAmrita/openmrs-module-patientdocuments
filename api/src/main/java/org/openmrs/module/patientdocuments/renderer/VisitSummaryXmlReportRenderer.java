@@ -11,6 +11,8 @@ package org.openmrs.module.patientdocuments.renderer;
 
 import static org.openmrs.module.patientdocuments.reports.VisitSummaryReportManager.DATASET_KEY_VISIT_SUMMARY_FIELDS;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -53,10 +55,13 @@ import org.w3c.dom.Element;
  * configurable getOrder() value, delegating all XML construction to each
  * section's renderXml().
  */
+@Slf4j
 @Component
 @Handler
 @Localized("patientdocuments.visitSummaryXmlReportRenderer")
 public class VisitSummaryXmlReportRenderer extends ReportDesignRenderer {
+
+	private static final String NO_DATA_MESSAGE_KEY = "patientdocuments.visitSummary.common.noDataRecorded";
 
 	@Autowired(required = false)
 	private List<VisitSummarySection> sections;
@@ -128,11 +133,11 @@ public class VisitSummaryXmlReportRenderer extends ReportDesignRenderer {
 	private void configureNoDataLabel(Element root) {
 		String label;
 		try {
-			label = Context.getMessageSourceService().getMessage(
-					"patientdocuments.visitSummary.common.noDataRecorded", null,
+			label = Context.getMessageSourceService().getMessage(NO_DATA_MESSAGE_KEY, null,
 					PatientDocumentsConstants.NO_DATA_RECORDED_PLACEHOLDER, Context.getLocale());
 		}
 		catch (Exception e) {
+			log.warn("Message lookup failed for key '{}'; using fallback", NO_DATA_MESSAGE_KEY, e);
 			label = PatientDocumentsConstants.NO_DATA_RECORDED_PLACEHOLDER;
 		}
 		root.setAttribute("lbl-no-data", label);

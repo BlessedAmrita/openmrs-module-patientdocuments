@@ -103,7 +103,7 @@ public class Helper {
 			return null;
 		}
 		try {
-			byte[] imageBytes = OpenmrsUtil.getFileAsBytes(imageFile);
+			byte[] imageBytes = Files.readAllBytes(imageFile.toPath());
 			if (imageBytes == null || imageBytes.length == 0) {
 				return null;
 			}

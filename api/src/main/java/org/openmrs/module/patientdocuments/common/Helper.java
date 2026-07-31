@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Base64;
@@ -104,7 +105,7 @@ public class Helper {
 		}
 		try {
 			byte[] imageBytes = Files.readAllBytes(imageFile.toPath());
-			if (imageBytes == null || imageBytes.length == 0) {
+			if (imageBytes.length == 0) {
 				return null;
 			}
 			String mediaType = detectImageMediaType(imageBytes);

@@ -9,7 +9,6 @@
  */
 package org.openmrs.module.patientdocuments.api.section;
 
-import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import org.apache.commons.lang3.StringUtils;
@@ -62,8 +61,15 @@ public class FooterSection extends TypedSection<FooterInfo> {
 			}
 		}
 		String systemId = currentUser != null ? StringUtils.defaultString(currentUser.getSystemId()) : "";
-		String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
-		return new FooterInfo(printedBy, systemId, timestamp);
+		String timestamp = formatDatetime(new Date());
+		String facilityName = visit.getLocation() != null && visit.getLocation().getName() != null
+				? visit.getLocation().getName() : "";
+		return FooterInfo.builder()
+			.printedBy(printedBy)
+			.systemId(systemId)
+			.timestamp(timestamp)
+			.facilityName(facilityName)
+			.build();
 	}
 
 	@Override
@@ -71,9 +77,12 @@ public class FooterSection extends TypedSection<FooterInfo> {
 		Element footer = doc.createElement("footer");
 		footer.setAttribute("lbl-printed-by", msg(KEY_PREFIX + "lbl.printedBy", "Printed by:"));
 		footer.setAttribute("lbl-system-id", msg(KEY_PREFIX + "lbl.systemId", "System ID:"));
+		footer.setAttribute("lbl-page", msg(KEY_PREFIX + "lbl.page", "Page"));
+		footer.setAttribute("lbl-of", msg(KEY_PREFIX + "lbl.of", "of"));
 		root.appendChild(footer);
 		addTextElement(doc, footer, "printedBy", data.getPrintedBy());
 		addTextElement(doc, footer, "timestamp", data.getTimestamp());
 		addTextElement(doc, footer, "systemId", data.getSystemId());
+		addTextElement(doc, footer, "facilityName", data.getFacilityName());
 	}
 }

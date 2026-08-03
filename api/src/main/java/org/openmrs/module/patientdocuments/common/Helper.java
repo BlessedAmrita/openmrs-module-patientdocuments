@@ -9,6 +9,8 @@
  */
 package org.openmrs.module.patientdocuments.common;
 
+import lombok.extern.slf4j.Slf4j;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.openmrs.util.OpenmrsClassLoader;
@@ -18,10 +20,21 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Base64;
 
+@Slf4j
 public class Helper {
+
+	private static final byte[] PNG_SIGNATURE = { (byte) 0x89, 'P', 'N', 'G' };
+
+	private static final byte[] JPEG_SIGNATURE = { (byte) 0xFF, (byte) 0xD8, (byte) 0xFF };
+
+	private static final byte[] GIF87A_SIGNATURE = { 'G', 'I', 'F', '8', '7', 'a' };
+
+	private static final byte[] GIF89A_SIGNATURE = { 'G', 'I', 'F', '8', '9', 'a' };
 
 	public static InputStream getInputStreamByResource(String resourceName) {
 		try {
@@ -73,5 +86,63 @@ public class Helper {
 		} catch (IllegalArgumentException | IOException e) {
 			return null;
 		}
+	}
+
+	/**
+	 * Loads an image from the application data directory as a base64 data URI for an
+	 * XSL-FO {@code fo:external-graphic} source. Resolved via
+	 * {@link #getFileFromAppDataDir(String)}, so absolute and traversing paths are rejected.
+	 * The media type is read from the file's signature bytes, not its extension, and an
+	 * unsupported type is rejected rather than mislabelled as PNG.
+	 *
+	 * @param relativePath image path relative to the application data directory
+	 * @return the data URI, or {@code null} when unusable
+	 */
+	public static String getImageAsDataUri(String relativePath) {
+		File imageFile = getFileFromAppDataDir(relativePath);
+		if (imageFile == null || !imageFile.isFile() || !imageFile.canRead()) {
+			return null;
+		}
+		try {
+			byte[] imageBytes = Files.readAllBytes(imageFile.toPath());
+			if (imageBytes.length == 0) {
+				return null;
+			}
+			String mediaType = detectImageMediaType(imageBytes);
+			if (mediaType == null) {
+				log.warn("Image '{}' is not a PNG, JPEG or GIF; ignoring it", relativePath);
+				return null;
+			}
+			return "data:" + mediaType + ";base64," + Base64.getEncoder().encodeToString(imageBytes);
+		} catch (IOException e) {
+			log.warn("Image '{}' could not be read; ignoring it", relativePath, e);
+			return null;
+		}
+	}
+
+	/** Identifies a raster image from its leading signature bytes, or null if unsupported. */
+	private static String detectImageMediaType(byte[] bytes) {
+		if (startsWith(bytes, PNG_SIGNATURE)) {
+			return "image/png";
+		}
+		if (startsWith(bytes, JPEG_SIGNATURE)) {
+			return "image/jpeg";
+		}
+		if (startsWith(bytes, GIF87A_SIGNATURE) || startsWith(bytes, GIF89A_SIGNATURE)) {
+			return "image/gif";
+		}
+		return null;
+	}
+
+	private static boolean startsWith(byte[] bytes, byte[] signature) {
+		if (bytes.length < signature.length) {
+			return false;
+		}
+		for (int i = 0; i < signature.length; i++) {
+			if (bytes[i] != signature[i]) {
+				return false;
+			}
+		}
+		return true;
 	}
 }

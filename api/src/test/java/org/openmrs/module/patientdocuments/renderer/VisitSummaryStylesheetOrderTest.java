@@ -45,8 +45,12 @@ public class VisitSummaryStylesheetOrderTest {
 		}
 	}
 
+	/** Marker standing in for the localized no-data label the renderer sets on the root. */
+	private static final String NO_DATA_LABEL = "LBL-no-data";
+
 	private static String visitSummaryXml(String sections) {
-		return "<visitSummary page-height=\"297mm\" page-width=\"210mm\">" + sections + "</visitSummary>";
+		return "<visitSummary page-height=\"297mm\" page-width=\"210mm\" lbl-no-data=\"" + NO_DATA_LABEL + "\">"
+		        + sections + "</visitSummary>";
 	}
 
 	private static List<String> headingOrder(String foOutput) {
@@ -126,7 +130,7 @@ public class VisitSummaryStylesheetOrderTest {
 		Assertions.assertTrue(output.contains("NOTE-narrative"), "note narrative must render into the FO output");
 		Assertions.assertTrue(output.contains("NOTE-provider"), "note provider must render into the FO output");
 		Assertions.assertTrue(output.contains("NOTE-datetime"), "note datetime must render into the FO output");
-		Assertions.assertFalse(output.contains("None recorded"),
+		Assertions.assertFalse(output.contains(NO_DATA_LABEL),
 		    "a section holding notes must not fall through to the empty-state branch");
 	}
 
@@ -147,7 +151,7 @@ public class VisitSummaryStylesheetOrderTest {
 	public void stylesheet_shouldRenderEmptyStateWhenVisitNotesHoldsNoNotes() throws Exception {
 		String output = transform(visitSummaryXml("<visitNotes heading=\"HEAD-visitNotes\"/>"));
 
-		Assertions.assertTrue(output.contains("None recorded"),
+		Assertions.assertTrue(output.contains(NO_DATA_LABEL),
 		    "a visit-notes section with no notes must render the empty state");
 	}
 }

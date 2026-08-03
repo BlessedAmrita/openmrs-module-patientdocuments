@@ -22,6 +22,8 @@ public class PatientVisitInfo {
 
 	String dateOfBirth;
 
+	String age;
+
 	String gender;
 
 	String visitDate;

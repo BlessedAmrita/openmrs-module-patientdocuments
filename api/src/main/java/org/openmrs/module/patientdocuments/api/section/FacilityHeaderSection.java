@@ -9,17 +9,35 @@
  */
 package org.openmrs.module.patientdocuments.api.section;
 
+import lombok.extern.slf4j.Slf4j;
+
+import org.apache.commons.lang3.StringUtils;
 import org.openmrs.Location;
+import org.openmrs.LocationAttribute;
+import org.openmrs.LocationAttributeType;
 import org.openmrs.Visit;
 import org.openmrs.module.patientdocuments.api.model.FacilityInfo;
+import org.openmrs.module.patientdocuments.common.Helper;
+import org.openmrs.util.ConfigUtil;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+/**
+ * Produces the document header: facility logo, name and contact line from the visit's
+ * Location, plus the document title and visit date.
+ */
+@Slf4j
 @Component
 public class FacilityHeaderSection extends TypedSection<FacilityInfo> {
 
 	private static final int DEFAULT_ORDER = 100;
+
+	private static final String KEY_PREFIX = "patientdocuments.visitSummary.";
+
+	private static final String LOGO_PATH_PROPERTY = "report.visitSummary.logourl";
+
+	private static final String PHONE_ATTRIBUTE_TYPE_PROPERTY = "report.visitSummary.facility.phoneAttributeType";
 
 	@Override
 	protected int getDefaultOrder() {
@@ -45,12 +63,18 @@ public class FacilityHeaderSection extends TypedSection<FacilityInfo> {
 
 	@Override
 	protected FacilityInfo gatherData(Visit visit) {
-		if (visit.getLocation() == null) {
-			return new FacilityInfo("", "", "");
-		}
 		Location loc = visit.getLocation();
-		String name = loc.getName() != null ? loc.getName() : "";
+		return FacilityInfo.builder()
+			.facilityName(loc != null && loc.getName() != null ? loc.getName() : "")
+			.facilityAddress(loc != null ? buildAddress(loc) : "")
+			.facilityPhone(loc != null ? resolvePhone(loc) : "")
+			.logoData(loadLogo())
+			.documentTitle(msg(KEY_PREFIX + "documentTitle", "Visit Summary"))
+			.visitDate(formatDate(visit.getStartDatetime()))
+			.build();
+	}
 
+	private String buildAddress(Location loc) {
 		StringBuilder addr = new StringBuilder();
 		for (String part : new String[] {
 				loc.getAddress1(), loc.getAddress2(),
@@ -61,11 +85,52 @@ public class FacilityHeaderSection extends TypedSection<FacilityInfo> {
 				addr.append(part);
 			}
 		}
+		return addr.toString();
+	}
 
-		// Phone from location attribute (if the attribute type exists)
-		String phone = "";
+	/**
+	 * Reads the facility phone number from the location attribute whose type
+	 * name or uuid is configured in report.visitSummary.facility.phoneAttributeType.
+	 * Returns "" when the property is unset or no matching attribute has a value,
+	 * so the contact line is simply omitted from the header.
+	 */
+	private String resolvePhone(Location location) {
+		String configuredType = ConfigUtil.getProperty(PHONE_ATTRIBUTE_TYPE_PROPERTY);
+		if (StringUtils.isBlank(configuredType)) {
+			return "";
+		}
+		configuredType = configuredType.trim();
+		for (LocationAttribute attribute : location.getActiveAttributes()) {
+			LocationAttributeType type = attribute.getAttributeType();
+			if (type != null && (configuredType.equalsIgnoreCase(type.getName()) || configuredType.equals(type.getUuid()))) {
+				Object value = attribute.getValue();
+				if (value != null) {
+					return value.toString();
+				}
+			}
+		}
+		return "";
+	}
 
-		return new FacilityInfo(name, addr.toString(), phone);
+	/**
+	 * Loads the configured facility logo as a base64 data URI, using the same
+	 * mechanism as the patient ID sticker logo: report.visitSummary.logourl
+	 * holds a PNG path relative to the application data directory, resolved
+	 * with path-traversal protection by {@link Helper#getImageAsDataUri(String)}.
+	 * Returns "" when unconfigured or unreadable so the header renders without
+	 * a logo instead of failing the PDF.
+	 */
+	private String loadLogo() {
+		String logoPath = ConfigUtil.getProperty(LOGO_PATH_PROPERTY);
+		if (StringUtils.isBlank(logoPath)) {
+			return "";
+		}
+		String dataUri = Helper.getImageAsDataUri(logoPath.trim());
+		if (dataUri == null) {
+			log.warn("Visit summary logo '{}' could not be read; rendering header without a logo", logoPath);
+			return "";
+		}
+		return dataUri;
 	}
 
 	@Override
@@ -75,5 +140,8 @@ public class FacilityHeaderSection extends TypedSection<FacilityInfo> {
 		addTextElement(doc, section, "facilityName", data.getFacilityName());
 		addTextElement(doc, section, "facilityAddress", data.getFacilityAddress());
 		addTextElement(doc, section, "facilityPhone", data.getFacilityPhone());
+		addTextElement(doc, section, "logoData", data.getLogoData());
+		addTextElement(doc, section, "documentTitle", data.getDocumentTitle());
+		addTextElement(doc, section, "visitDate", data.getVisitDate());
 	}
 }

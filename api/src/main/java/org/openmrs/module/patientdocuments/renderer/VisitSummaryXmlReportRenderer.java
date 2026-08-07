@@ -11,8 +11,6 @@ package org.openmrs.module.patientdocuments.renderer;
 
 import static org.openmrs.module.patientdocuments.reports.VisitSummaryReportManager.DATASET_KEY_VISIT_SUMMARY_FIELDS;
 
-import lombok.extern.slf4j.Slf4j;
-
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;

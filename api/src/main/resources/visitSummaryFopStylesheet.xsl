@@ -5,9 +5,13 @@
 
     <xsl:output method="xml" indent="yes"/>
 
-    <!-- Page dimensions from renderer attributes -->
+    <!-- Page frame from renderer attributes: XSLT 1.0 has no unit arithmetic, so
+         VisitSummaryPageLayout measures and this stylesheet only interpolates. -->
     <xsl:variable name="page-height" select="/visitSummary/@page-height"/>
     <xsl:variable name="page-width"  select="/visitSummary/@page-width"/>
+    <xsl:variable name="side-margin" select="/visitSummary/@side-margin"/>
+    <xsl:variable name="logo-column-width"  select="/visitSummary/@logo-column-width"/>
+    <xsl:variable name="logo-graphic-width" select="/visitSummary/@logo-graphic-width"/>
 
     <!-- Font families matching bundled IBM Plex Sans Arabic fonts -->
     <xsl:variable name="label-font-family">IBM Plex Sans Arabic</xsl:variable>
@@ -23,7 +27,10 @@
                 <fo:simple-page-master master-name="visit-summary-page"
                     page-height="{$page-height}" page-width="{$page-width}"
                     margin-top="15mm" margin-bottom="15mm"
-                    margin-left="15mm" margin-right="15mm">
+                    margin-left="{$side-margin}" margin-right="{$side-margin}">
+                    <!-- The footer sizes to its own two rows of 7pt text, not to the paper,
+                         so its extent and the body's clearance stay fixed while the side
+                         margins scale. -->
                     <fo:region-body margin-bottom="10mm"/>
                     <fo:region-after extent="10mm"/>
                 </fo:simple-page-master>
@@ -52,15 +59,15 @@
 
     <!-- ═══════════════════════════════════════════════════
          Facility header band. The logo cell is emitted even when the logo is
-         absent, so the rest of the band does not shift or collapse. Only that
-         column is fixed-width; the others are proportional so the band
-         survives narrower configured page sizes.
+         absent, so the rest of the band does not shift or collapse. That column and its
+         graphic scale with the content box (28mm and 24mm on A4) so they do not eat a
+         narrow page; the other two columns stay proportional.
          ═══════════════════════════════════════════════════ -->
     <xsl:template match="facilityHeader">
         <fo:block font-family="{$label-font-family}" margin-bottom="3mm"
             border-bottom="0.5pt solid #cccccc" padding-bottom="2mm">
             <fo:table width="100%" table-layout="fixed">
-                <fo:table-column column-width="28mm"/>
+                <fo:table-column column-width="{$logo-column-width}"/>
                 <fo:table-column column-width="proportional-column-width(58)"/>
                 <fo:table-column column-width="proportional-column-width(42)"/>
                 <fo:table-body>
@@ -69,7 +76,7 @@
                             <fo:block>
                                 <xsl:if test="logoData != ''">
                                     <fo:external-graphic src="{logoData}"
-                                        width="24mm" content-width="scale-down-to-fit"
+                                        width="{$logo-graphic-width}" content-width="scale-down-to-fit"
                                         content-height="12mm" scaling="uniform"/>
                                 </xsl:if>
                             </fo:block>

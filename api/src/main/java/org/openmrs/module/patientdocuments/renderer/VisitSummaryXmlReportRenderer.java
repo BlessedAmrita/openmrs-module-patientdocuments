@@ -143,11 +143,27 @@ public class VisitSummaryXmlReportRenderer extends ReportDesignRenderer {
 		root.setAttribute("lbl-no-data", label);
 	}
 
+	/**
+	 * Publishes the page frame as root attributes for the stylesheet to interpolate.
+	 * {@code layout-profile} and {@code content-width-mm} are emitted for the later
+	 * section-reflow work to branch on; this stylesheet does not read them.
+	 * <p>
+	 * Measured in Java because XSLT 1.0 cannot do unit arithmetic. Emitting the normalised
+	 * value rather than the raw property also keeps an unparseable global property from
+	 * reaching FOP as a page dimension.
+	 */
 	private void configurePageDimensions(Element root) {
-		String pageHeight = ConfigUtil.getProperty("report.visitSummary.size.height", "297mm");
-		String pageWidth = ConfigUtil.getProperty("report.visitSummary.size.width", "210mm");
-		root.setAttribute("page-height", pageHeight);
-		root.setAttribute("page-width", pageWidth);
+		VisitSummaryPageLayout layout = VisitSummaryPageLayout.from(
+				ConfigUtil.getProperty(PatientDocumentsConstants.VISIT_SUMMARY_PAGE_WIDTH_PROPERTY),
+				ConfigUtil.getProperty(PatientDocumentsConstants.VISIT_SUMMARY_PAGE_HEIGHT_PROPERTY));
+
+		root.setAttribute("page-height", layout.getPageHeightAttribute());
+		root.setAttribute("page-width", layout.getPageWidthAttribute());
+		root.setAttribute("side-margin", layout.getSideMarginAttribute());
+		root.setAttribute("logo-column-width", layout.getLogoColumnAttribute());
+		root.setAttribute("logo-graphic-width", layout.getLogoGraphicAttribute());
+		root.setAttribute("content-width-mm", VisitSummaryPageLayout.formatMm(layout.getContentWidthMm()));
+		root.setAttribute("layout-profile", layout.getLayoutProfile());
 	}
 
 	private void writeToOutputStream(Document doc, OutputStream out) throws RenderingException {

@@ -53,6 +53,10 @@ public class PatientDocumentsConstants {
 
 	public static final String VISIT_SUMMARY_SECTION_PREFIX = "report.visitSummary.section.";
 
+	public static final String VISIT_SUMMARY_PAGE_WIDTH_PROPERTY = "report.visitSummary.size.width";
+
+	public static final String VISIT_SUMMARY_PAGE_HEIGHT_PROPERTY = "report.visitSummary.size.height";
+
 	public static final String NO_DATA_RECORDED_PLACEHOLDER = "No data recorded";
 
 	public static final String MISSING_VALUE_PLACEHOLDER = "-";

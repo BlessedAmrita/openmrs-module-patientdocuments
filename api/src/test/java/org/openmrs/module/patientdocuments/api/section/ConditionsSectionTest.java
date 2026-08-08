@@ -9,6 +9,7 @@
  */
 package org.openmrs.module.patientdocuments.api.section;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,6 +17,7 @@ import org.openmrs.GlobalProperty;
 import org.openmrs.Visit;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.patientdocuments.api.model.ConditionEntry;
+import org.openmrs.module.patientdocuments.testconfig.GlobalPropertyRestorer;
 import org.openmrs.test.jupiter.BaseModuleContextSensitiveTest;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -48,12 +50,25 @@ public class ConditionsSectionTest extends BaseModuleContextSensitiveTest {
 	private static final String DATASET =
 	    "org/openmrs/module/patientdocuments/include/conditionsSectionTestDataset.xml";
 
+	private static final String ENABLED_GP = "report.visitSummary.section.conditions.enabled";
+
 	private ConditionsSection section;
+
+	private GlobalPropertyRestorer globalProperties;
 
 	@BeforeEach
 	public void setUp() throws Exception {
+		// Captured before anything writes it: ConfigUtil caches global properties outside the
+		// test transaction, so a value left behind here would be visible to every later class
+		// in this JVM.
+		globalProperties = GlobalPropertyRestorer.capture(ENABLED_GP);
 		executeDataSet(DATASET);
 		section = new ConditionsSection();
+	}
+
+	@AfterEach
+	public void tearDown() {
+		globalProperties.restore();
 	}
 
 	// ── gatherData tests ──────────────────────────────────────────────────────
@@ -169,8 +184,7 @@ public class ConditionsSectionTest extends BaseModuleContextSensitiveTest {
 
 	@Test
 	public void isEnabled_whenGlobalPropertySetToFalse_returnsFalse() {
-		GlobalProperty gp = new GlobalProperty(
-		    "report.visitSummary.section.conditions.enabled", "false");
+		GlobalProperty gp = new GlobalProperty(ENABLED_GP, "false");
 		Context.getAdministrationService().saveGlobalProperty(gp);
 
 		Assertions.assertFalse(section.isEnabled());

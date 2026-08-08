@@ -9,6 +9,7 @@
  */
 package org.openmrs.module.patientdocuments.api.section;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,6 +18,7 @@ import org.openmrs.GlobalProperty;
 import org.openmrs.Visit;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.patientdocuments.api.model.VisitNoteEntry;
+import org.openmrs.module.patientdocuments.testconfig.GlobalPropertyRestorer;
 import org.openmrs.test.jupiter.BaseModuleContextSensitiveTest;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -49,10 +51,18 @@ public class VisitNotesSectionTest extends BaseModuleContextSensitiveTest {
 	private static final String DATASET =
 	    "org/openmrs/module/patientdocuments/include/visitNotesSectionTestDataset.xml";
 
+	private static final String ENABLED_GP = "report.visitSummary.section.visitNotes.enabled";
+
 	private VisitNotesSection section;
+
+	private GlobalPropertyRestorer globalProperties;
 
 	@BeforeEach
 	public void setUp() throws Exception {
+		// Captured before the baselines below overwrite them, so tearDown can put back what
+		// this class found rather than what it assumed.
+		globalProperties = GlobalPropertyRestorer.capture(ENABLED_GP,
+		    VisitNotesSection.NOTE_CONCEPT_PROPERTY, VisitNotesSection.CLINICIAN_ROLE_PROPERTY);
 		executeDataSet(DATASET);
 		// ConfigUtil caches GP values in-memory outside the test transaction; reset the
 		// defaults before each test so a prior test's override does not leak.
@@ -61,6 +71,12 @@ public class VisitNotesSectionTest extends BaseModuleContextSensitiveTest {
 		Context.getAdministrationService().saveGlobalProperty(new GlobalProperty(
 		    VisitNotesSection.CLINICIAN_ROLE_PROPERTY, VisitNotesSection.DEFAULT_CLINICIAN_ROLE));
 		section = new VisitNotesSection();
+	}
+
+	/** Undoes both the baselines above and whatever the test itself wrote. */
+	@AfterEach
+	public void tearDown() {
+		globalProperties.restore();
 	}
 
 	// ── gatherData tests ──────────────────────────────────────────────────────
@@ -315,8 +331,7 @@ public class VisitNotesSectionTest extends BaseModuleContextSensitiveTest {
 
 	@Test
 	public void isEnabled_whenGlobalPropertySetToFalse_returnsFalse() {
-		Context.getAdministrationService().saveGlobalProperty(new GlobalProperty(
-		    "report.visitSummary.section.visitNotes.enabled", "false"));
+		Context.getAdministrationService().saveGlobalProperty(new GlobalProperty(ENABLED_GP, "false"));
 
 		Assertions.assertFalse(section.isEnabled());
 	}

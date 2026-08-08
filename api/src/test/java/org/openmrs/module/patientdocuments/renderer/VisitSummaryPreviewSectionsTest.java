@@ -28,6 +28,8 @@ import org.openmrs.GlobalProperty;
 import org.openmrs.Visit;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.patientdocuments.api.section.VisitSummarySection;
+import org.openmrs.module.patientdocuments.common.PatientDocumentsConstants;
+import org.openmrs.module.patientdocuments.testconfig.GlobalPropertyRestorer;
 import org.openmrs.test.jupiter.BaseModuleContextSensitiveTest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -83,7 +85,7 @@ public class VisitSummaryPreviewSectionsTest extends BaseModuleContextSensitiveT
 	@BeforeEach
 	public void setUp() {
 		Context.setLocale(Locale.ENGLISH);
-		restoreVitalsDefaults();
+		clearSectionOverrides();
 	}
 
 	/**
@@ -93,12 +95,20 @@ public class VisitSummaryPreviewSectionsTest extends BaseModuleContextSensitiveT
 	 */
 	@AfterEach
 	public void tearDown() {
-		restoreVitalsDefaults();
+		clearSectionOverrides();
 	}
 
-	private void restoreVitalsDefaults() {
-		Context.getAdministrationService().saveGlobalProperty(new GlobalProperty(VITALS_ENABLED_GP, "true"));
-		Context.getAdministrationService().saveGlobalProperty(new GlobalProperty(VITALS_ORDER_GP, "300"));
+	/**
+	 * Covers every registered section, not just the one this class reconfigures: these tests
+	 * assert on the whole enabled-and-ordered set, so any section a previously-run class left
+	 * switched off would fail them. Clearing rather than writing known defaults keeps the
+	 * baseline whatever each section itself declares.
+	 */
+	private void clearSectionOverrides() {
+		for (VisitSummarySection section : registeredSections) {
+			String prefix = PatientDocumentsConstants.VISIT_SUMMARY_SECTION_PREFIX + section.getSectionKey();
+			GlobalPropertyRestorer.clear(prefix + ".enabled", prefix + ".order");
+		}
 	}
 
 	private Element renderSample(List<VisitSummarySection> sections) throws Exception {

@@ -58,8 +58,22 @@
 	</privilege>
 	<!-- /Required Privileges -->
 
+	<!-- Global Properties -->
+	<globalProperty>
+		<property>report.visitSummary.size.width</property>
+		<defaultValue>210mm</defaultValue>
+		<description>Paper width for the visit summary PDF. Accepts mm, cm, in or pt (a bare number is read as mm), for example 210mm, 21cm, 8.5in. Defaults to A4 portrait. Page margins and the facility logo scale with this value. An unreadable value falls back to 210mm.</description>
+	</globalProperty>
+
+	<globalProperty>
+		<property>report.visitSummary.size.height</property>
+		<defaultValue>297mm</defaultValue>
+		<description>Paper height for the visit summary PDF. Accepts mm, cm, in or pt (a bare number is read as mm), for example 297mm, 29.7cm, 11in. Defaults to A4 portrait. An unreadable value falls back to 297mm.</description>
+	</globalProperty>
+	<!-- /Global Properties -->
+
 	<!-- Conditional Resources -->
-	
+
 	<!-- /Conditional Resources -->
 
 </module>

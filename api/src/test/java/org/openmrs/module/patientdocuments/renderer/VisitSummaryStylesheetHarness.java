@@ -17,6 +17,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Result;
 import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
@@ -89,11 +90,22 @@ final class VisitSummaryStylesheetHarness {
 		        + " lbl-no-data=\"" + NO_DATA_LABEL + "\">" + sections + "</visitSummary>";
 	}
 
-	/** Transforms through the stylesheet only, yielding the FO tree as text. */
+	/**
+	 * Transforms through the stylesheet only, yielding the FO tree as text.
+	 * <p>
+	 * Serialized without indentation, overriding the stylesheet's {@code indent="yes"}, because
+	 * indentation is the one part of this string that is not the stylesheet's output: JDK 8
+	 * indents by nothing and leaves mixed content on one line, while JDK 9 and later indent by
+	 * four and break mixed content across lines. Unindented, the two agree byte for byte, which
+	 * is what lets the golden comparison mean anything. Nothing is lost by it — the production
+	 * render never serializes the FO at all, it pushes SAX events straight into FOP.
+	 */
 	static String renderToFo(String xml) throws Exception {
 		try (InputStream stylesheet = openStylesheet()) {
 			StringWriter fo = new StringWriter();
-			newTransformer(stylesheet).transform(new StreamSource(new StringReader(xml)), new StreamResult(fo));
+			Transformer transformer = newTransformer(stylesheet);
+			transformer.setOutputProperty(OutputKeys.INDENT, "no");
+			transformer.transform(new StreamSource(new StringReader(xml)), new StreamResult(fo));
 			return fo.toString();
 		}
 	}

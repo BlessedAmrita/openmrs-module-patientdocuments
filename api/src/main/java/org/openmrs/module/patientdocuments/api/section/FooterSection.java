@@ -20,6 +20,12 @@ import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+/**
+ * Audit footer printed on every page.
+ * The sample preview inherits the default renderSampleXml: gatherData() reads only the visit's
+ * Location name, which the transient sample visit carries, plus the current user and time, so
+ * the default already renders the correct footer and no override is needed.
+ */
 @Component
 public class FooterSection extends TypedSection<FooterInfo> {
 

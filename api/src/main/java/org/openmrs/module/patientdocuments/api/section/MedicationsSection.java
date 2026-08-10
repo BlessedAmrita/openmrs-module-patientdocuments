@@ -171,6 +171,27 @@ public class MedicationsSection extends TypedSection<List<MedicationEntry>> {
 		return "";
 	}
 
+	/**
+	 * Sample medications for the preview. Overridden because the real gather resolves the
+	 * drug order type and reads drug, dose-unit and route concepts; the strings here are
+	 * plain display text so no dictionary is involved. Start dates are relative to now.
+	 */
+	@Override
+	protected List<MedicationEntry> gatherSampleData(List<String> notices) {
+		List<MedicationEntry> medications = new ArrayList<>();
+		medications.add(new MedicationEntry(
+		    VisitSummarySampleData.msg("medications.first.name", "Amoxicillin 500mg"),
+		    VisitSummarySampleData.msg("medications.first.dosing", "500 mg, Oral, Three times daily"),
+		    VisitSummarySampleData.msg("medications.first.duration", "7 days"),
+		    formatDate(VisitSummarySampleData.daysAgo(2))));
+		medications.add(new MedicationEntry(
+		    VisitSummarySampleData.msg("medications.second.name", "Paracetamol 500mg"),
+		    VisitSummarySampleData.msg("medications.second.dosing", "1000 mg, Oral, Every 6 hours as needed"),
+		    VisitSummarySampleData.msg("medications.second.duration", "5 days"),
+		    formatDate(VisitSummarySampleData.daysAgo(1))));
+		return medications;
+	}
+
 	@Override
 	protected void renderXml(Document doc, Element root, List<MedicationEntry> medications) {
 		Element section = doc.createElement("medications");

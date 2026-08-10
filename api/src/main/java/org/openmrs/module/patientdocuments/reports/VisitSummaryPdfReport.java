@@ -44,6 +44,7 @@ import org.openmrs.module.patientdocuments.common.PatientDocumentsPrivilegeConst
 import org.openmrs.module.patientdocuments.library.VisitSummaryDataSetDefinition;
 import org.openmrs.module.patientdocuments.library.VisitSummaryDataSetEvaluator;
 import org.openmrs.module.patientdocuments.renderer.VisitSummaryXmlReportRenderer;
+import org.openmrs.util.PrivilegeConstants;
 import org.openmrs.module.reporting.dataset.DataSet;
 import org.openmrs.module.reporting.evaluation.EvaluationContext;
 import org.openmrs.module.reporting.report.ReportData;
@@ -54,6 +55,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.xml.sax.SAXException;
 
+/**
+ * Builds the visit summary PDF: section XML from the renderer, then XSL-FO through FOP.
+ * generateSamplePdf() takes the same two steps with the same renderer, stylesheet and FOP
+ * configuration, differing only in that the XML is built from sample content rather than
+ * from a visit.
+ */
 @Component
 public class VisitSummaryPdfReport {
 
@@ -80,6 +87,32 @@ public class VisitSummaryPdfReport {
 		catch (Exception e) {
 			log.error("Failed to generate visit summary PDF for visit '{}'", visitUuid, e);
 			throw new PdfGenerationException("Failed to generate visit summary PDF for visit: " + visitUuid, e);
+		}
+	}
+
+	/**
+	 * Renders the sample preview PDF for the settings page, through the same renderer,
+	 * stylesheet and FOP configuration as the real summary.
+	 */
+	public byte[] generateSamplePdf() {
+		// GET_GLOBAL_PROPERTIES, not the generate-summary privilege: the preview reads no
+		// patient data and is only reachable from the settings page that this privilege guards.
+		Context.requirePrivilege(PrivilegeConstants.GET_GLOBAL_PROPERTIES);
+
+		try {
+			byte[] xmlBytes = renderSampleToXml();
+			return transformXmlToPdf(xmlBytes);
+		}
+		catch (Exception e) {
+			log.error("Failed to generate visit summary sample preview PDF", e);
+			throw new PdfGenerationException("Failed to generate visit summary sample preview PDF", e);
+		}
+	}
+
+	private byte[] renderSampleToXml() throws IOException {
+		try (ByteArrayOutputStream xmlOutputStream = new ByteArrayOutputStream()) {
+			renderer.renderSample(xmlOutputStream);
+			return xmlOutputStream.toByteArray();
 		}
 	}
 

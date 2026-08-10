@@ -9,6 +9,7 @@
  */
 package org.openmrs.module.patientdocuments.api.section;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,6 +17,7 @@ import org.openmrs.GlobalProperty;
 import org.openmrs.Visit;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.patientdocuments.api.model.Vital;
+import org.openmrs.module.patientdocuments.testconfig.GlobalPropertyRestorer;
 import org.openmrs.test.jupiter.BaseModuleContextSensitiveTest;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -47,17 +49,32 @@ public class VitalsSectionTest extends BaseModuleContextSensitiveTest {
 	private static final String DATASET =
 	    "org/openmrs/module/patientdocuments/include/vitalsSectionTestDataset.xml";
 
+	private static final String ENABLED_GP = "report.visitSummary.section.vitals.enabled";
+
+	private static final String CONCEPTS_GP = "report.visitSummary.vitals.concepts";
+
 	private VitalsSection section;
+
+	private GlobalPropertyRestorer globalProperties;
 
 	@BeforeEach
 	public void setUp() throws Exception {
+		// Captured before the baseline below overwrites it, so tearDown can put back what
+		// this class found rather than what it assumed.
+		globalProperties = GlobalPropertyRestorer.capture(ENABLED_GP, CONCEPTS_GP);
 		executeDataSet(DATASET);
 		// ConfigUtil caches GP values in-memory but does not participate in test
 		// transaction rollbacks. Explicitly save the default before each test so the
 		// cache reflects the correct baseline regardless of what a prior test wrote.
 		Context.getAdministrationService().saveGlobalProperty(
-		    new GlobalProperty("report.visitSummary.vitals.concepts", VitalsSection.DEFAULT_VITAL_CONCEPTS));
+		    new GlobalProperty(CONCEPTS_GP, VitalsSection.DEFAULT_VITAL_CONCEPTS));
 		section = new VitalsSection();
+	}
+
+	/** Undoes both the baseline above and whatever the test itself wrote. */
+	@AfterEach
+	public void tearDown() {
+		globalProperties.restore();
 	}
 
 	// ── gatherData tests ──────────────────────────────────────────────────────
@@ -184,7 +201,7 @@ public class VitalsSectionTest extends BaseModuleContextSensitiveTest {
 	public void gatherData_withValidConceptMapping_resolvesConcept() {
 		// Set concepts GP to only CIEL:5085 (systolic). Visit 101 has systolic obs = 120.
 		// With only systolic present, BP is emitted as "120/? mmHg" (no diastolic concept).
-		GlobalProperty gp = new GlobalProperty("report.visitSummary.vitals.concepts", "CIEL:5085");
+		GlobalProperty gp = new GlobalProperty(CONCEPTS_GP, "CIEL:5085");
 		Context.getAdministrationService().saveGlobalProperty(gp);
 		Visit visit = Context.getVisitService().getVisit(101);
 
@@ -199,8 +216,7 @@ public class VitalsSectionTest extends BaseModuleContextSensitiveTest {
 	public void gatherData_someConceptEntriesUnresolvable_surfacesNoticeAndKeepsGood() {
 		// "BADFORMAT" has no colon separator, "NONEXISTENT:99999" doesn't resolve;
 		// "CIEL:5085" is valid → BP emitted as "120/? mmHg" (systolic-only).
-		GlobalProperty gp = new GlobalProperty(
-		    "report.visitSummary.vitals.concepts", "BADFORMAT,NONEXISTENT:99999,CIEL:5085");
+		GlobalProperty gp = new GlobalProperty(CONCEPTS_GP, "BADFORMAT,NONEXISTENT:99999,CIEL:5085");
 		Context.getAdministrationService().saveGlobalProperty(gp);
 		Visit visit = Context.getVisitService().getVisit(101);
 		List<String> notices = new ArrayList<>();
@@ -220,8 +236,7 @@ public class VitalsSectionTest extends BaseModuleContextSensitiveTest {
 	@Test
 	public void renderXml_someConceptEntriesUnresolvable_emitsNoticeAlongsideData() throws Exception {
 		// The notice must be a sibling of the data element — data renders AND the gap is visible.
-		GlobalProperty gp = new GlobalProperty(
-		    "report.visitSummary.vitals.concepts", "BADFORMAT,CIEL:5085");
+		GlobalProperty gp = new GlobalProperty(CONCEPTS_GP, "BADFORMAT,CIEL:5085");
 		Context.getAdministrationService().saveGlobalProperty(gp);
 		Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
 		Element root = doc.createElement("root");
@@ -245,8 +260,7 @@ public class VitalsSectionTest extends BaseModuleContextSensitiveTest {
 	@Test
 	public void gatherData_allConceptEntriesUnresolvable_throws() {
 		// All entries configured but none resolve — must throw so the error banner fires
-		GlobalProperty gp = new GlobalProperty(
-		    "report.visitSummary.vitals.concepts", "NONEXISTENT:99999");
+		GlobalProperty gp = new GlobalProperty(CONCEPTS_GP, "NONEXISTENT:99999");
 		Context.getAdministrationService().saveGlobalProperty(gp);
 		Visit visit = Context.getVisitService().getVisit(101);
 
@@ -257,8 +271,7 @@ public class VitalsSectionTest extends BaseModuleContextSensitiveTest {
 	@Test
 	public void gatherData_withCustomConceptsGP_overridesDefaults() {
 		// Override the concepts GP to use only the TEST-source custom concept
-		GlobalProperty gp = new GlobalProperty(
-		    "report.visitSummary.vitals.concepts", "TEST:custom001");
+		GlobalProperty gp = new GlobalProperty(CONCEPTS_GP, "TEST:custom001");
 		Context.getAdministrationService().saveGlobalProperty(gp);
 		// Visit 105 has an obs for the custom concept with value 118
 		Visit visit = Context.getVisitService().getVisit(105);
@@ -275,7 +288,7 @@ public class VitalsSectionTest extends BaseModuleContextSensitiveTest {
 		// CIEL:5087 is Heart Rate (concept_id=5005, concept_numeric units="bpm").
 		// Visit 101 has a heart rate obs with value 72.
 		// The unit must be appended from ConceptNumeric.getUnits() → "72 bpm".
-		GlobalProperty gp = new GlobalProperty("report.visitSummary.vitals.concepts", "CIEL:5087");
+		GlobalProperty gp = new GlobalProperty(CONCEPTS_GP, "CIEL:5087");
 		Context.getAdministrationService().saveGlobalProperty(gp);
 		Visit visit = Context.getVisitService().getVisit(101);
 
@@ -336,8 +349,7 @@ public class VitalsSectionTest extends BaseModuleContextSensitiveTest {
 
 	@Test
 	public void isEnabled_whenGlobalPropertySetToFalse_returnsFalse() {
-		GlobalProperty gp = new GlobalProperty(
-		    "report.visitSummary.section.vitals.enabled", "false");
+		GlobalProperty gp = new GlobalProperty(ENABLED_GP, "false");
 		Context.getAdministrationService().saveGlobalProperty(gp);
 
 		Assertions.assertFalse(section.isEnabled());
@@ -345,8 +357,7 @@ public class VitalsSectionTest extends BaseModuleContextSensitiveTest {
 
 	@Test
 	public void isEnabled_whenGlobalPropertySetToTrue_returnsTrue() {
-		GlobalProperty gp = new GlobalProperty(
-		    "report.visitSummary.section.vitals.enabled", "true");
+		GlobalProperty gp = new GlobalProperty(ENABLED_GP, "true");
 		Context.getAdministrationService().saveGlobalProperty(gp);
 
 		Assertions.assertTrue(section.isEnabled());

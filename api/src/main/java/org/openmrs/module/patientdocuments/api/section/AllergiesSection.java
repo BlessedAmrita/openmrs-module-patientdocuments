@@ -93,6 +93,25 @@ public class AllergiesSection extends TypedSection<List<AllergyEntry>> {
 		return reactions.toString();
 	}
 
+	/**
+	 * Sample allergies for the preview. Overridden because the real gather goes through
+	 * the patient service and reads coded allergens and severities from the dictionary;
+	 * everything here is plain display text instead.
+	 */
+	@Override
+	protected List<AllergyEntry> gatherSampleData(List<String> notices) {
+		List<AllergyEntry> allergies = new ArrayList<>();
+		allergies.add(new AllergyEntry(
+		    VisitSummarySampleData.msg("allergies.first.allergen", "Penicillins"),
+		    VisitSummarySampleData.msg("allergies.severity.severe", "Severe"),
+		    VisitSummarySampleData.msg("allergies.first.reactions", "Rash, Anaphylaxis")));
+		allergies.add(new AllergyEntry(
+		    VisitSummarySampleData.msg("allergies.second.allergen", "Peanuts"),
+		    VisitSummarySampleData.msg("allergies.severity.mild", "Mild"),
+		    VisitSummarySampleData.msg("allergies.second.reactions", "Hives")));
+		return allergies;
+	}
+
 	@Override
 	protected void renderXml(Document doc, Element root, List<AllergyEntry> allergies) {
 		Element section = doc.createElement("allergies");

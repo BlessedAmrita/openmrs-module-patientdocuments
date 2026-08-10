@@ -26,6 +26,11 @@ import org.w3c.dom.Element;
 /**
  * Produces the document header: facility logo, name and contact line from the visit's
  * Location, plus the document title and visit date.
+ * <p>
+ * The sample preview inherits the default renderSampleXml: gatherData() reads the visit's
+ * Location, which the transient sample visit carries, and otherwise only global properties,
+ * so it needs no override. The configured logo and phone attribute are deliberately read on
+ * the preview path too — the point of the preview is to show the header as deployed.
  */
 @Slf4j
 @Component

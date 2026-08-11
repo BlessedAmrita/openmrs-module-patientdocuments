@@ -31,6 +31,7 @@ import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import org.apache.commons.lang3.StringUtils;
 import org.openmrs.Visit;
 import org.openmrs.annotation.Handler;
 import org.openmrs.api.context.Context;
@@ -40,6 +41,7 @@ import org.openmrs.util.ConfigUtil;
 import org.openmrs.module.reporting.common.Localized;
 import org.openmrs.module.reporting.dataset.DataSet;
 import org.openmrs.module.reporting.dataset.DataSetRow;
+import org.openmrs.module.reporting.evaluation.EvaluationContext;
 import org.openmrs.module.reporting.report.ReportData;
 import org.openmrs.module.reporting.report.ReportRequest;
 import org.openmrs.module.reporting.report.renderer.RenderingException;
@@ -97,7 +99,7 @@ public class VisitSummaryXmlReportRenderer extends ReportDesignRenderer {
 
 		Element root = doc.createElement("visitSummary");
 		doc.appendChild(root);
-		configurePageDimensions(root);
+		configurePageDimensions(root, results.getContext());
 		configureNoDataLabel(root);
 
 		if (results.getDataSets().containsKey(DATASET_KEY_VISIT_SUMMARY_FIELDS)) {
@@ -150,13 +152,24 @@ public class VisitSummaryXmlReportRenderer extends ReportDesignRenderer {
 	 * rather than the band does not have to re-derive it.
 	 * <p>
 	 * Measured in Java because XSLT 1.0 cannot do unit arithmetic. Emitting the normalised
-	 * value rather than the raw property also keeps an unparseable global property from
+	 * value rather than the raw configuration also keeps an unparseable page size from
 	 * reaching FOP as a page dimension.
+	 * <p>
+	 * Each dimension takes the request override if this render was asked for one, and the
+	 * global property otherwise, so a request naming only one dimension keeps the configured
+	 * default for the other. The context is null on the report-design path, where there is no
+	 * request to override anything.
 	 */
-	private void configurePageDimensions(Element root) {
-		VisitSummaryPageLayout layout = VisitSummaryPageLayout.from(
-				ConfigUtil.getProperty(PatientDocumentsConstants.VISIT_SUMMARY_PAGE_WIDTH_PROPERTY),
-				ConfigUtil.getProperty(PatientDocumentsConstants.VISIT_SUMMARY_PAGE_HEIGHT_PROPERTY));
+	private void configurePageDimensions(Element root, EvaluationContext context) {
+		ConfiguredDimension width = ConfiguredDimension.resolve(context,
+				PatientDocumentsConstants.VISIT_SUMMARY_PAGE_WIDTH_PARAMETER,
+				PatientDocumentsConstants.VISIT_SUMMARY_PAGE_WIDTH_PROPERTY);
+		ConfiguredDimension height = ConfiguredDimension.resolve(context,
+				PatientDocumentsConstants.VISIT_SUMMARY_PAGE_HEIGHT_PARAMETER,
+				PatientDocumentsConstants.VISIT_SUMMARY_PAGE_HEIGHT_PROPERTY);
+
+		VisitSummaryPageLayout layout = VisitSummaryPageLayout.from(width.value, height.value, width.source,
+				height.source);
 
 		root.setAttribute("page-height", layout.getPageHeightAttribute());
 		root.setAttribute("page-width", layout.getPageWidthAttribute());
@@ -165,6 +178,33 @@ public class VisitSummaryXmlReportRenderer extends ReportDesignRenderer {
 		root.setAttribute("logo-graphic-width", layout.getLogoGraphicAttribute());
 		root.setAttribute("content-width-mm", VisitSummaryPageLayout.formatMm(layout.getContentWidthMm()));
 		root.setAttribute("layout-profile", layout.getLayoutProfile());
+	}
+
+	/**
+	 * A raw page dimension paired with the knob it came from. It only picks which of the two
+	 * knobs to read; the value stays raw so that {@link VisitSummaryPageLayout#from} remains
+	 * the only place a page dimension is parsed or validated.
+	 */
+	private static final class ConfiguredDimension {
+
+		private final String value;
+
+		private final String source;
+
+		private ConfiguredDimension(String value, String source) {
+			this.value = value;
+			this.source = source;
+		}
+
+		static ConfiguredDimension resolve(EvaluationContext context, String parameterName, String globalPropertyKey) {
+			Object requested = context == null ? null : context.getParameterValue(parameterName);
+			if (requested != null && StringUtils.isNotBlank(requested.toString())) {
+				return new ConfiguredDimension(requested.toString(),
+						VisitSummaryPageLayout.requestParameterSource(parameterName));
+			}
+			return new ConfiguredDimension(ConfigUtil.getProperty(globalPropertyKey),
+					VisitSummaryPageLayout.globalPropertySource(globalPropertyKey));
+		}
 	}
 
 	private void writeToOutputStream(Document doc, OutputStream out) throws RenderingException {

@@ -113,16 +113,27 @@ public class VisitSummaryPageLayout {
 	/**
 	 * Builds the frame from the two raw global property values. Either may be null, blank or
 	 * unparseable; that dimension falls back to A4.
+	 */
+	public static VisitSummaryPageLayout from(String configuredWidth, String configuredHeight) {
+		return from(configuredWidth, configuredHeight,
+				globalPropertySource(PatientDocumentsConstants.VISIT_SUMMARY_PAGE_WIDTH_PROPERTY),
+				globalPropertySource(PatientDocumentsConstants.VISIT_SUMMARY_PAGE_HEIGHT_PROPERTY));
+	}
+
+	/**
+	 * The one place a page dimension is parsed, whichever knob it came from. The two source
+	 * labels only name that knob in the warnings, so a mis-typed per-request size sends an
+	 * admin to the request rather than to an innocent global property; the validation itself
+	 * does not vary by source.
 	 * <p>
 	 * A size that parses but leaves too little to render takes the whole frame down with it
 	 * rather than the offending dimension alone: a page too small in either direction reaches
 	 * FOP as an unreadable PDF rather than an error, sometimes without even a layout event.
 	 */
-	public static VisitSummaryPageLayout from(String configuredWidth, String configuredHeight) {
-		double widthMm = normaliseToMm(configuredWidth,
-				PatientDocumentsConstants.VISIT_SUMMARY_PAGE_WIDTH_PROPERTY, A4_WIDTH_MM);
-		double heightMm = normaliseToMm(configuredHeight,
-				PatientDocumentsConstants.VISIT_SUMMARY_PAGE_HEIGHT_PROPERTY, A4_HEIGHT_MM);
+	public static VisitSummaryPageLayout from(String configuredWidth, String configuredHeight, String widthSource,
+			String heightSource) {
+		double widthMm = normaliseToMm(configuredWidth, widthSource, A4_WIDTH_MM);
+		double heightMm = normaliseToMm(configuredHeight, heightSource, A4_HEIGHT_MM);
 
 		VisitSummaryPageLayout layout = frameFor(widthMm, heightMm);
 		boolean tooNarrow = layout.contentWidthMm < MIN_CONTENT_WIDTH_MM;
@@ -131,18 +142,26 @@ public class VisitSummaryPageLayout {
 		// Both are reported before returning, so one render tells an admin everything that
 		// is wrong rather than surfacing the second fault only once the first is fixed.
 		if (tooNarrow) {
-			log.warn("Global property '{}' gives a {}mm page with only {}mm of content; "
+			log.warn("Page size from {} gives a {}mm page with only {}mm of content; "
 					+ "falling back to A4 for both page dimensions",
-					PatientDocumentsConstants.VISIT_SUMMARY_PAGE_WIDTH_PROPERTY, formatMm(widthMm),
-					formatMm(layout.contentWidthMm));
+					widthSource, formatMm(widthMm), formatMm(layout.contentWidthMm));
 		}
 		if (tooShort) {
-			log.warn("Global property '{}' gives a {}mm page, below the {}mm its margins and footer need; "
+			log.warn("Page size from {} gives a {}mm page, below the {}mm its margins and footer need; "
 					+ "falling back to A4 for both page dimensions",
-					PatientDocumentsConstants.VISIT_SUMMARY_PAGE_HEIGHT_PROPERTY, formatMm(heightMm),
-					formatMm(MIN_PAGE_HEIGHT_MM));
+					heightSource, formatMm(heightMm), formatMm(MIN_PAGE_HEIGHT_MM));
 		}
 		return (tooNarrow || tooShort) ? frameFor(A4_WIDTH_MM, A4_HEIGHT_MM) : layout;
+	}
+
+	/** Names a global property in the warnings above, e.g. {@code report.visitSummary.size.width}. */
+	static String globalPropertySource(String globalPropertyKey) {
+		return "global property '" + globalPropertyKey + "'";
+	}
+
+	/** Names a per-request override in the warnings above, e.g. {@code pageWidth}. */
+	static String requestParameterSource(String parameterName) {
+		return "request parameter '" + parameterName + "'";
 	}
 
 	private static VisitSummaryPageLayout frameFor(double widthMm, double heightMm) {
@@ -161,10 +180,10 @@ public class VisitSummaryPageLayout {
 	 * millimetres.
 	 * <p>
 	 * A typo, or a length that is not a finite positive number, warns and falls back rather
-	 * than failing the render, naming the offending key and value. An unset or blank property
+	 * than failing the render, naming the offending source and value. An unset or blank value
 	 * is not a mistake and takes the same fallback silently.
 	 */
-	static double normaliseToMm(String value, String globalPropertyKey, double fallbackMm) {
+	static double normaliseToMm(String value, String source, double fallbackMm) {
 		// Locale.ROOT, not the user's locale: a Turkish locale lower-cases "IN" to a
 		// dotless i and the unit would stop matching.
 		String parsable = value == null ? "" : value.trim().toLowerCase(Locale.ROOT);
@@ -196,8 +215,7 @@ public class VisitSummaryPageLayout {
 			// Falls through to the warning below.
 		}
 
-		log.warn("Global property '{}' has invalid page size '{}'; defaulting to {}mm",
-				globalPropertyKey, value, fallbackMm);
+		log.warn("Invalid page size '{}' from {}; defaulting to {}mm", value, source, formatMm(fallbackMm));
 		return fallbackMm;
 	}
 

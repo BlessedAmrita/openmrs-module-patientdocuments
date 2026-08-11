@@ -22,47 +22,49 @@ public class VisitSummaryPageLayoutTest {
 
 	private static final String WIDTH_KEY = "report.visitSummary.size.width";
 
+	private static final String WIDTH_SOURCE = VisitSummaryPageLayout.globalPropertySource(WIDTH_KEY);
+
 	@Test
 	public void normaliseToMm_acceptsMillimetres() {
-		Assertions.assertEquals(210d, VisitSummaryPageLayout.normaliseToMm("210mm", WIDTH_KEY, 1d), TOLERANCE);
+		Assertions.assertEquals(210d, VisitSummaryPageLayout.normaliseToMm("210mm", WIDTH_SOURCE, 1d), TOLERANCE);
 	}
 
 	@Test
 	public void normaliseToMm_acceptsCentimetres() {
-		Assertions.assertEquals(210d, VisitSummaryPageLayout.normaliseToMm("21cm", WIDTH_KEY, 1d), TOLERANCE);
+		Assertions.assertEquals(210d, VisitSummaryPageLayout.normaliseToMm("21cm", WIDTH_SOURCE, 1d), TOLERANCE);
 	}
 
 	@Test
 	public void normaliseToMm_acceptsInches() {
-		Assertions.assertEquals(215.9d, VisitSummaryPageLayout.normaliseToMm("8.5in", WIDTH_KEY, 1d), TOLERANCE);
+		Assertions.assertEquals(215.9d, VisitSummaryPageLayout.normaliseToMm("8.5in", WIDTH_SOURCE, 1d), TOLERANCE);
 	}
 
 	@Test
 	public void normaliseToMm_acceptsPoints() {
-		Assertions.assertEquals(25.4d, VisitSummaryPageLayout.normaliseToMm("72pt", WIDTH_KEY, 1d), TOLERANCE);
+		Assertions.assertEquals(25.4d, VisitSummaryPageLayout.normaliseToMm("72pt", WIDTH_SOURCE, 1d), TOLERANCE);
 	}
 
 	@Test
 	public void normaliseToMm_readsBareNumberAsMillimetres() {
-		Assertions.assertEquals(148d, VisitSummaryPageLayout.normaliseToMm("148", WIDTH_KEY, 1d), TOLERANCE);
+		Assertions.assertEquals(148d, VisitSummaryPageLayout.normaliseToMm("148", WIDTH_SOURCE, 1d), TOLERANCE);
 	}
 
 	@Test
 	public void normaliseToMm_isCaseAndWhitespaceInsensitive() {
-		Assertions.assertEquals(210d, VisitSummaryPageLayout.normaliseToMm("  21 CM ", WIDTH_KEY, 1d), TOLERANCE);
+		Assertions.assertEquals(210d, VisitSummaryPageLayout.normaliseToMm("  21 CM ", WIDTH_SOURCE, 1d), TOLERANCE);
 	}
 
 	@Test
 	public void normaliseToMm_fallsBackOnGarbage() {
 		Assertions.assertEquals(VisitSummaryPageLayout.A4_WIDTH_MM,
-		    VisitSummaryPageLayout.normaliseToMm("wide please", WIDTH_KEY, VisitSummaryPageLayout.A4_WIDTH_MM),
+		    VisitSummaryPageLayout.normaliseToMm("wide please", WIDTH_SOURCE, VisitSummaryPageLayout.A4_WIDTH_MM),
 		    TOLERANCE);
 	}
 
 	@Test
 	public void normaliseToMm_fallsBackOnUnknownUnit() {
 		Assertions.assertEquals(VisitSummaryPageLayout.A4_WIDTH_MM,
-		    VisitSummaryPageLayout.normaliseToMm("210px", WIDTH_KEY, VisitSummaryPageLayout.A4_WIDTH_MM),
+		    VisitSummaryPageLayout.normaliseToMm("210px", WIDTH_SOURCE, VisitSummaryPageLayout.A4_WIDTH_MM),
 		    TOLERANCE);
 	}
 
@@ -70,9 +72,9 @@ public class VisitSummaryPageLayoutTest {
 	@Test
 	public void normaliseToMm_fallsBackOnNonPositiveLength() {
 		Assertions.assertEquals(VisitSummaryPageLayout.A4_WIDTH_MM,
-		    VisitSummaryPageLayout.normaliseToMm("0mm", WIDTH_KEY, VisitSummaryPageLayout.A4_WIDTH_MM), TOLERANCE);
+		    VisitSummaryPageLayout.normaliseToMm("0mm", WIDTH_SOURCE, VisitSummaryPageLayout.A4_WIDTH_MM), TOLERANCE);
 		Assertions.assertEquals(VisitSummaryPageLayout.A4_WIDTH_MM,
-		    VisitSummaryPageLayout.normaliseToMm("-50mm", WIDTH_KEY, VisitSummaryPageLayout.A4_WIDTH_MM),
+		    VisitSummaryPageLayout.normaliseToMm("-50mm", WIDTH_SOURCE, VisitSummaryPageLayout.A4_WIDTH_MM),
 		    TOLERANCE);
 	}
 
@@ -80,19 +82,19 @@ public class VisitSummaryPageLayoutTest {
 	@Test
 	public void normaliseToMm_fallsBackOnNonFiniteLength() {
 		Assertions.assertEquals(VisitSummaryPageLayout.A4_WIDTH_MM,
-		    VisitSummaryPageLayout.normaliseToMm("Infinity", WIDTH_KEY, VisitSummaryPageLayout.A4_WIDTH_MM),
+		    VisitSummaryPageLayout.normaliseToMm("Infinity", WIDTH_SOURCE, VisitSummaryPageLayout.A4_WIDTH_MM),
 		    TOLERANCE);
 		Assertions.assertEquals(VisitSummaryPageLayout.A4_WIDTH_MM,
-		    VisitSummaryPageLayout.normaliseToMm("NaNmm", WIDTH_KEY, VisitSummaryPageLayout.A4_WIDTH_MM),
+		    VisitSummaryPageLayout.normaliseToMm("NaNmm", WIDTH_SOURCE, VisitSummaryPageLayout.A4_WIDTH_MM),
 		    TOLERANCE);
 	}
 
 	@Test
 	public void normaliseToMm_fallsBackWhenUnset() {
 		Assertions.assertEquals(VisitSummaryPageLayout.A4_WIDTH_MM,
-		    VisitSummaryPageLayout.normaliseToMm(null, WIDTH_KEY, VisitSummaryPageLayout.A4_WIDTH_MM), TOLERANCE);
+		    VisitSummaryPageLayout.normaliseToMm(null, WIDTH_SOURCE, VisitSummaryPageLayout.A4_WIDTH_MM), TOLERANCE);
 		Assertions.assertEquals(VisitSummaryPageLayout.A4_WIDTH_MM,
-		    VisitSummaryPageLayout.normaliseToMm("   ", WIDTH_KEY, VisitSummaryPageLayout.A4_WIDTH_MM), TOLERANCE);
+		    VisitSummaryPageLayout.normaliseToMm("   ", WIDTH_SOURCE, VisitSummaryPageLayout.A4_WIDTH_MM), TOLERANCE);
 	}
 
 	/** The A4 equivalence claim: same dimensions the stylesheet hardcoded, formatted the same way. */
@@ -292,5 +294,41 @@ public class VisitSummaryPageLayoutTest {
 		Assertions.assertEquals("15", VisitSummaryPageLayout.formatMm(15d));
 		Assertions.assertEquals("10.57", VisitSummaryPageLayout.formatMm(148d / 14d));
 		Assertions.assertEquals("0.5", VisitSummaryPageLayout.formatMm(0.5d));
+	}
+
+	/**
+	 * The source labels only name the knob a bad size came from, so a mis-typed per-request
+	 * size does not send an admin hunting an innocent global property.
+	 */
+	@Test
+	public void globalPropertySource_namesTheProperty() {
+		Assertions.assertEquals("global property 'report.visitSummary.size.width'",
+		    VisitSummaryPageLayout.globalPropertySource(WIDTH_KEY));
+	}
+
+	@Test
+	public void requestParameterSource_namesTheParameter() {
+		Assertions.assertEquals("request parameter 'pageWidth'",
+		    VisitSummaryPageLayout.requestParameterSource("pageWidth"));
+	}
+
+	/**
+	 * The single-validation-path claim: the source label is a diagnostic string and nothing
+	 * else, so a per-request size is judged exactly as the same value in a global property is.
+	 */
+	@Test
+	public void from_validatesARequestSourcedSizeIdenticallyToAConfiguredOne() {
+		String requestWidth = VisitSummaryPageLayout.requestParameterSource("pageWidth");
+		String requestHeight = VisitSummaryPageLayout.requestParameterSource("pageHeight");
+
+		for (String[] size : new String[][] { { "148mm", "210mm" }, { "wide please", "297mm" },
+		        { "5mm", "297mm" }, { "210mm", "10mm" }, { null, null } }) {
+			VisitSummaryPageLayout configured = VisitSummaryPageLayout.from(size[0], size[1]);
+			VisitSummaryPageLayout requested = VisitSummaryPageLayout.from(size[0], size[1], requestWidth,
+			    requestHeight);
+
+			Assertions.assertEquals(configured, requested,
+			    "a per-request '" + size[0] + "' x '" + size[1] + "' must derive the same frame");
+		}
 	}
 }

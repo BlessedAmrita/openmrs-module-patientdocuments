@@ -9,6 +9,7 @@
  */
 package org.openmrs.module.patientdocuments.api.section;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,6 +19,7 @@ import org.openmrs.api.context.Context;
 import org.openmrs.module.patientdocuments.api.model.LabResult;
 import org.openmrs.module.patientdocuments.api.model.LabResultGroup;
 import org.openmrs.module.patientdocuments.api.model.LabResultsData;
+import org.openmrs.module.patientdocuments.testconfig.GlobalPropertyRestorer;
 import org.openmrs.test.jupiter.BaseModuleContextSensitiveTest;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -53,16 +55,30 @@ public class LabResultsSectionTest extends BaseModuleContextSensitiveTest {
 	private static final String DATASET =
 	    "org/openmrs/module/patientdocuments/include/labResultsSectionTestDataset.xml";
 
+	private static final String ENABLED_GP = "report.visitSummary.section.labResults.enabled";
+
 	private LabResultsSection section;
+
+	private GlobalPropertyRestorer globalProperties;
 
 	@BeforeEach
 	public void setUp() throws Exception {
+		// Captured before the baseline below overwrites it, so tearDown can put back what
+		// this class found rather than what it assumed.
+		globalProperties = GlobalPropertyRestorer.capture(ENABLED_GP,
+		    LabResultsSection.CONCEPT_CLASSES_PROPERTY);
 		executeDataSet(DATASET);
 		// ConfigUtil caches GP values in-memory outside the test transaction; reset the
 		// default before each test so a prior test's override does not leak.
 		Context.getAdministrationService().saveGlobalProperty(new GlobalProperty(
 		    LabResultsSection.CONCEPT_CLASSES_PROPERTY, LabResultsSection.DEFAULT_LAB_CONCEPT_CLASSES));
 		section = new LabResultsSection();
+	}
+
+	/** Undoes both the baseline above and whatever the test itself wrote. */
+	@AfterEach
+	public void tearDown() {
+		globalProperties.restore();
 	}
 
 	private LabResult findStandalone(LabResultsData data, String name) {
@@ -464,8 +480,7 @@ public class LabResultsSectionTest extends BaseModuleContextSensitiveTest {
 
 	@Test
 	public void isEnabled_whenGlobalPropertySetToFalse_returnsFalse() {
-		Context.getAdministrationService().saveGlobalProperty(new GlobalProperty(
-		    "report.visitSummary.section.labResults.enabled", "false"));
+		Context.getAdministrationService().saveGlobalProperty(new GlobalProperty(ENABLED_GP, "false"));
 
 		Assertions.assertFalse(section.isEnabled());
 	}

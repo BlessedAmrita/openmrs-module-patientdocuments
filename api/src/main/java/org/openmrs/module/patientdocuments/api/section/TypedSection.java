@@ -23,6 +23,7 @@ import org.w3c.dom.Element;
  * Subclasses implement typed gatherData() and renderXml(doc, root, T) separately.
  * The VisitSummarySection interface remains open for implementations that don't
  * fit the typed flow (e.g. sections that stream data or delegate to sub-renderers).
+ * The sample preview reuses the same typed renderXml(): see gatherSampleData().
  */
 @Slf4j
 public abstract class TypedSection<T> extends AbstractVisitSummarySection {
@@ -74,6 +75,33 @@ public abstract class TypedSection<T> extends AbstractVisitSummarySection {
 			errorEl.setAttribute("message", msg("patientdocuments.visitSummary.common.sectionError",
 					"Unable to load data for this section"));
 			root.appendChild(errorEl);
+		}
+	}
+
+	/**
+	 * Sample content for this section, for the settings-page preview.
+	 * The default runs the real gather against the transient sample Visit, so a section
+	 * that reads the visit object graph is populated without writing any sample code.
+	 * Sections that gather through a service should override and return in-memory data
+	 * instead — that keeps the preview off the database and out of the concept dictionary.
+	 * Returning null skips the section, exactly as on the real path; throwing surfaces as
+	 * a visible section-error, so a broken sample is never silently dropped.
+	 */
+	protected T gatherSampleData(List<String> notices) {
+		return gatherData(VisitSummarySampleData.newSampleVisit(), notices);
+	}
+
+	/**
+	 * Renders sample content through the same typed renderXml() the real path uses, so
+	 * the preview cannot drift from the real layout. Exceptions deliberately propagate:
+	 * the preview renderer catches them uniformly, covering non-TypedSection
+	 * implementations too.
+	 */
+	@Override
+	public void renderSampleXml(Document doc, Element root, List<String> notices) {
+		T data = gatherSampleData(notices);
+		if (data != null) {
+			renderXml(doc, root, data);
 		}
 	}
 }

@@ -11,15 +11,12 @@ package org.openmrs.module.patientdocuments.renderer;
 
 import static org.openmrs.module.patientdocuments.reports.VisitSummaryReportManager.DATASET_KEY_VISIT_SUMMARY_FIELDS;
 
-import lombok.extern.slf4j.Slf4j;
-
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
@@ -31,10 +28,13 @@ import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import lombok.extern.slf4j.Slf4j;
+
 import org.apache.commons.lang3.StringUtils;
 import org.openmrs.Visit;
 import org.openmrs.annotation.Handler;
 import org.openmrs.api.context.Context;
+import org.openmrs.module.patientdocuments.api.section.VisitSummarySampleData;
 import org.openmrs.module.patientdocuments.api.section.VisitSummarySection;
 import org.openmrs.module.patientdocuments.common.PatientDocumentsConstants;
 import org.openmrs.util.ConfigUtil;
@@ -51,19 +51,31 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /**
  * ReportRenderer that iterates enabled sections sorted by each section's
  * configurable getOrder() value, delegating all XML construction to each
  * section's renderXml().
+ * <p>
+ * renderSample() produces the same document from the same section list, through the
+ * same enabled-and-ordered filter, but calls each section's renderSampleXml() instead —
+ * so the settings-page preview cannot drift from the real summary's configuration.
  */
-@Slf4j
 @Component
 @Handler
 @Localized("patientdocuments.visitSummaryXmlReportRenderer")
+@Slf4j
 public class VisitSummaryXmlReportRenderer extends ReportDesignRenderer {
 
 	private static final String NO_DATA_MESSAGE_KEY = "patientdocuments.visitSummary.common.noDataRecorded";
+
+	static final String PREVIEW_NOTICE_KEY = "patientdocuments.visitSummary.preview.notice";
+
+	static final String PREVIEW_EMPTY_SECTION_KEY = "patientdocuments.visitSummary.preview.emptySection";
+
+	static final String PREVIEW_NO_SECTIONS_KEY = "patientdocuments.visitSummary.preview.noSections";
 
 	@Autowired(required = false)
 	private List<VisitSummarySection> sections;
@@ -86,21 +98,10 @@ public class VisitSummaryXmlReportRenderer extends ReportDesignRenderer {
 
 	@Override
 	public void render(ReportData results, String argument, OutputStream out) throws IOException, RenderingException {
-		DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
-		DocumentBuilder docBuilder;
-		try {
-			docBuilder = docFactory.newDocumentBuilder();
-		}
-		catch (ParserConfigurationException e) {
-			throw new RenderingException(e.getLocalizedMessage(), e);
-		}
-
-		Document doc = docBuilder.newDocument();
-
-		Element root = doc.createElement("visitSummary");
-		doc.appendChild(root);
-		configurePageDimensions(root, results.getContext());
-		configureNoDataLabel(root);
+		Document doc = newDocument();
+		// The evaluation context carries any per-request page-size override; it is null on
+		// the report-design path, where the global properties decide.
+		Element root = newRoot(doc, results.getContext());
 
 		if (results.getDataSets().containsKey(DATASET_KEY_VISIT_SUMMARY_FIELDS)) {
 			DataSet dataSet = results.getDataSets().get(DATASET_KEY_VISIT_SUMMARY_FIELDS);
@@ -115,16 +116,135 @@ public class VisitSummaryXmlReportRenderer extends ReportDesignRenderer {
 		writeToOutputStream(doc, out);
 	}
 
-	private void buildXmlFromVisit(Document doc, Element root, Visit visit) {
-		if (sections != null) {
-			List<VisitSummarySection> ordered = new ArrayList<>(sections);
-			ordered.sort(Comparator.comparingInt(VisitSummarySection::getOrder));
-			for (VisitSummarySection section : ordered) {
-				if (section.isEnabled()) {
-					section.renderXml(doc, root, visit);
-				}
+	/**
+	 * Renders the sample preview XML: the same document shell and the same enabled,
+	 * ordered section list as render(), with each section asked for sample content.
+	 * No Visit is loaded — sections are handed in-memory sample data only.
+	 */
+	public void renderSample(OutputStream out) throws RenderingException {
+		Document doc = newDocument();
+		Element root = newRoot(doc, null);
+
+		// Leads the document so nobody mistakes a preview for a patient record. Reuses the
+		// existing section-notice element rather than adding a preview-only visual.
+		appendNotice(doc, root, null, VisitSummarySampleData.message(PREVIEW_NOTICE_KEY,
+		    "Sample preview — example data only, not a patient record"));
+
+		List<VisitSummarySection> enabled = getEnabledSectionsInOrder();
+		if (enabled.isEmpty()) {
+			// An empty preview would read as "the summary looks like nothing", which is a very
+			// different problem from "no section is switched on". Say which one it is.
+			appendNotice(doc, root, null, VisitSummarySampleData.message(PREVIEW_NO_SECTIONS_KEY,
+			    "No visit summary sections are registered or enabled"));
+		}
+		for (VisitSummarySection section : enabled) {
+			renderSampleSection(doc, root, section);
+		}
+
+		writeToOutputStream(doc, out);
+	}
+
+	/**
+	 * Renders one section's sample content, guaranteeing it is visible either way: a
+	 * throwing section becomes a section-error, and a section that contributes nothing at
+	 * all becomes a section-notice, so no configured section can silently vanish from the
+	 * preview. Sections are caught individually so one failure cannot take out the rest.
+	 */
+	private void renderSampleSection(Document doc, Element root, VisitSummarySection section) {
+		List<String> notices = new ArrayList<>();
+		int childrenBefore = countElements(root);
+		boolean failed = false;
+		try {
+			section.renderSampleXml(doc, root, notices);
+		}
+		catch (Exception e) {
+			log.error("Section '{}' failed to render sample content", section.getSectionKey(), e);
+			failed = true;
+		}
+
+		if (failed) {
+			Element errorEl = doc.createElement("section-error");
+			errorEl.setAttribute("key", section.getSectionKey());
+			errorEl.setAttribute("message", VisitSummarySampleData.message(
+			    "patientdocuments.visitSummary.common.sectionError", "Unable to load data for this section"));
+			root.appendChild(errorEl);
+		} else if (countElements(root) == childrenBefore && notices.isEmpty()) {
+			notices.add(VisitSummarySampleData.message(PREVIEW_EMPTY_SECTION_KEY,
+			    "This section produced no sample content"));
+		}
+
+		for (String message : notices) {
+			appendNotice(doc, root, section.getSectionKey(), message);
+		}
+	}
+
+	private void appendNotice(Document doc, Element root, String sectionKey, String message) {
+		Element noticeEl = doc.createElement("section-notice");
+		if (sectionKey != null) {
+			noticeEl.setAttribute("key", sectionKey);
+		}
+		noticeEl.setAttribute("message", message);
+		root.appendChild(noticeEl);
+	}
+
+	private int countElements(Element root) {
+		int count = 0;
+		NodeList children = root.getChildNodes();
+		for (int i = 0; i < children.getLength(); i++) {
+			if (children.item(i).getNodeType() == Node.ELEMENT_NODE) {
+				count++;
 			}
 		}
+		return count;
+	}
+
+	private void buildXmlFromVisit(Document doc, Element root, Visit visit) {
+		for (VisitSummarySection section : getEnabledSectionsInOrder()) {
+			section.renderXml(doc, root, visit);
+		}
+	}
+
+	/**
+	 * The single sort-and-filter both the real summary and the preview go through, so a
+	 * disabled section is absent from both and a reordering shows up in both.
+	 */
+	private List<VisitSummarySection> getEnabledSectionsInOrder() {
+		if (sections == null) {
+			return new ArrayList<>();
+		}
+		List<VisitSummarySection> ordered = new ArrayList<>();
+		for (VisitSummarySection section : sections) {
+			if (section.isEnabled()) {
+				ordered.add(section);
+			}
+		}
+		ordered.sort(Comparator.comparingInt(VisitSummarySection::getOrder));
+		return ordered;
+	}
+
+	private Document newDocument() throws RenderingException {
+		try {
+			return DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+		}
+		catch (ParserConfigurationException e) {
+			throw new RenderingException(e.getLocalizedMessage(), e);
+		}
+	}
+
+	/**
+	 * Builds the shared document shell. Both render() and renderSample() go through here,
+	 * so the preview gets the same page dimensions and empty-state label as the real PDF.
+	 * <p>
+	 * The context carries a per-request page-size override where there is one. The preview
+	 * passes null: it is rendered from the settings page, not from an export request, so it
+	 * shows the configured default paper.
+	 */
+	private Element newRoot(Document doc, EvaluationContext context) {
+		Element root = doc.createElement("visitSummary");
+		doc.appendChild(root);
+		configurePageDimensions(root, context);
+		configureNoDataLabel(root);
+		return root;
 	}
 
 	/**

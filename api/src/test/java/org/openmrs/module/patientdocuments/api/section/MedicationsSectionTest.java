@@ -9,6 +9,7 @@
  */
 package org.openmrs.module.patientdocuments.api.section;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,6 +20,7 @@ import org.openmrs.OrderType;
 import org.openmrs.Visit;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.patientdocuments.api.model.MedicationEntry;
+import org.openmrs.module.patientdocuments.testconfig.GlobalPropertyRestorer;
 import org.openmrs.test.jupiter.BaseModuleContextSensitiveTest;
 import org.springframework.validation.Errors;
 import org.w3c.dom.Document;
@@ -56,17 +58,29 @@ public class MedicationsSectionTest extends BaseModuleContextSensitiveTest {
 	private static final String DATASET =
 	    "org/openmrs/module/patientdocuments/include/medicationsSectionTestDataset.xml";
 
+	private static final String ENABLED_GP = "report.visitSummary.section.medications.enabled";
+
 	private MedicationsSection section;
+
+	private GlobalPropertyRestorer globalProperties;
 
 	@BeforeEach
 	public void setUp() throws Exception {
+		// Captured before the baseline below overwrites it, so tearDown can put back what
+		// this class found rather than what it assumed.
+		globalProperties = GlobalPropertyRestorer.capture(ENABLED_GP);
 		executeDataSet(DATASET);
 		// ConfigUtil caches GP values in-memory but does not participate in test
 		// transaction rollbacks. Explicitly save the default before each test so the
 		// cache reflects the correct baseline regardless of what a prior test wrote.
-		Context.getAdministrationService().saveGlobalProperty(
-		    new GlobalProperty("report.visitSummary.section.medications.enabled", "true"));
+		Context.getAdministrationService().saveGlobalProperty(new GlobalProperty(ENABLED_GP, "true"));
 		section = new MedicationsSection();
+	}
+
+	/** Undoes both the baseline above and whatever the test itself wrote. */
+	@AfterEach
+	public void tearDown() {
+		globalProperties.restore();
 	}
 
 	private MedicationEntry findByName(List<MedicationEntry> meds, String name) {
@@ -319,8 +333,7 @@ public class MedicationsSectionTest extends BaseModuleContextSensitiveTest {
 
 	@Test
 	public void isEnabled_whenGlobalPropertySetToFalse_returnsFalse() {
-		GlobalProperty gp = new GlobalProperty(
-		    "report.visitSummary.section.medications.enabled", "false");
+		GlobalProperty gp = new GlobalProperty(ENABLED_GP, "false");
 		Context.getAdministrationService().saveGlobalProperty(gp);
 
 		Assertions.assertFalse(section.isEnabled());

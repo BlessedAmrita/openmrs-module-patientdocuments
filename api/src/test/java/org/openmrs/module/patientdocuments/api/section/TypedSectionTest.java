@@ -17,15 +17,17 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import javax.xml.parsers.DocumentBuilderFactory;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import static org.mockito.Mockito.mock;
 
 /**
- * Unit tests for the TypedSection gather→render orchestration.
- * No Spring context is needed: the only Context call (the msg() lookup for the
- * error banner) falls back safely when no context is open.
+ * Unit tests for the TypedSection gather→render orchestration, on both the real path
+ * (gatherData from a visit) and the sample path (gatherSampleData for the preview).
+ * No Spring context is needed: the only Context calls (the msg() lookup for the error
+ * banner and the sample text lookups) fall back safely when no context is open.
  */
 public class TypedSectionTest {
 
@@ -53,6 +55,8 @@ public class TypedSectionTest {
 
 		private final boolean renderShouldThrow;
 
+		private Visit gatheredFrom;
+
 		TestSection(List<String> data, boolean gatherThrows, boolean renderThrows) {
 			this.dataToReturn = data;
 			this.gatherShouldThrow = gatherThrows;
@@ -66,6 +70,7 @@ public class TypedSectionTest {
 
 		@Override
 		protected List<String> gatherData(Visit visit) {
+			gatheredFrom = visit;
 			if (gatherShouldThrow) {
 				throw new RuntimeException("gatherData failed");
 			}
@@ -124,5 +129,34 @@ public class TypedSectionTest {
 		Element errorEl = (Element) root.getChildNodes().item(0);
 		Assertions.assertEquals("section-error", errorEl.getNodeName());
 		Assertions.assertEquals("test", errorEl.getAttribute("key"));
+	}
+
+	@Test
+	public void renderSampleXml_shouldRenderThroughTheRealTypedRenderXml() {
+		TestSection section = new TestSection(Collections.singletonList("item"), false, false);
+
+		section.renderSampleXml(doc, root, new ArrayList<>());
+
+		Assertions.assertEquals(1, root.getChildNodes().getLength());
+		Assertions.assertEquals("test-item", root.getChildNodes().item(0).getNodeName());
+	}
+
+	@Test
+	public void renderSampleXml_shouldGatherFromATransientSampleVisitNeverALoadedOne() {
+		TestSection section = new TestSection(Collections.singletonList("item"), false, false);
+
+		section.renderSampleXml(doc, root, new ArrayList<>());
+
+		Assertions.assertNotNull(section.gatheredFrom, "The default must delegate to gatherData");
+		Assertions.assertNull(section.gatheredFrom.getVisitId(), "The sample visit must not come from the database");
+		Assertions.assertNotNull(section.gatheredFrom.getPatient(), "The sample visit must be populated");
+	}
+
+	@Test
+	public void renderSampleXml_shouldPropagateFailuresSoTheCallerCanMakeThemVisible() {
+		TestSection section = new TestSection(null, true, false);
+
+		Assertions.assertThrows(RuntimeException.class,
+		    () -> section.renderSampleXml(doc, root, new ArrayList<>()));
 	}
 }

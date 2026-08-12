@@ -202,6 +202,24 @@ public class VisitNotesSection extends TypedSection<List<VisitNoteEntry>> {
 		return role;
 	}
 
+	/**
+	 * Sample visit note for the preview. Overridden because the real gather resolves the
+	 * note concept mapping and the clinician encounter role; the note text and provider
+	 * here are plain display text, and the timestamp is relative to now.
+	 */
+	@Override
+	protected List<VisitNoteEntry> gatherSampleData(List<String> notices) {
+		List<VisitNoteEntry> notes = new ArrayList<>();
+		notes.add(new VisitNoteEntry(
+		    VisitSummarySampleData.msg("visitNotes.text",
+		        "Patient presented with fever and headache for three days. "
+		            + "Examination unremarkable apart from mild pallor. "
+		            + "Treatment started and review arranged for next week."),
+		    VisitSummarySampleData.msg("visitNotes.provider", "Sample Clinician"),
+		    new SimpleDateFormat("yyyy-MM-dd HH:mm").format(VisitSummarySampleData.hoursAgo(2))));
+		return notes;
+	}
+
 	@Override
 	protected void renderXml(Document doc, Element root, List<VisitNoteEntry> data) {
 		Element section = doc.createElement("visitNotes");

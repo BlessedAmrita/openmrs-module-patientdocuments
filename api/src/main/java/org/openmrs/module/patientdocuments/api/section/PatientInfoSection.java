@@ -18,6 +18,11 @@ import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+/**
+ * Patient and visit identity block.
+ * The sample preview inherits the default renderSampleXml: gatherData() reads only the
+ * visit and its patient, both present on the transient sample visit, so no override is needed.
+ */
 @Component
 public class PatientInfoSection extends TypedSection<PatientVisitInfo> {
 

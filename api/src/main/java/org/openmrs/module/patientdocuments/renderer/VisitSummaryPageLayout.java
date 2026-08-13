@@ -76,6 +76,21 @@ public class VisitSummaryPageLayout {
 	private static final double MIN_PAGE_HEIGHT_MM = 60d;
 
 	/**
+	 * The ceiling both dimensions share, applied to the page itself rather than a derived box.
+	 * FOP converts a length to millipoints with {@code (int) (mm * 2834.64567)}, and a
+	 * double-to-int cast in Java saturates rather than wrapping, so past roughly 757 metres the
+	 * page box pins silently to Integer.MAX_VALUE and the configured size stops meaning
+	 * anything. 5080mm is 200 inches, where the PDF page box itself stops, so nothing below this
+	 * loses a size a reader could have honoured anyway.
+	 */
+	private static final double MAX_PAGE_SIDE_MM = 5080d;
+
+	private static final String A4_FALLBACK_NOTE = "; falling back to A4 for both page dimensions";
+
+	private static final String OVERSIZE_WARNING = "Page size from {} gives a {}mm page, above the {}mm "
+			+ "a PDF page box can hold" + A4_FALLBACK_NOTE;
+
+	/**
 	 * Layout profile bands, measured against the content width rather than the page width so
 	 * usable space decides the profile, not paper size: A4 gives 180mm and US Letter 185mm,
 	 * A5 portrait ~127mm, an 80mm receipt roll ~69mm.
@@ -126,9 +141,11 @@ public class VisitSummaryPageLayout {
 	 * admin to the request rather than to an innocent global property; the validation itself
 	 * does not vary by source.
 	 * <p>
-	 * A size that parses but leaves too little to render takes the whole frame down with it
-	 * rather than the offending dimension alone: a page too small in either direction reaches
-	 * FOP as an unreadable PDF rather than an error, sometimes without even a layout event.
+	 * A size that parses but leaves nothing renderable takes the whole frame down with it rather
+	 * than the offending dimension alone, at both ends of the range: a page too small in either
+	 * direction reaches FOP as an unreadable PDF rather than an error, sometimes without even a
+	 * layout event, and a page too large stops being measurable at all once FOP's millipoint
+	 * conversion saturates.
 	 */
 	public static VisitSummaryPageLayout from(String configuredWidth, String configuredHeight, String widthSource,
 			String heightSource) {
@@ -138,20 +155,27 @@ public class VisitSummaryPageLayout {
 		VisitSummaryPageLayout layout = frameFor(widthMm, heightMm);
 		boolean tooNarrow = layout.contentWidthMm < MIN_CONTENT_WIDTH_MM;
 		boolean tooShort = heightMm < MIN_PAGE_HEIGHT_MM;
+		boolean tooWide = widthMm > MAX_PAGE_SIDE_MM;
+		boolean tooTall = heightMm > MAX_PAGE_SIDE_MM;
 
-		// Both are reported before returning, so one render tells an admin everything that
+		// All are reported before returning, so one render tells an admin everything that
 		// is wrong rather than surfacing the second fault only once the first is fixed.
 		if (tooNarrow) {
-			log.warn("Page size from {} gives a {}mm page with only {}mm of content; "
-					+ "falling back to A4 for both page dimensions",
+			log.warn("Page size from {} gives a {}mm page with only {}mm of content" + A4_FALLBACK_NOTE,
 					widthSource, formatMm(widthMm), formatMm(layout.contentWidthMm));
 		}
 		if (tooShort) {
-			log.warn("Page size from {} gives a {}mm page, below the {}mm its margins and footer need; "
-					+ "falling back to A4 for both page dimensions",
+			log.warn("Page size from {} gives a {}mm page, below the {}mm its margins and footer need"
+					+ A4_FALLBACK_NOTE,
 					heightSource, formatMm(heightMm), formatMm(MIN_PAGE_HEIGHT_MM));
 		}
-		return (tooNarrow || tooShort) ? frameFor(A4_WIDTH_MM, A4_HEIGHT_MM) : layout;
+		if (tooWide) {
+			log.warn(OVERSIZE_WARNING, widthSource, formatMm(widthMm), formatMm(MAX_PAGE_SIDE_MM));
+		}
+		if (tooTall) {
+			log.warn(OVERSIZE_WARNING, heightSource, formatMm(heightMm), formatMm(MAX_PAGE_SIDE_MM));
+		}
+		return (tooNarrow || tooShort || tooWide || tooTall) ? frameFor(A4_WIDTH_MM, A4_HEIGHT_MM) : layout;
 	}
 
 	/** Names a global property in the warnings above, e.g. {@code report.visitSummary.size.width}. */

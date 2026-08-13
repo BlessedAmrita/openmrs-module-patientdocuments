@@ -153,11 +153,36 @@ public class VisitSummaryXmlReportRendererPageSizeTest extends BaseModuleContext
 	}
 
 	/**
-	 * The report-design path hands the renderer a ReportData with no evaluation context at
-	 * all; there is no request there to override anything.
+	 * The ceiling counterpart of the sub-millimetre cases: an override past the largest page a
+	 * PDF can hold takes the whole frame back to A4, the configured height going with it, so
+	 * the export endpoint cannot be asked for a size FOP can no longer measure.
 	 */
 	@Test
-	public void render_withoutAnEvaluationContextUsesTheConfiguredPageSize() throws Exception {
+	public void render_withAnOverlargeWidthOverrideFallsBackToTheWholeA4Frame() throws Exception {
+		setGlobalProperty(PatientDocumentsConstants.VISIT_SUMMARY_PAGE_HEIGHT_PROPERTY, A5_HEIGHT);
+
+		Element root = render("6000mm", null);
+
+		assertFrame(root, A4_WIDTH, A4_HEIGHT, VisitSummaryPageLayout.PROFILE_STANDARD);
+	}
+
+	/** The same ceiling on the other dimension, with the configured width going with it. */
+	@Test
+	public void render_withAnOverlargeHeightOverrideFallsBackToTheWholeA4Frame() throws Exception {
+		setGlobalProperty(PatientDocumentsConstants.VISIT_SUMMARY_PAGE_WIDTH_PROPERTY, A5_WIDTH);
+
+		Element root = render(null, "600in");
+
+		assertFrame(root, A4_WIDTH, A4_HEIGHT, VisitSummaryPageLayout.PROFILE_STANDARD);
+	}
+
+	/**
+	 * A ReportData assembled by hand, with no evaluation context set on it at all: there is no
+	 * override to read, so the configured properties decide. Evaluating a report definition
+	 * always attaches a context, so this is the hand-built case rather than that path.
+	 */
+	@Test
+	public void render_withAContextlessReportDataUsesTheConfiguredPageSize() throws Exception {
 		setGlobalProperty(PatientDocumentsConstants.VISIT_SUMMARY_PAGE_WIDTH_PROPERTY, A5_WIDTH);
 		setGlobalProperty(PatientDocumentsConstants.VISIT_SUMMARY_PAGE_HEIGHT_PROPERTY, A5_HEIGHT);
 

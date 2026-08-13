@@ -99,8 +99,9 @@ public class VisitSummaryXmlReportRenderer extends ReportDesignRenderer {
 	@Override
 	public void render(ReportData results, String argument, OutputStream out) throws IOException, RenderingException {
 		Document doc = newDocument();
-		// The evaluation context carries any per-request page-size override; it is null on
-		// the report-design path, where the global properties decide.
+		// The evaluation context carries any per-request page-size override. Evaluating a report
+		// definition always attaches one, so this is null only for a ReportData assembled by
+		// hand that never set a context; the global properties decide there.
 		Element root = newRoot(doc, results.getContext());
 
 		if (results.getDataSets().containsKey(DATASET_KEY_VISIT_SUMMARY_FIELDS)) {
@@ -277,8 +278,14 @@ public class VisitSummaryXmlReportRenderer extends ReportDesignRenderer {
 	 * <p>
 	 * Each dimension takes the request override if this render was asked for one, and the
 	 * global property otherwise, so a request naming only one dimension keeps the configured
-	 * default for the other. The context is null on the report-design path, where there is no
-	 * request to override anything.
+	 * default for the other. A null context has no override to read and leaves both dimensions
+	 * to the global properties; that is the preview and any other hand-assembled ReportData,
+	 * not the report-design path, where evaluating the definition supplies a context.
+	 * <p>
+	 * The override is read off that context by parameter name, so a report definition declaring
+	 * a {@code pageWidth} or {@code pageHeight} parameter would decide the paper size on the
+	 * evaluated path. No report definition declares those parameters today:
+	 * {@code VisitSummaryReportManager} declares only {@code visitUuid}.
 	 */
 	private void configurePageDimensions(Element root, EvaluationContext context) {
 		ConfiguredDimension width = ConfiguredDimension.resolve(context,

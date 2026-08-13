@@ -739,8 +739,8 @@
     </xsl:template>
 
     <!-- ═══════════════════════════════════════════════════
-         Medications — medication, dosing, duration, start date. Dosing leads the stacked
-         block: it is the line the patient actually has to follow.
+         Medications — medication, dosing, duration, start date. The drug name leads the
+         stacked block, with dosing as the first labelled line under it.
          ═══════════════════════════════════════════════════ -->
     <xsl:template match="medications">
         <xsl:call-template name="data-section">

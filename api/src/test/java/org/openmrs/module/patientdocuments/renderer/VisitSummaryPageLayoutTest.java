@@ -217,6 +217,43 @@ public class VisitSummaryPageLayoutTest {
 		Assertions.assertEquals(VisitSummaryPageLayout.PROFILE_STANDARD, layout.getLayoutProfile());
 	}
 
+	/**
+	 * The ceiling counterpart of the floors above. Past 200in FOP's millipoint cast saturates
+	 * and the page box pins to Integer.MAX_VALUE, so the size stops being honoured without ever
+	 * failing; the non-A4 height proves the whole frame falls back, not the offending dimension.
+	 */
+	@Test
+	public void from_overlargeWidthFallsBackToTheWholeA4Frame() {
+		VisitSummaryPageLayout layout = VisitSummaryPageLayout.from("6000mm", "500mm");
+
+		Assertions.assertEquals("210mm", layout.getPageWidthAttribute());
+		Assertions.assertEquals("297mm", layout.getPageHeightAttribute());
+		Assertions.assertEquals("15mm", layout.getSideMarginAttribute());
+		Assertions.assertEquals("28mm", layout.getLogoColumnAttribute());
+		Assertions.assertEquals("24mm", layout.getLogoGraphicAttribute());
+		Assertions.assertEquals(VisitSummaryPageLayout.PROFILE_STANDARD, layout.getLayoutProfile());
+	}
+
+	/** The same ceiling on height, with the non-A4 width proving the whole frame goes with it. */
+	@Test
+	public void from_overlargeHeightFallsBackToTheWholeA4Frame() {
+		VisitSummaryPageLayout layout = VisitSummaryPageLayout.from("500mm", "600in");
+
+		Assertions.assertEquals("210mm", layout.getPageWidthAttribute());
+		Assertions.assertEquals("297mm", layout.getPageHeightAttribute());
+		Assertions.assertEquals("15mm", layout.getSideMarginAttribute());
+		Assertions.assertEquals(VisitSummaryPageLayout.PROFILE_STANDARD, layout.getLayoutProfile());
+	}
+
+	/** The ceiling is inclusive: the largest page a PDF can hold is a size, not a mistake. */
+	@Test
+	public void from_theLargestPdfPageIsNotTreatedAsMisconfigured() {
+		VisitSummaryPageLayout layout = VisitSummaryPageLayout.from("5080mm", "5080mm");
+
+		Assertions.assertEquals("5080mm", layout.getPageWidthAttribute());
+		Assertions.assertEquals("5080mm", layout.getPageHeightAttribute());
+	}
+
 	/** The height guard must not reject real short paper: A5 portrait and a landscape sheet. */
 	@Test
 	public void from_realShortPagesAreNotTreatedAsMisconfigured() {

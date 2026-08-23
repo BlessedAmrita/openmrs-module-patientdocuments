@@ -9,6 +9,7 @@
  */
 package org.openmrs.module.patientdocuments.api.section;
 
+import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -143,8 +144,25 @@ public class FacilityHeaderSectionTest extends BaseModuleContextSensitiveTest {
 		Assertions.assertEquals("", info.getFacilityPhone());
 	}
 
+	/** A deployment that has configured nothing still gets the bundled OpenMRS logo. */
 	@Test
-	public void gatherData_shouldReturnEmptyLogoWhenPropertyUnset() {
+	public void gatherData_shouldFallBackToTheBundledOpenmrsLogoWhenPropertyUnset() {
+		FacilityInfo info = section.gatherData(visitWithPhoneAttribute(null));
+
+		Assertions.assertTrue(info.getLogoData().startsWith("data:image/png;base64,"),
+		    "unset property must fall back to the bundled OpenMRS logo, got: "
+		            + StringUtils.abbreviate(info.getLogoData(), 60));
+	}
+
+	/**
+	 * An unreadable configured path must not fall back to the OpenMRS logo — that would hide
+	 * the misconfiguration behind the wrong branding. It degrades to no logo instead.
+	 */
+	@Test
+	public void gatherData_shouldNotFallBackToTheDefaultWhenAConfiguredLogoIsUnreadable() {
+		Context.getAdministrationService()
+		        .saveGlobalProperty(new GlobalProperty(LOGO_PROPERTY, "printing/does-not-exist.png"));
+
 		FacilityInfo info = section.gatherData(visitWithPhoneAttribute(null));
 
 		Assertions.assertEquals("", info.getLogoData());

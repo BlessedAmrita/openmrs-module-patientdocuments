@@ -26,6 +26,9 @@ import org.junit.jupiter.api.Test;
  */
 public class VisitSummaryStylesheetStackedFieldsTest {
 
+	/** The column marker both label/value grids draw at standard width. */
+	private static final String PROPORTIONAL_COLUMN = "proportional-column-width(1)";
+
 	@Test
 	public void narrow_everyPatientInfoFieldReachesThePageAsALabelledLine() throws Exception {
 		assertEveryPatientFieldLabelled(
@@ -66,21 +69,31 @@ public class VisitSummaryStylesheetStackedFieldsTest {
 	}
 
 	/**
-	 * The standard profile keeps both grids. Asserted on the FO rather than the text because
-	 * the grid and the stacked column carry the same words — only the arrangement differs.
+	 * The standard profile keeps both grids, four columns each. Asserted on the FO because
+	 * grid and stacked column carry the same words — only the arrangement differs. Rendered
+	 * separately, since both grids now draw the same column marker.
 	 */
 	@Test
-	public void standard_bothGridsKeepTheirTables() throws Exception {
-		String fo = VisitSummaryStylesheetHarness
-		        .renderToFo(VisitSummaryStylesheetHarness.visitSummaryXml(VisitSummaryDocumentFixture.patientInfo()
-		                + VisitSummaryDocumentFixture.vitals()));
+	public void standard_bothGridsKeepTheirFourColumnTables() throws Exception {
+		String patientFo = VisitSummaryStylesheetHarness
+		        .renderToFo(VisitSummaryStylesheetHarness.visitSummaryXml(VisitSummaryDocumentFixture.patientInfo()));
+		String vitalsFo = VisitSummaryStylesheetHarness
+		        .renderToFo(VisitSummaryStylesheetHarness.visitSummaryXml(VisitSummaryDocumentFixture.vitals()));
 
-		Assertions.assertTrue(fo.contains("proportional-column-width(1)"),
+		Assertions.assertEquals(4, countProportionalColumns(patientFo),
 		    "patient information must keep its four proportional columns on standard paper");
-		Assertions.assertTrue(fo.contains("column-width=\"33%\""),
-		    "vitals must keep its three-column grid on standard paper");
-		Assertions.assertFalse(fo.contains(VisitSummaryDocumentFixture.LBL_LOCATION + ": "),
+		Assertions.assertEquals(4, countProportionalColumns(vitalsFo),
+		    "vitals must draw four proportional columns on standard paper");
+		Assertions.assertFalse(patientFo.contains(VisitSummaryDocumentFixture.LBL_LOCATION + ": "),
 		    "standard paper must not lay down a stacked 'Label: value' line");
+	}
+
+	private static int countProportionalColumns(String fo) {
+		int count = 0;
+		for (int at = fo.indexOf(PROPORTIONAL_COLUMN); at >= 0; at = fo.indexOf(PROPORTIONAL_COLUMN, at + 1)) {
+			count++;
+		}
+		return count;
 	}
 
 	/** Both grids stack together, so neither is left overflowing beside a reflowed one. */
@@ -89,10 +102,8 @@ public class VisitSummaryStylesheetStackedFieldsTest {
 		String fo = VisitSummaryStylesheetHarness.renderToFo(compact(VisitSummaryDocumentFixture.patientInfo()
 		        + VisitSummaryDocumentFixture.vitals()));
 
-		Assertions.assertFalse(fo.contains("proportional-column-width(1)"),
-		    "patient information must not draw its grid on compact paper");
-		Assertions.assertFalse(fo.contains("column-width=\"33%\""),
-		    "vitals must not draw its grid on compact paper");
+		Assertions.assertFalse(fo.contains(PROPORTIONAL_COLUMN),
+		    "neither grid may draw its columns on compact paper");
 	}
 
 	/**

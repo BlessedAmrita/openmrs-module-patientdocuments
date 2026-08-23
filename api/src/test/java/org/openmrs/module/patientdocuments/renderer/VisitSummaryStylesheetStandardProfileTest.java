@@ -24,6 +24,9 @@ import org.junit.jupiter.api.Test;
  * between the table and the stacked block is only safe if the table it draws on full-width
  * paper is the same table byte for byte, so this compares the whole document rather than
  * sampling attributes out of it.
+ * <p>
+ * Re-captured once since, when vitals moved from three columns to four. Re-capture it only
+ * alongside a deliberate standard-width change, never to make a red test go green.
  */
 public class VisitSummaryStylesheetStandardProfileTest {
 

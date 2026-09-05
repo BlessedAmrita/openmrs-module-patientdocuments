@@ -73,7 +73,7 @@ public class VisitSummaryXmlReportRendererPageSizeTest extends BaseModuleContext
 		assertFrame(root, A5_WIDTH, A5_HEIGHT, VisitSummaryPageLayout.PROFILE_NARROW);
 	}
 
-	/** Wikum's ask: global default A4, this one request wants A5, and gets an A5-profile page. */
+	/** Overriding both dimensions beats the A4 configuration: an A5 page on the narrow profile. */
 	@Test
 	public void render_withAnOverrideBeatsTheConfiguredPageSize() throws Exception {
 		Element root = render(A5_WIDTH, A5_HEIGHT);

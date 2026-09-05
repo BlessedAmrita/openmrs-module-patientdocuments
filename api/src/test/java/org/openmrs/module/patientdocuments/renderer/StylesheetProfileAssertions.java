@@ -11,11 +11,15 @@ package org.openmrs.module.patientdocuments.renderer;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.junit.jupiter.api.Assertions;
 
 /** Assertions the profile tests share: what reached the page, and whether it fit. */
 final class StylesheetProfileAssertions {
+
+	/** Compiled once: the unwrapped comparison strips whitespace from every fragment. */
+	private static final Pattern WHITESPACE = Pattern.compile("\\s+");
 
 	private StylesheetProfileAssertions() {
 	}
@@ -62,11 +66,15 @@ final class StylesheetProfileAssertions {
 	 * the line they actually laid down.
 	 */
 	static void assertPageContainsUnwrapped(String text, String... fragments) {
-		String unwrapped = text.replaceAll("\\s+", "");
+		String unwrapped = stripWhitespace(text);
 		for (String fragment : fragments) {
-			Assertions.assertTrue(unwrapped.contains(fragment.replaceAll("\\s+", "")),
+			Assertions.assertTrue(unwrapped.contains(stripWhitespace(fragment)),
 			    "'" + fragment + "' must reach the page, but it read: " + text);
 		}
+	}
+
+	private static String stripWhitespace(String text) {
+		return WHITESPACE.matcher(text).replaceAll("");
 	}
 
 	/** Requires {@code earlier} to be laid down before {@code later}. */

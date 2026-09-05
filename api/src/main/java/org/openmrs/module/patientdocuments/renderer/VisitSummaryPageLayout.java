@@ -13,6 +13,8 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Locale;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
@@ -30,6 +32,9 @@ import org.openmrs.module.patientdocuments.common.PatientDocumentsConstants;
  */
 @Value
 @Slf4j
+// Not instantiable from outside: a frame only ever comes from the from(..) factories, which
+// validate the dimensions before one is built.
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class VisitSummaryPageLayout {
 
 	/** A4 portrait, the configured default and the basis every ratio is anchored to. */

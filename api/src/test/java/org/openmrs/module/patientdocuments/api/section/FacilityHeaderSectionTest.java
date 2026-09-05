@@ -154,20 +154,6 @@ public class FacilityHeaderSectionTest extends BaseModuleContextSensitiveTest {
 		            + StringUtils.abbreviate(info.getLogoData(), 60));
 	}
 
-	/**
-	 * An unreadable configured path must not fall back to the OpenMRS logo — that would hide
-	 * the misconfiguration behind the wrong branding. It degrades to no logo instead.
-	 */
-	@Test
-	public void gatherData_shouldNotFallBackToTheDefaultWhenAConfiguredLogoIsUnreadable() {
-		Context.getAdministrationService()
-		        .saveGlobalProperty(new GlobalProperty(LOGO_PROPERTY, "printing/does-not-exist.png"));
-
-		FacilityInfo info = section.gatherData(visitWithPhoneAttribute(null));
-
-		Assertions.assertEquals("", info.getLogoData());
-	}
-
 	@Test
 	public void gatherData_shouldReturnEmptyLogoWhenConfiguredFileIsUnreadable() {
 		Context.getAdministrationService().saveGlobalProperty(
@@ -175,7 +161,10 @@ public class FacilityHeaderSectionTest extends BaseModuleContextSensitiveTest {
 
 		FacilityInfo info = section.gatherData(visitWithPhoneAttribute(null));
 
-		// An unreadable logo must degrade to no logo, never fail the whole PDF.
-		Assertions.assertEquals("", info.getLogoData());
+		// An unreadable logo must degrade to no logo, never fail the whole PDF — and never
+		// to the bundled default, which would hide the misconfiguration behind OpenMRS
+		// branding. Empty rather than a data: URI is what distinguishes the two.
+		Assertions.assertEquals("", info.getLogoData(),
+		    "an unreadable configured logo must yield no logo, not the bundled default");
 	}
 }

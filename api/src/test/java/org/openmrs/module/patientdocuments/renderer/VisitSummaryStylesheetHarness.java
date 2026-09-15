@@ -16,6 +16,7 @@ import java.io.StringWriter;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Result;
@@ -69,6 +70,9 @@ final class VisitSummaryStylesheetHarness {
 	private static final String FOP_CONFIG = "conf/fop.xconf.xml";
 
 	private static final String FONT_BASE = "fonts/";
+
+	/** Compiled once: every extracted page is normalized through it. */
+	private static final Pattern WHITESPACE = Pattern.compile("\\s+");
 
 	private VisitSummaryStylesheetHarness() {
 	}
@@ -160,7 +164,7 @@ final class VisitSummaryStylesheetHarness {
 				PDFTextStripper stripper = new PDFTextStripper();
 				stripper.setStartPage(page);
 				stripper.setEndPage(page);
-				pages.add(stripper.getText(document).replaceAll("\\s+", " "));
+				pages.add(WHITESPACE.matcher(stripper.getText(document)).replaceAll(" "));
 			}
 			return pages;
 		}
